@@ -50,6 +50,8 @@ package Empire is
        SATELLITE,
        NOPIECE);
 
+  type Piece_Value_Array is array (Piece_Type_T) of Integer;
+
    -- in addition to terrain and user types, planning algorithms use following special symbols in view maps
    -- '$' represents loading tt must be first
    --  'x' represents tt producing city
