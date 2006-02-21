@@ -1,6 +1,11 @@
--- empire.c -- this file contains initialization code, the main command
--- parser, and the simple commands.
+-- simple commands.
 
+with Ada.Text_IO;
+
+with Empire.Comp_Move;
+with Empire.Game;
+with Empire.Locations;
+with Empire.Math;
 with Empire.Objects;
 with Empire.Ui;
 
@@ -43,7 +48,7 @@ package body Empire.Commands is
            then
               Print_Debug := FALSE;
            else
-              Huh;
+              Ui.Huh;
            end if;
         when '&' =>                     -- change print_vmap state
            E := Ui.Get_Chx;
@@ -72,7 +77,7 @@ package body Empire.Commands is
   -- it as the computers.
 
   procedure Give is
-     Unowned : array (1 .. NUM_CITY) of Integer;
+     Unowned_Cities : array (1 .. NUM_CITY) of Integer;
      City_Index : Integer;
      Count : Integer := 0;              -- nothing in list yet
   begin
@@ -81,7 +86,7 @@ package body Empire.Commands is
         if City(I).Owner = UNOWNED
         then
            Count := Count + 1;
-           Unowned(Count) := I;
+           Unowned_Cities(Count) := I;
         end if;
      end loop;
 
@@ -91,8 +96,7 @@ package body Empire.Commands is
         return;
      end if;
 
-     I := Rand_Long (Count);            -- pick a city, any city
-     City_Index := Unowned(I);          -- get city index
+     City_Index := Unowned_Cities(Math.Rand_Long(Count));   -- pick a city, get its index
      City(City_Index).Owner := COMP;
      City(City_Index).Prod := NOPIECE;
      City(City_Index).Work := 0;
@@ -104,7 +108,7 @@ package body Empire.Commands is
   -- The quit command.  Make sure the user really wants to quit
   procedure Quit is
   begin
-     if Get_Yn("QUIT -- Are you sure? ")
+     if Ui.Get_Yn("QUIT -- Are you sure? ")
      then
         Emp_End;
      end if;
@@ -120,78 +124,61 @@ package body Empire.Commands is
      Ui.Print_Sector_U(Sec);
   end Sector;
 
--- Print the map to a file.  We ask for a filename, attempt to open the
--- file, and if successful, print out the user's information to the file.
+-- Print the map to a file.
 -- We print the map sideways to make it easier for the user to print
 -- out the map.
+-- XXX XXX For now, unlike C version, we always use the same file name
+-- (which is symmetric with game and movie saves).  All three should change.
 
-static void
-c_map (void)
-{
-        FILE *f;
-        int i, j;
-        char line[MAP_HEIGHT+2];
+  procedure Map is
+     F : Ada.Text_IO.File_Type;
+  begin
+     Ada.Text_IO.Create(F, Ada.Text_IO.Out_File, MAP_NAME);
 
-        prompt ("Filename? ");
-        get_str (jnkbuf, STRSIZE);
+     for I in 0 .. MAP_WIDTH-1
+     loop
+        -- for each column (see above)
+        for J in 0 .. MAP_HEIGHT-1
+        loop
+           -- for each row (see above)
+           -- XXX we should do this line-at-a-time, as the C does.
+           Content_IO.Put(F, User_Map(Locations.Row_Col_Loc(J, I)).Contents);
+        end loop;
+        Ada.Text_IO.Put_Line(F, "");
+     end loop;
+  exception
+     when others =>                     -- XXX XXX much too general
+        Ui.Error("Unable to write map to file " & MAP_NAME & ".");
+  end Map;
 
-        f = fopen (jnkbuf, "w");
-        if (f == NULL)
-        {
-                error ("I can't open that file.");
-                return;
-        }
+-- We give the computer lots of free moves and
+-- Print a "zoomed" version of the computer's map.
 
-        for (i = 0; i < MAP_WIDTH; i++)
-        {
-                /* for each column */
-                for (j = MAP_HEIGHT-1; j >= 0; j--)
-                {
-                        /* for each row */
-                        line[MAP_HEIGHT-1-j] = user_map[row_col_loc(j,i)].contents;
-                }
-                j = MAP_HEIGHT-1;
-                while (j >= 0 && line[j] == ' ') /* scan off trailing blanks */
-                        j -= 1;
+  procedure Movie is
+  begin
+     loop
+        Comp_Move.Comp_Move;
+        Ui.Print_Zoom(Comp_Map);
+        Game.Save_Game;
+     end loop;
+  end Movie;
 
-                line[++j] = '\n';
-                line[++j] = 0; /* trailing null */
-                fputs (line, f);
-        }
-        fclose (f);
-}
+-- restore game with some error handling
 
-/*
- * We give the computer lots of free moves and
- * Print a "zoomed" version of the computer's map.
- */
+  procedure Restore is
+  begin
+     Game.Restore_Game;
+  exception
+     when Game.No_Saved_Game =>
+        Game.Init_Game;
+     when Game.Corrupt_Saved_Game =>
+        Ui.Error("Saved game is corrupted!");
+        if Ui.Get_Yn("Overwrite with new game? ")
+        then
+           Game.Init_Game;
+        else
+           Emp_End;
+        end if;
+  end Restore;
 
-static void
-c_movie (void)
-{
-        while (1)
-        {
-                comp_move();
-                print_zoom(comp_map);
-                save_game();
-        }
-}
-
-/*This provides a single place for collecting all startup routines */
-
-static void
-emp_start (void)
-{
-        term_init();    /* init tty, and info and status windows */
-        map_init();     /* init map window */
-        rand_init();    /* init random number generator */
-}
-
-/* This provides a single place for collecting all cleanup routines */
-
-static void
-emp_end (void)
-{
-        term_end();
-        exit(0);
-}
+end Empire.Commands;

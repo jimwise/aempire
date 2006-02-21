@@ -4,7 +4,7 @@
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  *
- * $Id: compmove.c,v 1.1 2006/02/21 17:33:41 jwise Exp $
+ * $Id: empire-comp_move.adb,v 1.1 2006/02/21 21:13:39 jwise Exp $
  */
 
 /*
