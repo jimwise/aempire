@@ -1,0 +1,136 @@
+V "GNAT Lib v3.4"
+M P W=b
+A -g
+A -gnata
+A -gnato
+A -gnatE
+A -gnatA
+A -fstack-check
+P SS
+R nnvvnnnvvnnnnnvnvnvvvvnnvnvnvnnnnnnvnvnnnnnnnnnnvnnnvvnn
+
+U main%b		main.adb		c4c34f22 DE NE SU
+W ada%s			ada.ads			ada.ali
+W ada.command_line%s	a-comlin.adb		a-comlin.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.numerics%s	a-numeri.ads		a-numeri.ali
+W ada.numerics.elementary_functions%s  a-nuelfu.ads  a-nuelfu.ali
+W empire%s		empire.adb		empire.ali
+W gnat%s		gnat.ads		gnat.ali
+W gnat.command_line%s	g-comlin.adb		g-comlin.ali
+W system%s		system.ads		system.ali
+W system.exception_table%s  s-exctab.adb	s-exctab.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.standard_library%s  s-stalib.adb	s-stalib.ali
+W system.string_ops%s	s-strops.adb		s-strops.ali
+W system.string_ops_concat_4%s  s-sopco4.adb	s-sopco4.ali
+W system.string_ops_concat_5%s  s-sopco5.adb	s-sopco5.ali
+W system.val_int%s	s-valint.adb		s-valint.ali
+W text_io%s		text_io.ads		text_io.ali
+
+D ada.ads		20030424175357 a0108083
+D a-charac.ads		20031021134153 a61fb5a9
+D a-chlat1.ads		20030424175352 06a18501
+D a-comlin.ads		20030424175352 781800a6
+D a-except.ads		20031021134153 a1717b33
+D a-finali.ads		20030424175353 d4be2e87
+D a-filico.ads		20030424175353 83058640
+D a-ioexce.ads		20030424175353 d52e128a
+D a-numeri.ads		20030424175353 24750733
+D a-nuelfu.ads		20030424175353 64fa1c9c
+D a-ngelfu.ads		20030424175353 95071d99
+D a-stream.ads		20030424175354 dbe6acb4
+D a-string.ads		20030424175354 6440c304
+D a-strmap.ads		20030424175354 e6fc9a3a
+D a-tags.ads		20031021134154 8f0cfa9c
+D a-tags.adb		20031021134154 547ae7e1
+D a-textio.ads		20031021134154 3e7f8d76
+D empire.ads		20060221035550 9d4973d5
+D gnat.ads		20030424175404 6380ea48
+D g-comlin.ads		20031021134200 d3101a70
+D g-dirope.ads		20040105152044 793c921d
+D g-regexp.ads		20031021134205 d7f5059c
+D interfac.ads		20031021134209 6e859da6
+D i-cstrea.ads		20031215115100 7690e8d9
+D main.adb		20060220055304 bd2f53ba
+D system.ads		20050804194856 c9aa1b08
+D s-arit64.ads		20030424175408 be646b3c
+D s-crtl.ads		20031217133703 a4a6fa53
+D s-exctab.ads		20031021134213 6637f07f
+D s-ficobl.ads		20030424175409 14416104
+D s-finimp.ads		20031021134214 ef65ab1e
+D s-finroo.ads		20031021134214 7e5e077b
+D s-htable.ads		20031021134214 af1a22d4
+D s-parame.ads		20031021134214 8479efe6
+D s-secsta.ads		20040105152046 7804722c
+D s-soflin.ads		20031021134214 14059e84
+D s-stache.ads		20031021134214 6135f334
+D s-stalib.ads		20031021134214 e7ad2af0
+D s-stoele.ads		20031021134214 6a4eed4d
+D s-stoele.adb		20030424175413 792079f8
+D s-stratt.ads		20031021134214 c1077a4d
+D s-strops.ads		20031021134214 ef352bfb
+D s-sopco3.ads		20030424175413 fb5c3964
+D s-sopco4.ads		20030424175413 3cc42ca6
+D s-sopco5.ads		20030424175413 57309ce3
+D s-traent.ads		20031021134218 e81a0978
+D s-unstyp.ads		20031021134218 0d291e44
+D s-valint.ads		20030424175414 d7655cb7
+D text_io.ads		20030424175419 2b576907
+D unchconv.ads		20030424175420 1b7a14c5
+X 1 ada.ads
+16K9*Ada 19e8 25|18r6 19r6 20r5 43r33 51r33 59r32 71r13 71r46 92r4 92r37
+. 97r24 101r25 105r24 106r24 107r7 107r40
+X 4 a-comlin.ads
+38K13*Command_Line 136e21 25|18w10 43r37 51r37 59r36 71r17 71r50 92r8 92r41
+. 97r28 101r29 105r28 106r28 107r11 107r44
+57V13*Command_Name{string} 25|43r50 51r50 59r49 97r41 101r42 105r41 106r41
+65I9*Exit_Status<integer>
+67i4*Success{65I9} 25|71r63 92r54
+68i4*Failure{65I9} 25|107r57
+70U14*Set_Exit_Status 25|71r30 92r21 107r24
+X 9 a-numeri.ads
+17K13*Numerics 28e17 25|19r10 20r9
+X 10 a-nuelfu.ads
+18K22*Elementary_Functions 25|19w19 20r18
+X 11 a-ngelfu.ads
+22V13*Sqrt{float} 25|88r36[10|18]
+X 17 a-textio.ads
+258U14*Put_Line 25|43r24 51r24 59r23 70r21 97r15 101r15 105r15
+X 18 empire.ads
+1K9*Empire 595e11 25|23w6 64r13 67r13 70r30 81r4 82r4 83r4 86r12 86r37 87r19
+. 88r4 90r4
+4i4*MAP_SIZE{integer} 25|86r19
+5i4*NUM_CITY{integer} 25|87r26
+32a4*VERSION_STRING{string} 25|70r37
+251i4*Smooth{integer} 25|81m11
+252i4*Water_Ratio{integer} 25|82m11 86r44
+253i4*Min_City_Dist{integer} 25|88m11
+254i4*Save_Interval{integer} 25|83m11
+255i4*Traditional{integer} 25|64m20
+271b4*Color{boolean} 25|67m20
+316U14*Run_Empire 25|90r11
+X 19 gnat.ads
+36K9*GNAT 39e9 25|21r6 37r12 40r43 48r43 56r42 96r9 97r63 100r9 101r64
+X 20 g-comlin.ads
+100K14*Command_Line 322e22 25|21w11 37r17 40r48 48r48 56r47 96r14 97r68 100r14
+. 101r69
+143V13*Full_Switch{string} 25|97r81 101r82
+147V13*Getopt{character} 25|37r30
+235V13*Parameter{string} 25|40r61 48r61 56r60
+278X4*Invalid_Switch 25|96r27
+281X4*Invalid_Parameter 25|100r27
+X 25 main.adb
+25U11*Main 25b11 109l5 109t9
+26i4 Error{integer}
+27i4 Flag_Small_W{integer} 40m13 41r16 41r37 82r26
+28i4 Flag_Small_S{integer} 48m13 49r16 81r21
+29i4 Flag_Large_S{integer} 56m12 57r15 83r28
+30i4 Land{integer} 86m4 87m4 87r12 88r47
+31X4 Invalid_Command_Line 44r22 52r22 60r21 98r13 102r13 104r9
+32a4 OPTFLAGS{string} 37r37
+33a4 USAGE{string} 106r62
+X 49 text_io.ads
+19K9*Text_IO=19:29 25|17w6 43r16 51r16 59r15 70r13 97r7 101r7 105r7
+

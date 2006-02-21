@@ -1,0 +1,16 @@
+Project Empire is
+
+	for Object_Dir use ".";
+
+	for Main use ("main");
+
+	package Builder is
+		for Default_Switches ("Ada") use ("-g");
+	end Builder;
+     
+	package Compiler is
+		for Default_Switches ("Ada")
+		    use ("-fstack-check", "-gnata", "-gnato", "-gnatE");
+	end Compiler;
+
+end Empire;

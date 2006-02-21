@@ -1,0 +1,48 @@
+V "GNAT Lib v3.4"
+P
+R nnnvnnnnnnnnnnnnnnnnnnnnvnnnnnnnnnnnnvnnnnnnnnnnnnnnvnnn
+
+U empire.locations%b	empire-locations.adb	cc73e4ba NE PK
+W empire%s		empire.adb		empire.ali
+
+U empire.locations%s	empire-locations.ads	9f9cbfaa EE NE PK
+W empire%s		empire.adb		empire.ali
+
+D empire.ads		20060217034653 4aed0190
+D empire-locations.ads	20060217035128 d571be3a
+D empire-locations.adb	20060217035421 19025a80
+D system.ads		20050804194856 c9aa1b08
+D s-unstyp.ads		20031021134218 0d291e44
+X 1 empire.ads
+1K9*Empire 659e11 2|1r9 10r5 3|1r14 44r5
+3i4*MAP_WIDTH{integer} 3|5r20 10r22 15r20
+7I12*Location_T{integer} 2|2r31 3r31 4r68 8r34 9r51 3|3r31 8r31 13r68 33r34
+. 38r51
+8I12*Row_T{integer} 2|2r50 4r35 5r51 7r38 3|3r50 13r35 18r51 28r38
+9I12*Column_T{integer} 2|3r50 4r51 6r51 7r54 3|8r50 13r51 23r51 28r54
+24i4*SECTOR_ROWS{integer} 3|20r22 25r20 30r20
+27i4*ROWS_PER_SECTOR{integer} 3|35r42 40r44 40r62
+28i4*COLS_PER_SECTOR{integer} 3|35r72 41r44 41r62
+29I12*Sector_T{integer} 2|5r34 6r34 7r71 8r53 9r34 3|18r34 23r34 28r71 33r53
+. 38r34
+X 2 empire-locations.ads
+1K16*Locations 1|1k9 2|10l12 10e21 3|1b21 44l12 44t21
+2V13*Loc_Row{1|8I12} 2>22 3|3b13 6l8 6t15 35r29
+2i22 Loc{1|7I12} 3|3b22 5r14
+3V13*Loc_Col{1|9I12} 3>22 3|8b13 11l8 11t15 35r59
+3i22 Loc{1|7I12} 3|8b22 10r14
+4V13*Row_Col_Loc{1|7I12} 4>26 4>42 3|13b13 16l8 16t19 40r14
+4i26 Row{1|8I12} 3|13b26 15r14
+4i42 Col{1|9I12} 3|13b42 15r32
+5V13*Sector_Row{1|8I12} 5>25 3|18b13 21l8 21t18 40r26
+5i25 Sec{1|29I12} 3|18b25 20r14
+6V13*Sector_Col{1|9I12} 6>25 3|23b13 26l8 26t18 41r26
+6i25 Sec{1|29I12} 3|23b25 25r14
+7V13*Row_Col_Sector{1|29I12} 7>29 7>45 3|28b13 31t7 35r14
+7i29 Row{1|8I12} 3|28b29 30r34
+7i45 Col{1|9I12} 3|28b45 30r14
+8V13*Loc_Sector{1|29I12} 8>25 3|33b13 36l8 36t18
+8i25 Loc{1|7I12} 3|33b25 35r37 35r67
+9V13*Sector_Loc{1|7I12} 9>25 3|38b13 42l8 42t18
+9i25 Sec{1|29I12} 3|38b25 40r37 41r37
+

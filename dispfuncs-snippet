@@ -1,0 +1,14 @@
+   procedure Display_Loc_U (Loc : in Location_T) is
+   begin
+      Display_Loc(USER, User_Map, Loc);
+   end Display_Loc_U;
+
+   procedure Print_Sector_U (Sec : in Sector_T) is
+   begin
+      Print_Sector(USER, User_Map, Sec);
+   end Print_Sector_U;
+
+   procedure Print_Sector_C (Sec : in Sector_T) is
+   begin
+      Print_Sector(COMP, Comp_Map, Sec);
+   end Print_Sector_C;
