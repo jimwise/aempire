@@ -1,3 +1,4 @@
+with Ada.Text_IO;
 package Empire is
    MAP_WIDTH : constant Integer := 100;
    MAP_HEIGHT : constant Integer := 60;
@@ -17,6 +18,10 @@ package Empire is
 
    type String_P is access constant String;
    type Help_Array is array (Natural range <>) of String_P;
+
+   SAVE_NAME : constant String := "empsave.dat";
+   MOVIE_NAME : constant String := "empmovie.dat";
+   MAP_NAME : constant String := "empmap.txt";
 
    -- useful constants for accessing sectors
 
@@ -59,6 +64,9 @@ package Empire is
    type Acceptable_Content_Array is array (Content_Display_T) of Boolean;
    type Acceptable_Terrain_Array is array (Terrain_Display_T range '.' .. '+') of Boolean;
    type Content_Value_Array is array (Content_Display_T) of Integer;
+
+   package Content_IO is new Ada.Text_IO.Enumeration_IO(Content_Display_T);
+   package Terrain_IO is new Ada.Text_IO.Enumeration_IO(Terrain_Display_T);
 
    type Direction_T is
       (NORTH,
@@ -259,7 +267,8 @@ package Empire is
    Resigned : Boolean;                  -- true IFF computer resigned
    Debug : Boolean;                     -- true IFF in debugging mode
    Print_Debug : Boolean;               -- true IFF we print debugging output
-   Print_Vmap : Boolean;                -- true IFF we print view maps
+   subtype Vmap_Debug_Option is Character; -- XXX restrict to A, I, L, S, U
+   Print_Vmap : Vmap_Debug_Option;      -- option for printing vmaps;
    Trace_Pmap : Boolean;                -- true IFF we are tracing pmaps
    Win : Boolean;                       -- true IFF games is over
    Save_Movie : Boolean;                -- true IFF we're saving movie screens
@@ -539,7 +548,7 @@ private
       new String'("q - Quit game"),
       new String'("r - Restore game"),
       new String'("s - Save game"),
-      new String'("t - save movie in empmovie.dat"),
+      new String'("t - save movie in " & MOVIE_NAME),
       new String'("w - Watch movie"),
       new String'("z - display Zoomed out map"),
       new String'("<ctrl-L> - redraw screen"));

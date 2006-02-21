@@ -140,7 +140,7 @@ package body Empire is
             Save_Movie := not Save_Movie;
             if Save_Movie
             then                        -- XXX name?
-               Ui.Info("Saving movie screens to 'empmovie.dat'.");
+               Ui.Info("Saving movie screens to '" & MOVIE_NAME & "'.");
             else
                Ui.Info("No longer saving movie screens.");
             end if;
