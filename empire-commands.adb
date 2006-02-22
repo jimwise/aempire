@@ -77,11 +77,11 @@ package body Empire.Commands is
   -- it as the computers.
 
   procedure Give is
-     Unowned_Cities : array (1 .. NUM_CITY) of Integer;
+     Unowned_Cities : array (City'Range) of Integer;
      City_Index : Integer;
      Count : Integer := 0;              -- nothing in list yet
   begin
-     for I in 1 .. NUM_CITY
+     for I in City'Range
      loop
         if City(I).Owner = UNOWNED
         then
@@ -135,10 +135,10 @@ package body Empire.Commands is
   begin
      Ada.Text_IO.Create(F, Ada.Text_IO.Out_File, MAP_NAME);
 
-     for I in 0 .. MAP_WIDTH-1
+     for I in Column_T'Range
      loop
         -- for each column (see above)
-        for J in 0 .. MAP_HEIGHT-1
+        for J in Row_T'Range
         loop
            -- for each row (see above)
            -- XXX we should do this line-at-a-time, as the C does.
