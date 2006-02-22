@@ -192,9 +192,9 @@ package Empire is
    type Scan_Counts_T is
       record
          User_Cities : Integer;         -- number of user cities on continent
-         User_Objects : Content_Value_Array;
+         User_Objects : Piece_Value_Array;
          Comp_Cities : Integer;
-         Comp_Objects : Content_Value_Array;
+         Comp_Objects : Piece_Value_Array;
          Size : Integer;                -- size of continent in cells
          Unowned_Cities : Integer;      -- number of unowned cities
          Unexplored : Integer;          -- unexplored territory
