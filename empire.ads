@@ -52,6 +52,7 @@ package Empire is
        NOPIECE);
 
   type Piece_Value_Array is array (Piece_Type_T) of Integer;
+  type Piece_Value_P is access all Piece_Value_Array;
 
    -- in addition to terrain and user types, planning algorithms use following special symbols in view maps
    -- '$' represents loading tt must be first
