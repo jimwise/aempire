@@ -4,9 +4,10 @@ package Empire is
    MAP_HEIGHT : constant Integer := 60;
    MAP_SIZE : constant Integer := MAP_WIDTH * MAP_HEIGHT;
    NUM_CITY : constant Integer := 70;
-   subtype Location_T is Integer range 0 .. NUM_CITY - 1; -- map location as index into map
-   subtype Row_T is Integer range 0 .. MAP_HEIGHT - 1;
-   subtype Column_T is Integer range 0 .. MAP_WIDTH - 1;
+   -- these are still from 0 so modulo, etc are easy to use.
+   subtype Location_T is Integer range 0 .. MAP_SIZE-1; -- map location as index into map
+   subtype Row_T is Integer range 0 .. MAP_HEIGHT-1;
+   subtype Column_T is Integer range 0 .. MAP_WIDTH-1;
 
    type Location_Value_Array is array (Location_T) of Integer;
 
@@ -245,7 +246,7 @@ package Empire is
    Comp_Map : View_Map;                 -- computer's view of the world
    User_Map : View_Map;                 -- user's view of the world
 
-   City : array (0..NUM_CITY-1) of aliased City_Info_T; -- city information
+   City : array (1..NUM_CITY) of aliased City_Info_T; -- city information
 
    -- There is one array to hold all allocated objects no matter who
    -- owns them.  Objects are allocated from the array and placed on
@@ -254,7 +255,7 @@ package Empire is
    Free_List : Piece_Info_P;            -- list of free items in object list
    User_Obj : array (Piece_Type_T) of Piece_Info_P; -- user object lists
    Comp_Obj : array (Piece_Type_T) of Piece_Info_P; -- computer object lists
-   Object : array (0..LIST_SIZE-1) of aliased Piece_Info_T; -- global object list
+   Object : array (1..LIST_SIZE) of aliased Piece_Info_T; -- global object list
 
    -- miscellaneous global variables
 
