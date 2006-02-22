@@ -14,5 +14,5 @@ package Empire.Mapping is
    procedure Vmap_Mark_Near_path (Pmap : in out Path_Map; Loc : in Location_T);
    procedure Vmap_Mark_Path (Pmap : in out Path_Map; Vmap : in View_Map; Loc : in Location_T);
    procedure Vmap_Mark_Up_Cont (Cont_Map : out Continent_Map; Vmap : in View_Map; Loc : in Location_T; Bad_Terrain : Terrain_Display_T);
-   procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map_T);
+   procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map);
 end Empire.Mapping;
