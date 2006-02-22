@@ -6,6 +6,27 @@ private
 
    Emap : View_Map;                     -- pruned explore map
 
+-- Define ratios for numbers of cities we want producing each object.
+--
+-- Early in the game, we want to produce armies, patrols, and transports for
+-- rapid expansion.  After a while, we add fighters and other ships
+-- for exploration.  Later, we add ships of all kinds for control of
+-- the sea.
+
+   Ratio1 : aliased Piece_Value_Array := (ARMY => 60, TRANSPORT => 20, PATROL => 10, others => 0);
+
+   Ratio2 : aliased Piece_Value_Array := (ARMY => 90, TRANSPORT => 40,
+                              FIGHTER|PATROL|DESTROYER|SUBMARINE => 10, others => 0);
+
+   Ratio3 : aliased Piece_Value_Array := (ARMY => 120, TRANSPORT => 60, FIGHTER|PATROL => 20,
+                              DESTROYER|SUBMARINE|CARRIER|BATTLESHIP => 10, others => 0);
+
+   Ratio4 : aliased Piece_Value_Array := (ARMY => 150, TRANSPORT => 70, FIGHTER|PATROL => 30,
+                              DESTROYER|SUBMARINE => 20, CARRIER|BATTLESHIP => 10);
+
+   Ratio : Piece_Value_P := Ratio1'Access;
+
+
    procedure Do_Cities;
    procedure Do_Pieces;
    procedure Check_Endgame;
