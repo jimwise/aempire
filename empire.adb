@@ -2,7 +2,7 @@
 -- parser, and the simple commands.
 
 with Empire.Commands;
-with Empire.Comp_Move;
+with Empire.Ai;
 with Empire.Editing;
 with Empire.Game;
 with Empire.Locations;
@@ -28,7 +28,7 @@ package body Empire is
          if Automove
          then
             User_Move.User_Move;
-            Comp_Move.Comp_Move;
+            Ai.Comp_Move;
             Turn := Turn + 1;
             if (Turn mod Save_Interval) = 0
             then
@@ -95,7 +95,7 @@ package body Empire is
             Commands.Map;
 
          when 'G' =>                 -- give one free enemy move
-            Comp_Move.Comp_Move;
+            Ai.Comp_Move;
 
          when '?' =>                  -- help
             Ui.Help(Help_Cmd);
@@ -112,14 +112,14 @@ package body Empire is
 
          when 'M' =>                    -- move
             User_Move.User_Move;
-            Comp_Move.Comp_Move;
+            Ai.Comp_Move;
             Game.Save_Game;
 
          when 'N' =>                    -- give enemy free moves
             Ncycle := Ui.Get_Int("Number of free enemy moves: ", 1, 1000);
             for I in 1 .. Ncycle
             loop
-               Comp_Move.Comp_Move;
+               Ai.Comp_Move;
             end loop;
             Game.Save_Game;
 

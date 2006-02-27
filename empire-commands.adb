@@ -2,7 +2,7 @@
 
 with Ada.Text_IO;
 
-with Empire.Comp_Move;
+with Empire.Ai;
 with Empire.Game;
 with Empire.Locations;
 with Empire.Math;
@@ -157,7 +157,7 @@ package body Empire.Commands is
   procedure Movie is
   begin
      loop
-        Comp_Move.Comp_Move;
+        Ai.Comp_Move;
         Ui.Print_Zoom(Comp_Map);
         Game.Save_Game;
      end loop;
