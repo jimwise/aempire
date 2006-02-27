@@ -357,6 +357,14 @@ private
 -- the range of a fighter from 20 to 30 so that fighters will be somewhat
 -- more useful.
 
+   -- values for Piece_Attr.*.Terrain.  XXX We could dispatch based on
+   -- Class now, but don't yet
+
+   GROUND_TERRAIN : constant Acceptable_Terrain_Array := ('+'|'*' => TRUE, '.' => FALSE);
+   AIRCRAFT_TERRAIN : constant Acceptable_Terrain_Array := (others => TRUE);
+   SHIP_TERRAIN : constant Acceptable_Terrain_Array := ('.'|'*' => TRUE, '+' => FALSE);
+   SPACECRAFT_TERRAIN : constant Acceptable_Terrain_Array := AIRCRAFT_TERRAIN;
+
    Piece_Attr : constant Piece_Attr_Array :=
      (ARMY =>
         (Sname => 'A',                 -- character for printing piece
@@ -365,13 +373,13 @@ private
          Nickname => new String'("army"), -- nickname
          Article => new String'("an army"), -- name with preceding article
          Plural => new String'("armies"), -- plural
-         Terrain => ('.' => FALSE, '+' => TRUE), -- terrain
-         Build_Time => 5,              -- units to build
-         Strength => 1,                -- streng
-         Max_Hits => 1,                -- max hits
-         Speed => 1,                   -- movement
-         Capacity => 0,                -- capacity
-         Piece_Range => INFINITY),     -- range of piece
+         Terrain => GROUND_TERRAIN,     -- terrain
+         Build_Time => 5,               -- units to build
+         Strength => 1,                 -- streng
+         Max_Hits => 1,                 -- max hits
+         Speed => 1,                    -- movement
+         Capacity => 0,                 -- capacity
+         Piece_Range => INFINITY),      -- range of piece
 
       -- For fighters, the range is set to an even multiple of the speed.
       -- This allows user to move fighter, say, two turns out and two
@@ -380,56 +388,56 @@ private
       FIGHTER =>
         (Sname => 'F', Class => AIRCRAFT, Name => new String'("fighter"), Nickname => new String'("fighter"),
          Article => new String'("a fighter"), Plural => new String'("fighters"),
-         Terrain => (others => TRUE),
+         Terrain => AIRCRAFT_TERRAIN,
          Build_Time => 10, Strength => 1, Max_Hits => 1,
          Speed => 8, Capacity => 0, Piece_Range => 32),
 
       PATROL =>
         (Sname => 'P', Class => SHIP, Name => new String'("patrol boat"), Nickname => new String'("patrol"),
          Article => new String'("a patrol boat"), Plural => new String'("patrol boats"),
-         Terrain => ('.' => TRUE, '+' => FALSE),
+         Terrain => SHIP_TERRAIN,
          Build_Time => 15, Strength => 1, Max_Hits => 1,
          Speed => 4, Capacity => 0, Piece_Range => INFINITY),
 
       DESTROYER =>
         (Sname => 'D', Class => SHIP, Name => new String'("destroyer"), Nickname => new String'("destroyer"),
          Article => new String'("a destroyer"), Plural => new String'("destroyers"),
-         Terrain => ('.' => TRUE, '+' => FALSE),
+         Terrain => SHIP_TERRAIN,
          Build_Time => 20, Strength => 1, Max_Hits => 3,
          Speed => 4, Capacity => 0, Piece_Range => INFINITY),
 
       SUBMARINE =>
         (Sname => 'S', Class => SHIP, Name => new String'("submarine"), Nickname => new String'("submarine"),
          Article => new String'("a submarine"), Plural => new String'("submarines"),
-         Terrain => ('.' => TRUE, '+' => FALSE),
+         Terrain => SHIP_TERRAIN,
          Build_Time => 20, Strength => 3, Max_Hits => 2,
          Speed => 2, Capacity => 0, Piece_Range => INFINITY),
 
       TRANSPORT =>
         (Sname => 'T', Class => SHIP, Name => new String'("troop transport"), Nickname => new String'("transport"),
          Article => new String'("a troop transport"), Plural => new String'("troop transports"),
-         Terrain => ('.' => TRUE, '+' => FALSE),
+         Terrain => SHIP_TERRAIN,
          Build_Time => 30, Strength => 1, Max_Hits => 1,
          Speed => 2, Capacity => 6, Piece_Range => INFINITY),
 
       CARRIER =>
         (Sname => 'C', Class => SHIP, Name => new String'("aircraft carrier"), Nickname => new String'("carrier"),
          Article => new String'("an aircraft carrier"), Plural => new String'("aircraft carriers"),
-         Terrain => ('.' => TRUE, '+' => FALSE),
+         Terrain => SHIP_TERRAIN,
          Build_Time => 30, Strength => 1, Max_Hits => 8,
          Speed => 2, Capacity => 8, Piece_Range => INFINITY),
 
       BATTLESHIP =>
         (Sname => 'B', Class => SHIP, Name => new String'("battleship"), Nickname => new String'("battleship"),
          Article => new String'("a battleship"), Plural => new String'("battleships"),
-         Terrain => ('.' => TRUE, '+' => FALSE),
+         Terrain => SHIP_TERRAIN,
          Build_Time => 40, Strength => 2, Max_Hits => 10,
          Speed => 2, Capacity => 0, Piece_Range => INFINITY),
 
       SATELLITE =>
         (Sname => 'Z', Class => SPACECRAFT, Name => new String'("satellite"), Nickname => new String'("satellite"),
          Article => new String'("a satellite"), Plural => new String'("satellites"),
-         Terrain => (others => TRUE),
+         Terrain => SPACECRAFT_TERRAIN,
          Build_Time => 50, Strength => 0, Max_Hits => 1,
          Speed => 10, Capacity => 0, Piece_Range => 500));
 
@@ -464,7 +472,8 @@ private
       MOVE_S => new String'("X"),
       MOVE_SW => new String'("Z"),
       MOVE_W => new String'("A"),
-      MOVE_NW => new String'("Q"));
+      MOVE_NW => new String'("Q"),
+      MOVE_TO_DEST => new String'("destination"));
 
    -- the order in which pieces should be moved
    -- alternative (easy enough) would be to put piece_type_t in move order.
