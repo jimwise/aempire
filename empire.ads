@@ -4,6 +4,10 @@ package Empire is
    MAP_HEIGHT : constant Integer := 60;
    MAP_SIZE : constant Integer := MAP_WIDTH * MAP_HEIGHT;
    NUM_CITY : constant Integer := 70;
+
+   -- cost to switch a city's production is the _new_ item's cost over RETOOLING_DENOMINATOR
+   RETOOLING_DENOMINATOR : constant := 5;
+
    -- these are still from 0 so modulo, etc are easy to use.
    subtype Location_T is Integer range 0 .. MAP_SIZE-1; -- map location as index into map
    subtype Row_T is Integer range 0 .. MAP_HEIGHT-1;
@@ -54,6 +58,12 @@ package Empire is
   type Piece_Value_Array is array (Piece_Type_T) of Integer;
   type Piece_Value_P is access all Piece_Value_Array;
 
+  type Piece_Class_T is
+     (GROUND,
+      AIRCRAFT,
+      SHIP,
+      SPACECRAFT);
+
    -- in addition to terrain and user types, planning algorithms use following special symbols in view maps
    -- '$' represents loading tt must be first
    --  'x' represents tt producing city
@@ -66,7 +76,7 @@ package Empire is
    type Terrain_Display_T is ('.', '+', '*');
 
    type Acceptable_Content_Array is array (Content_Display_T) of Boolean;
-   type Acceptable_Terrain_Array is array (Terrain_Display_T range '.' .. '+') of Boolean;
+   type Acceptable_Terrain_Array is array (Terrain_Display_T range '.' .. '*') of Boolean;
    type Content_Value_Array is array (Content_Display_T) of Integer;
 
    package Content_IO is new Ada.Text_IO.Enumeration_IO(Content_Display_T);
@@ -82,26 +92,30 @@ package Empire is
        WEST,
        NORTHWEST);
 
+   -- in original, function_t was overloaded, with negative values meaning as indicated
+   -- below, and positive values indicatign a location_t destination.
+   -- we now use MOVE_TO_DEST, and the piece_info_t's (new) `Dest' field.
    type Function_T is
-      (NOFUNC,                          -- no programmed function
-       RANDOM,                          -- move randomly
-       SENTRY,                          -- sleep
-       FILL,                            -- load transport
-       LAND,                            -- land fighter at city
-       EXPLORE,                         -- explore
-       ARMYLOAD,                        -- move toward and board a transport
-       ARMYATTACK,                      -- army looks for city to attack
-       TTLOAD,                          -- transport moves toward loading armies
-       REPAIR,                          -- ship moves toward port
-       WFTRANSPORT,                     -- army boards a transport
-       MOVE_N,                          -- move north
-       MOVE_NE,                         -- move northeast
-       MOVE_E,                          -- move east
-       MOVE_SE,                         -- move southeast
-       MOVE_S,                          -- move south
-       MOVE_SW,                         -- move southwest
-       MOVE_W,                          -- move west
-       MOVE_NW);                        -- move northwest
+      (NOFUNC,                          -- no programmed function (-1)
+       RANDOM,                          -- move randomly (-2)
+       SENTRY,                          -- sleep (-3)
+       FILL,                            -- load transport (-4)
+       LAND,                            -- land fighter at city (-5)
+       EXPLORE,                         -- explore (-6)
+       ARMYLOAD,                        -- move toward and board a transport (-7)
+       ARMYATTACK,                      -- army looks for city to attack (-8)
+       TTLOAD,                          -- transport moves toward loading armies (-9)
+       REPAIR,                          -- ship moves toward port (-10)
+       WFTRANSPORT,                     -- army boards a transport (-11)
+       MOVE_N,                          -- move north (-12)
+       MOVE_NE,                         -- move northeast (-13)
+       MOVE_E,                          -- move east (-14)
+       MOVE_SE,                         -- move southeast (-15)
+       MOVE_S,                          -- move south (-16)
+       MOVE_SW,                         -- move southwest (-17)
+       MOVE_W,                          -- move west (-18)
+       MOVE_NW,                         -- move northwest (-19)
+       MOVE_TO_DEST);                   -- move to Obj.Destination;
 
    -- if we determine how to represent T_PATH, this could be replaced with a set of constants of
    -- type Acceptable_Content_Array
@@ -136,8 +150,9 @@ package Empire is
          Cargo_Link : Link_T;           -- linked list of cargo pieces
          Owner : Owner_t;               -- owner of piece
          Piece_Type : Piece_Type_T;     -- type of piece
-         Loc : Location_T;                -- location of piece
+         Loc : Location_T;              -- location of piece
          Func : Function_T;             -- programmed type of movement
+         Dest : Location_T;             -- if Func = MOVE_TO_DEST
          Hits : Integer;                -- hits left
          Moved : Integer;               -- moves made
          Ship : Piece_Info_P;           -- pointer to containing ship
@@ -154,6 +169,7 @@ package Empire is
    type Piece_Attr_T is
       record
          Sname : Content_Display_T;     -- eg 'C'
+         Class : Piece_Class_T;         -- general type of piece
          Name : String_P;               -- eg "aircraft carrier"
          Nickname : String_P;           -- eg "carrier"
          Article : String_P;            -- eg "an aircraft carrier"
@@ -227,7 +243,7 @@ package Empire is
 
    type Real_Map_T is
       record
-         Contents : Terrain_T;          -- '+', '.', or '*'
+         Contents : Terrain_Display_T;  -- '+', '.', or '*'
          On_Board : Boolean;            -- True IFF on board
          CityP : City_Info_P;           -- pointer to city at this location
          ObjP : Piece_Info_P;           -- list of objects at this location
@@ -344,6 +360,7 @@ private
    Piece_Attr : constant Piece_Attr_Array :=
      (ARMY =>
         (Sname => 'A',                 -- character for printing piece
+         Class => GROUND,
          Name => new String'("army"),   -- name of piece
          Nickname => new String'("army"), -- nickname
          Article => new String'("an army"), -- name with preceding article
@@ -361,56 +378,56 @@ private
       -- turns back.
 
       FIGHTER =>
-        (Sname => 'F', Name => new String'("fighter"), Nickname => new String'("fighter"),
+        (Sname => 'F', Class => AIRCRAFT, Name => new String'("fighter"), Nickname => new String'("fighter"),
          Article => new String'("a fighter"), Plural => new String'("fighters"),
          Terrain => (others => TRUE),
          Build_Time => 10, Strength => 1, Max_Hits => 1,
          Speed => 8, Capacity => 0, Piece_Range => 32),
 
       PATROL =>
-        (Sname => 'P', Name => new String'("patrol boat"), Nickname => new String'("patrol"),
+        (Sname => 'P', Class => SHIP, Name => new String'("patrol boat"), Nickname => new String'("patrol"),
          Article => new String'("a patrol boat"), Plural => new String'("patrol boats"),
          Terrain => ('.' => TRUE, '+' => FALSE),
          Build_Time => 15, Strength => 1, Max_Hits => 1,
          Speed => 4, Capacity => 0, Piece_Range => INFINITY),
 
       DESTROYER =>
-        (Sname => 'D', Name => new String'("destroyer"), Nickname => new String'("destroyer"),
+        (Sname => 'D', Class => SHIP, Name => new String'("destroyer"), Nickname => new String'("destroyer"),
          Article => new String'("a destroyer"), Plural => new String'("destroyers"),
          Terrain => ('.' => TRUE, '+' => FALSE),
          Build_Time => 20, Strength => 1, Max_Hits => 3,
          Speed => 4, Capacity => 0, Piece_Range => INFINITY),
 
       SUBMARINE =>
-        (Sname => 'S', Name => new String'("submarine"), Nickname => new String'("submarine"),
+        (Sname => 'S', Class => SHIP, Name => new String'("submarine"), Nickname => new String'("submarine"),
          Article => new String'("a submarine"), Plural => new String'("submarines"),
          Terrain => ('.' => TRUE, '+' => FALSE),
          Build_Time => 20, Strength => 3, Max_Hits => 2,
          Speed => 2, Capacity => 0, Piece_Range => INFINITY),
 
       TRANSPORT =>
-        (Sname => 'T', Name => new String'("troop transport"), Nickname => new String'("transport"),
+        (Sname => 'T', Class => SHIP, Name => new String'("troop transport"), Nickname => new String'("transport"),
          Article => new String'("a troop transport"), Plural => new String'("troop transports"),
          Terrain => ('.' => TRUE, '+' => FALSE),
          Build_Time => 30, Strength => 1, Max_Hits => 1,
          Speed => 2, Capacity => 6, Piece_Range => INFINITY),
 
       CARRIER =>
-        (Sname => 'C', Name => new String'("aircraft carrier"), Nickname => new String'("carrier"),
+        (Sname => 'C', Class => SHIP, Name => new String'("aircraft carrier"), Nickname => new String'("carrier"),
          Article => new String'("an aircraft carrier"), Plural => new String'("aircraft carriers"),
          Terrain => ('.' => TRUE, '+' => FALSE),
          Build_Time => 30, Strength => 1, Max_Hits => 8,
          Speed => 2, Capacity => 8, Piece_Range => INFINITY),
 
       BATTLESHIP =>
-        (Sname => 'B', Name => new String'("battleship"), Nickname => new String'("battleship"),
+        (Sname => 'B', Class => SHIP, Name => new String'("battleship"), Nickname => new String'("battleship"),
          Article => new String'("a battleship"), Plural => new String'("battleships"),
          Terrain => ('.' => TRUE, '+' => FALSE),
          Build_Time => 40, Strength => 2, Max_Hits => 10,
          Speed => 2, Capacity => 0, Piece_Range => INFINITY),
 
       SATELLITE =>
-        (Sname => 'Z', Name => new String'("satellite"), Nickname => new String'("satellite"),
+        (Sname => 'Z', Class => SPACECRAFT, Name => new String'("satellite"), Nickname => new String'("satellite"),
          Article => new String'("a satellite"), Plural => new String'("satellites"),
          Terrain => (others => TRUE),
          Build_Time => 50, Strength => 0, Max_Hits => 1,
@@ -450,6 +467,9 @@ private
       MOVE_NW => new String'("Q"));
 
    -- the order in which pieces should be moved
+   -- alternative (easy enough) would be to put piece_type_t in move order.
+   -- we can do this because we don't rely on all ships being > fighter
+   -- as the c code does.
    Move_Order : constant Move_Order_Array :=
      (SATELLITE, TRANSPORT, CARRIER, BATTLESHIP, PATROL, SUBMARINE, DESTROYER, ARMY, FIGHTER);
 

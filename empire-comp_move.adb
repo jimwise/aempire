@@ -6,10 +6,12 @@
 --     2)  Move computer's pieces;
 --     3)  Check to see if the game is over.
 
+with Empire.Attack;
 with Empire.Game;
 with Empire.Mapping;
 with Empire.Objects;
 with Empire.Ui;
+with Empire.Utility;
 
 package body Empire.Comp_Move is
 
@@ -45,500 +47,559 @@ package body Empire.Comp_Move is
 
    end Comp_Move;
 
--- /*
---  * Handle city production.  First, we set production for new cities.
---  * Then we produce new pieces.  After producing a piece, we will see
---  * if we should change our production.
---  *
---  * Our goals for city production are first, not to change production
---  * while something is in the process of being built.  Second, we attempt
---  * to have enough city producing armies on a continent to counter any
---  * threat on the continent, and to adequately explore and control the
---  * continent.  Third, we attempt to always have at least one transport
---  * producer.  Fourth, we attempt to maintain a good ratio between the
---  * number of producers we have of each type of piece.  Fifth, we never
---  * build carriers, as we don't have a good strategy for moving these.
---  */
+-- Handle city production.  First, we set production for new cities.
+-- Then we produce new pieces.  After producing a piece, we will see
+-- if we should change our production.
+--
+-- Our goals for city production are first, not to change production
+-- while something is in the process of being built.  Second, we attempt
+-- to have enough city producing armies on a continent to counter any
+-- threat on the continent, and to adequately explore and control the
+-- continent.  Third, we attempt to always have at least one transport
+-- producer.  Fourth, we attempt to maintain a good ratio between the
+-- number of producers we have of each type of piece.  Fifth, we never
+-- build carriers, as we don't have a good strategy for moving these.
 
--- static void
--- do_cities (void)
--- {
---         int i;
---         int is_lake;
+   procedure  Do_Cities is
+      Is_Land_Locked : Boolean;
+   begin
+      for I in City'Range
+      loop
+         if City(I).Owner = Comp
+         then
+            Objects.Scan(Comp_Map, City(I).Loc);
 
---         for (i = 0; i < NUM_CITY; i++) /* new production */
---         if (city[i].owner == COMP) {
---                 scan (comp_map, city[i].loc);
+            if City(I).Prod = NOPIECE
+            then
+               Comp_Prod (City(I), Land_Locked(City(I).Loc));
+            end if;
+         end if;
+      end loop;
 
---                 if (city[i].prod == NOPIECE)
---                         comp_prod (&city[i], lake (city[i].loc));
---         }
---         for (i = 0; i < NUM_CITY; i++) /* produce and change */
---         if (city[i].owner == COMP) {
---                 is_lake = lake (city[i].loc);
---                 if (city[i].work++ >= (long)piece_attr[city[i].prod].build_time) {
---                         produce (&city[i]);
---                         comp_prod (&city[i], is_lake);
---                 }
---                 /* don't produce ships in lakes */
---                 else if (city[i].prod > FIGHTER && city[i].prod != SATELLITE && is_lake)
---                         comp_prod (&city[i], is_lake);
---         }
--- }
+      for I in City'Range         -- produce and change production
+      loop
+         if City(I).Owner = COMP
+         then
+            Is_Land_Locked := Land_Locked(City(I).Loc);
+            City(I).Work := City(I).Work + 1; -- was post-increment in c, but this was wrong (?)
+            if City(I).Work >= Piece_Attr(City(I).Prod).Build_time
+            then
+               Objects.Produce(City(I));
+               Comp_Prod(City(I), Is_Land_Locked);
+            else                     -- if we're making a ship in a land-locked city, stop!
+               if Piece_Attr(City(I).Prod).Class = SHIP
+               then
+                 Comp_Prod(City(I), Is_Land_Locked);
+               end if;
+            end if;
+         end if;
+      end loop;
 
--- /*
---  * Define ratios for numbers of cities we want producing each object.
---  *
---  * Early in the game, we want to produce armies and transports for
---  * rapid expansion.  After a while, we add fighters and pt boats
---  * for exploration.  Later, we add ships of all kinds for control of
---  * the sea.
---  */
---                                  /* A    F    P    S    D    T    C    B   Z*/
--- static int ratio1[NUM_OBJECTS] = { 60,   0,  10,   0,   0,  20,   0,   0,  0};
--- static int ratio2[NUM_OBJECTS] = { 90,  10,  10,  10,  10,  40,   0,   0,  0};
--- static int ratio3[NUM_OBJECTS] = {120,  20,  20,  10,  10,  60,  10,  10,  0};
--- static int ratio4[NUM_OBJECTS] = {150,  30,  30,  20,  20,  70,  10,  10,  0};
--- static int *ratio;
+   end Do_Cities;
 
--- /*
---  * Set city production if necessary.
---  *
---  * The algorithm below contains three parts:
---  *
---  * 1)  Defend continents we own.
---  *
---  * 2)  Produce a TT and a Satellite.
---  *
---  * 3)  Meet the ratio requirements given above.
---  */
+--  Set city production if necessary.
+--
+-- The algorithm below contains three parts:
+--
+-- 1)  Defend continents we own.
+--
+-- 2)  Produce a TT and a Satellite.
+--
+-- 3)  Meet the ratio requirements given above.
 
--- static void
--- comp_prod (city_info_t *cityp, int is_lake)
--- {
---         int city_count[NUM_OBJECTS]; /* # of cities producing each piece */
---         int cont_map[MAP_SIZE];
---         int total_cities;
---         long i;
---         piece_type_t j;
---         int comp_ac;
---         city_info_t *p;
---         int need_count, interest;
---         scan_counts_t counts;
+   procedure Comp_Prod (Cityp : in out City_Info_T; Is_Land_Locked : in Boolean) is
+      City_Count : Piece_Value_Array := (others => 0); -- # of cities producing each piece
+      Cont_Map : Continent_Map := (others => FALSE);
+      Total_Cities : Integer := 0;
+      Comp_Army_Count : Integer := 0;   -- # of army-producing cities
+      P : City_Info_P;
+      Need_Count : Integer := 0;
+      Interest : Boolean := FALSE;
+      Counts : Scan_Counts_T;
 
---         /* Make sure we have army producers for current continent. */
+   begin
+      -- Make sure we have army producers for current continent
 
---         /* map out city's continent */
---         vmap_cont (cont_map, comp_map, cityp->loc, '.');
+      -- map out city's continent
+      Mapping.Vmap_Cont(Cont_Map, Comp_Map, Cityp.Loc, '.');
 
---         /* count items of interest on the continent */
---         counts = vmap_cont_scan (cont_map, comp_map);
---         comp_ac = 0; /* no army producing computer cities */
+      -- count items of interest on the continent
+      Counts := Mapping.Vmap_Cont_Scan (Cont_Map, Comp_Map);
 
---         for (i = 0; i < MAP_SIZE; i++)
---         if (cont_map[i]) { /* for each cell of continent */
---                 if (comp_map[i].contents == 'X') {
---                         p = find_city (i);
---                         assert (p != NULL && p->owner == COMP);
---                         if (p->prod == ARMY) comp_ac += 1;
---                 }
---         }
---         /* see if anything of interest is on continent */
---         interest = (counts.unexplored || counts.user_cities
---                  || counts.user_objects[ARMY]
---                  || counts.unowned_cities);
+      for I in Comp_Map'Range
+      loop
+         if Cont_Map(I)                 -- for each cell of continent
+         then
+            if Comp_Map(I).Contents = 'X'
+            then
+               P := Objects.Find_City(I);
+               if P.Prod = ARMY
+               then
+                  Comp_Army_Count := Comp_Army_Count + 1;
+               end if;
+            end if;
+         end if;
+      end loop;
 
---         /* we want one more army producer than enemy has cities */
---         /* and one more if anything of interest on cont */
---         need_count = counts.user_cities - comp_ac + interest;
---         if (counts.user_cities) need_count += 1;
+      -- see if there's anything of interest on the continent
+      Interest := (Counts.Unexplored > 0) or (Counts.User_Cities > 0) or
+        (Counts.User_Objects(ARMY) > 0) or (Counts.Unowned_Cities > 0);
 
---         if (need_count > 0) { /* need an army producer? */
---                 comp_set_prod (cityp, ARMY);
---                 return;
---         }
+      --  we want one more army producer than enemy has cities
+      --  and one more if anything of interest on continent
+      Need_Count := Counts.User_Cities - Comp_Army_Count;
+      if Interest
+      then
+         Need_Count := Need_Count + 1;
+      end if;
 
---         /* Produce armies in new cities if there is a city to attack. */
---         if (counts.user_cities && cityp->prod == NOPIECE) {
---                 comp_set_prod (cityp, ARMY);
---                 return;
---         }
+      if Need_Count > 0                 -- need an army producer?
+      then
+         Comp_Set_Prod(Cityp, ARMY);
+         return;
+      end if;
 
---         /* Produce a TT and SAT if we don't have one. */
+      -- Produce armies in new cities if there is a city to attack
+      if (Counts.User_Cities > 0) and (Cityp.Prod = NOPIECE)
+      then
+         Comp_Set_Prod(Cityp, ARMY);
+         return;
+      end if;
 
---         /* count # of cities producing each piece */
---         for (j = FIRST_OBJECT; j < NUM_OBJECTS; j++)
---                 city_count[j] = 0;
+      -- Produce a TT if we don't have one
 
---         total_cities = 0;
+      -- count # of cities producing each piece
+      for I in City'Range
+      loop
+         if (City(I).Owner = COMP) and (City(I).Prod /= NOPIECE)
+         then
+            City_Count(City(I).Prod) := City_Count(City(I).Prod) + 1;
+            Total_Cities := Total_Cities + 1;
+         end if;
+      end loop;
 
---         for (i = 0; i < NUM_CITY; i++)
---         if (city[i].owner == COMP && city[i].prod != NOPIECE) {
---                 city_count[city[i].prod] += 1;
---                 total_cities += 1;
---         }
---         if (total_cities <= 10) ratio = ratio1;
---         else if (total_cities <= 20) ratio = ratio2;
---         else if (total_cities <= 30) ratio = ratio3;
---         else ratio = ratio4;
+      if Total_Cities <= 10
+      then
+         Ratio := 1;
+      elsif Total_Cities <= 20
+      then
+         Ratio := 2;
+      elsif Total_Cities <= 30
+      then
+         Ratio := 3;
+      else
+         Ratio := 4;
+      end if;
 
---         /* if we have one army producer, and this is it, return */
---         if (city_count[ARMY] == 1 && cityp->prod == ARMY) return;
+      -- if we have one army producer, and this is it, return
+      if (City_Count(ARMY) = 1) and (Cityp.Prod = ARMY)
+      then
+         return;
+      end if;
 
---         /* first available non-lake becomes a tt producer */
---         if (city_count[TRANSPORT] == 0) {
---                 if (!is_lake) {
---                         comp_set_prod (cityp, TRANSPORT);
---                         return;
---                 }
---                 /*
---                  * if we have one army producer that is not on a lake,
---                  * produce armies here instead
---                  */
---                 if (city_count[ARMY] == 1) {
---                         for (i = 0; i < NUM_CITY; i++)
---                         if (city[i].owner == COMP && city[i].prod == ARMY) break;
+      -- first available non-land-locked city becomes a tt producer
+      if City_Count(TRANSPORT) = 0
+      then
+         if not Is_Land_Locked
+         then
+            Comp_Set_Prod(Cityp, TRANSPORT);
+            return;
+         end if;
 
---                         if (!lake (city[i].loc)) {
---                                 comp_set_prod (cityp, ARMY);
---                                 return;
---                         }
---                 }
---         }
--- #if 0
---         /* Now we need a SATELLITE. */
---         if (cityp->prod == NOPIECE && city_count[SATELLITE] == 0) {
---                 comp_set_prod (cityp, SATELLITE);
---                 return;
---         }
---         if (cityp->prod == SATELLITE) return;
---         /* "The satellites are out tonight." -- Lori Anderson */
--- #endif
---         /* don't change prod from armies if something on continent */
---         if (cityp->prod == ARMY && interest) return;
+         -- if we have one army producer that is not on a land-locked,
+         -- produce armies here instead
+         if City_Count(ARMY) = 1
+         then
+            for I in City'Range
+            loop
+               if (City(I).Owner = COMP) and (City(I).Prod = ARMY)
+               then
+                  if not Land_Locked(City(I).Loc)
+                  then
+                     Comp_Set_Prod(Cityp, ARMY);
+                     return;
+                  end if;
+                  exit;                 -- only one, so stop at first
+               end if;
+            end loop;
+         end if;
+      end if;
 
---         /* Produce armies in new cities if there is a city to attack. */
---         if (counts.unowned_cities && cityp->prod == NOPIECE) {
---                 comp_set_prod (cityp, ARMY);
---                 return;
---         }
+      -- don't change prod from armies if there's something on continent
+      if (Cityp.Prod = ARMY) and Interest
+      then
+         return;
+      end if;
 
---         /*
---          * Set production to item most needed.  Continents with one
---          * city and nothing interesting may not produce armies.  We
---          * set production for unset cities, and change production for
---          * cities that produce objects for which we have many city producers.
---          * Ship producers on lakes also get there production changed.
---          */
+      -- Produce armies in new cities if there is a city to attack
+      if (Counts.Unowned_Cities > 0) and Cityp.Prod = NOPIECE
+      then
+         Comp_Set_Prod(Cityp, ARMY);
+         return;
+      end if;
 
---         interest = (counts.comp_cities != 1 || interest);
+      -- Set production to item most needed.  Continents with one
+      -- city and nothing interesting may not produce armies.  We
+      -- set production for unset cities, and change production for
+      -- cities that produce objects for which we have many city producers.
+      -- Ship producers on lakes also get there production changed.
 
---         if ((cityp->prod == NOPIECE)
---             || (cityp->prod == ARMY && counts.comp_cities == 1)
---             || overproduced (cityp, city_count)
---             || (cityp->prod > FIGHTER && is_lake))
---                 comp_set_needed (cityp, city_count, interest, is_lake);
--- }
+      Interest := (Counts.Comp_Cities /= 1) or Interest;
 
--- /*
---  * Set production for a computer city to a given type.  Don't
---  * reset production if it is already correct.
---  */
+      case Cityp.Prod is
+         when NOPIECE =>
+            Comp_Set_Needed(Cityp, City_Count, Interest, Is_Land_Locked);
+         when ARMY =>
+            if Counts.Comp_Cities = 1
+            then
+               Comp_Set_Needed(Cityp, City_Count, Interest, Is_Land_Locked);
+            end if;
+         when PATROL|DESTROYER|SUBMARINE|TRANSPORT|CARRIER|BATTLESHIP =>
+            if Is_Land_locked           -- separate from Do_Cities case so that doesn't loop with this
+            then
+               Comp_Set_Needed(Cityp, City_Count, Interest, Is_Land_Locked);
+            end if;
+         when others =>
+            if Overproduced(Cityp, City_Count)
+            then
+               Comp_Set_Needed(Cityp, City_Count, Interest, Is_Land_Locked);
+            end if;
+      end case;
 
--- static void
--- comp_set_prod (city_info_t *cityp, piece_type_t type)
--- {
---         if (cityp->prod == type)
---                 return;
+      end Comp_Prod;
 
---         if (print_debug)
---                 info("Changing city prod at %d from %d to %d\n", cityp->loc, cityp->prod, type);
+-- Set production for a computer city to a given type.  Don't
+-- reset production if it is already correct.
 
---         cityp->prod = type;
---         cityp->work = -(piece_attr[type].build_time / 5);
--- }
+   procedure Comp_Set_Prod (Cityp : in out City_Info_T; Ptype : in Piece_Type_T) is
+   begin
+      if Cityp.Prod = Ptype
+      then
+         return;
+      end if;
 
--- /* See if a city is producing an object which is being overproduced. */
+      if Print_Debug
+      then
+         Ui.Info("Changing city production at " & Location_T'Image(Cityp.Loc) &
+                 " from " & Piece_Type_T'Image(Cityp.Prod) & " to " &
+                 Piece_Type_T'Image(Ptype));
+      end if;
 
--- static int
--- overproduced (city_info_t *cityp, int *city_count)
--- {
---         piece_type_t i;
+      Cityp.Prod := Ptype;
+      -- re-tooling time of 20% of new production cost.
+      Cityp.Work := -(Piece_Attr(Ptype).Build_Time / RETOOLING_DENOMINATOR);
+   end Comp_Set_Prod;
 
---         for (i = FIRST_OBJECT; i < NUM_OBJECTS; i++)
---         {
---                 /* return true if changing production would improve balance */
---                 if (i != cityp->prod && ((city_count[cityp->prod] - 1) * ratio[i] > (city_count[i] + 1) * ratio[cityp->prod]))
---                         return (TRUE);
---         }
---         return (FALSE);
--- }
 
--- /*
---  * See if one type of production is needed more than another type.
---  * Return the most-needed type of production.
---  */
+-- See if a city is producing an object which is being overproduced
 
--- static int
--- need_more (int *city_count, int prod1, int prod2)
--- {
---         if (city_count[prod1] * ratio[prod2] <= city_count[prod2] * ratio[prod1])
---                 return (prod1);
---         else
---                 return (prod2);
--- }
+   function Overproduced (Cityp : in City_Info_T; City_Count : in Piece_Value_Array) return Boolean is
+   begin
+      for I in Piece_Type_T'Range
+      loop
+         -- return true if changing production would improve balance
+         if (Cityp.Prod /= I) and
+           ( ((City_Count(Cityp.Prod) - 1) * Ratios(Ratio)(I)) > ((City_Count(I) + 1) * Ratios(Ratio)(I)) )
+         then
+            return TRUE;
+         end if;
+      end loop;
 
--- /*
---  * Figure out the most needed type of production.  We are passed
---  * a flag telling us if armies are ok to produce.
---  */
+      return FALSE;
+   end Overproduced;
 
--- static void
--- comp_set_needed (city_info_t *cityp, int *city_count, int army_ok, int is_lake)
--- {
---         int best_prod;
---         piece_type_t prod;
+-- See if one type of production is needed more than another type.
+-- Return the most-needed type of production.
 
---         if (!army_ok)
---                 city_count[ARMY] = INFINITY;
+   function Need_More (City_Count : in Piece_Value_Array; Prod1 : in Piece_Type_T; Prod2 : in Piece_Type_T) return Piece_Type_T is
+   begin
+      if (City_Count(Prod1) * Ratios(Ratio)(Prod2)) <= (City_Count(Prod2) * Ratios(Ratio)(Prod1))
+      then
+         return Prod1;
+      else
+         return Prod2;
+      end if;
+   end Need_More;
 
---         if (is_lake)
---         {
---                 /* choose fighter or army */
---                 comp_set_prod (cityp, need_more (city_count, ARMY, FIGHTER));
---                 return;
---         }
+-- Figure out the most needed type of production.  We are passed
+-- a flag telling us if armies are ok to produce.
 
---         /* don't choose fighter */
---         city_count[FIGHTER] = INFINITY;
+   procedure Comp_Set_Needed (Cityp : in out City_Info_T; City_Count : in out Piece_Value_Array; Army_Ok : in Boolean; Is_Land_Locked : in Boolean) is
+      Best_Prod : Piece_Type_T;
+   begin
+      if not Army_Ok
+      then
+         City_Count(ARMY) := INFINITY;
+      end if;
 
---         best_prod = ARMY; /* default */
---         for (prod = NUM_OBJECTS; prod < NUM_OBJECTS; prod++)
---                 best_prod = need_more (city_count, best_prod, prod);
+      if Is_Land_Locked
+      then
+         -- choose fighter or army
+         Comp_Set_Prod (Cityp, Need_More (City_Count, ARMY, FIGHTER));
+         return;
+      end if;
 
---         comp_set_prod (cityp, best_prod);
--- }
+      -- don't choose fighter
+      City_Count(FIGHTER) := INFINITY;
 
--- /*
---  * See if a city is on a lake.  We define a lake to be a body of
---  * water (where cities are considered to be water) that does not
---  * touch either an attackable city or unexplored territory.
---  *
---  * Be careful, because we use the 'emap'.  This predicts whether
---  * unexplored territory will be land or water.  The prediction should
---  * be helpful, because small bodies of water that enclose unexplored
---  * territory will appear as solid water.  Big bodies of water should
---  * have unexplored territory on the edges.
---  */
+      Best_Prod := ARMY;                -- default
+      for Prod in Piece_Type_T'Range
+      loop
+         Best_Prod := Need_More(City_Count, Best_Prod, Prod);
+      end loop;
 
--- static int
--- lake (long loc)
--- {
---         int cont_map[MAP_SIZE];
---         scan_counts_t counts;
+      Comp_Set_Prod(Cityp, Best_Prod);
+   end Comp_Set_Needed;
 
---         vmap_cont (cont_map, emap, loc, '+'); /* map lake */
---         counts = vmap_cont_scan (cont_map, emap);
+-- See if a city is land-locked (not next to water or only next to a
+-- lake).  We define a lake to be a body of water (where cities are
+-- considered to be water) that does not touch either an attackable
+-- city or unexplored territory.
 
---         return !(counts.unowned_cities || counts.user_cities || counts.unexplored);
--- }
+-- Be careful, because we use the 'emap'.  This predicts whether
+-- unexplored territory will be land or water.  The prediction should be
+-- helpful, because small bodies of water that enclose unexplored
+-- territory will appear as solid water.  Big bodies of water should
+-- have unexplored territory on the edges.
 
--- /* Move all computer pieces. */
+   function Land_Locked (Loc : in Location_T) return Boolean is
+      Cont_Map : Continent_Map;
+      Counts : Scan_Counts_T;
+   begin
+      Mapping.Vmap_Cont(Cont_Map, Emap, Loc, '+');
+      Counts := Mapping.Vmap_Cont_Scan(Cont_Map, Emap);
 
--- static view_map_t amap[MAP_SIZE]; /* temp view map */
--- static path_map_t path_map[MAP_SIZE];
+      return (Counts.Unowned_Cities > 0) or (Counts.User_Cities > 0) or (Counts.Unexplored > 0);
+   end Land_Locked;
 
--- static void
--- do_pieces (void)
--- {
---         /* move pieces */
---         piece_type_t i;
---         piece_info_t *obj, *next_obj;
 
---         for (i = 0; i < NUM_OBJECTS; i++) { /* loop through obj lists */
---                 for (obj = comp_obj[move_order[i]]; obj != NULL;
---                     obj = next_obj) { /* loop through objs in list */
---                         next_obj = obj->piece_link.next;
---                         cpiece_move (obj); /* yup; move the object */
---                 }
---         }
--- }
+-- Move all computer pieces
 
--- /*
---  * Move a piece.  We loop until all the moves of a piece are made.  Within
---  * the loop, we find a direction to move that will take us closer to an
---  * objective.
---  */
+   procedure Do_Pieces is
+      Obj : Piece_Info_P;
+      Next_Obj : Piece_Info_P;
+   begin
+      for I in Move_Order'Range
+      loop
+         -- loop through object lists
+         Obj := Comp_Obj(Move_Order(I));
+         while Obj /= null
+         loop
+            Next_Obj := Obj.Piece_Link.Next; -- set now, in case obj is destroyed
+            Cpiece_Move(Obj.all);           -- actually move the piece
+            Obj := Next_Obj;
+         end loop;
+      end loop;
+   end Do_Pieces;
 
--- static void
--- cpiece_move (piece_info_t *obj)
--- {
---         int changed_loc;
---         int max_hits;
---         long saved_loc;
---         city_info_t *cityp;
+-- Move a piece.  We loop until all the moves of a piece are made.  Within
+-- the loop, we find a direction to move that will take us closer to an
+-- objective.
 
---         if (obj->type == SATELLITE) {
---                 move_sat (obj);
---                 return;
---         }
+   procedure Cpiece_Move (Obj : in out Piece_Info_T) is
+      Changed_Loc : Boolean;
+      Saved_Loc : Location_T;
+   begin
 
---         obj->moved = 0; /* not moved yet */
---         changed_loc = FALSE; /* not changed yet */
---         max_hits = piece_attr[obj->type].max_hits;
+      if Obj.Piece_Type = SATELLITE
+      then
+         Objects.Move_Sat(Obj);
+         return;
+      end if;
 
---         if (obj->type == FIGHTER) { /* init fighter range */
---                 cityp = find_city (obj->loc);
---                 if (cityp != NULL)
---                         obj->range = piece_attr[FIGHTER].range;
---         }
+      Obj.Moved := 0;                   -- not moved yet
+      Changed_Loc := FALSE;             -- location not changed yet
 
---         while (obj->moved < obj_moves (obj)) {
---                 saved_loc = obj->loc; /* remember starting location */
---                 move1 (obj);
---                 if (saved_loc != obj->loc) changed_loc = TRUE;
+      if Piece_Attr(Obj.Piece_Type).Piece_Range /= INFINITY
+      then
+         -- if we have a range limit, initialize our range
+         if Comp_Map(Obj.Loc).Contents = 'X'  -- if we start in a city
+         then
+            Obj.Piece_range := Piece_Attr(Obj.Piece_Type).Piece_Range;
+         end if;
+      end if;
 
---                 if (obj->type == FIGHTER && obj->hits > 0) {
---                         if (comp_map[obj->loc].contents == 'X')
---                                 obj->moved = piece_attr[FIGHTER].speed;
---                         else if (obj->range == 0)
---                         {
---                                 if (print_debug)
---                                         info("Fighter at %d crashed and burned\n", obj->loc);
---                                 kill_obj (obj, obj->loc); /* crash & burn */
---                         }
---                 }
---         }
---         /* if a boat is in port, damaged, and never moved, fix some damage */
---         if (obj->hits > 0 /* live piece? */
---                 && !changed_loc /* object never changed location? */
---                 && obj->type != ARMY && obj->type != FIGHTER /* it is a boat? */
---                 && obj->hits != max_hits /* it is damaged? */
---                 && comp_map[obj->loc].contents == 'X') /* it is in port? */
---         obj->hits++; /* fix some damage */
--- }
+      while Obj.Moved < Objects.Obj_Moves(Obj)
+      loop
+         Saved_Loc := Obj.Loc;          -- remember starting location
+         Move1(Obj);
+         if Saved_Loc /= Obj.Loc
+         then
+            Changed_Loc := TRUE;
+         end if;
+
+         if (Piece_Attr(Obj.Piece_Type).Piece_Range /= INFINITY) and
+           Obj.Hits > 0                 -- if we're range-limited
+         then
+            if Comp_Map(Obj.Loc).Contents = 'X'
+            then
+              -- remember, we've already move1'ed above.  so if we ended in
+              -- a city, just end
+              Obj.Moved := Piece_Attr(Obj.Piece_Type).Speed;
+            end if;
+         elsif Obj.Piece_Range = 0
+         then
+            if Print_Debug
+            then
+               -- XXX spaces correctly?
+               Ui.Info("Fighter at " & Integer'Image(Obj.Loc) & " crashed and burned");
+            end if;
+            Objects.Kill_Obj(Obj, Obj.Loc);
+         end if;
+      end loop;
+
+      -- if a boat is in port, damaged, and never moved, fix some damage
+
+      if Obj.Hits > 0 and
+        not Changed_loc and             -- we didn't move
+        Piece_Attr(Obj.Piece_Type).Class = SHIP and
+        Obj.Hits < Piece_Attr(Obj.Piece_Type).Max_Hits and
+        Comp_Map(Obj.Loc).Contents = 'X'
+      then
+         Obj.Hits := Obj.Hits + 1;
+      end if;
+   end Cpiece_Move;
 
 -- /* Move a piece one square. */
 
--- static void
--- move1 (piece_info_t *obj)
--- {
---         switch (obj->type) {
---         case ARMY: army_move (obj); break;
---         case TRANSPORT: transport_move (obj); break;
---         case FIGHTER: fighter_move (obj); break;
---         default: ship_move (obj); break;
---         }
--- }
+   procedure Move1 (Obj : in out Piece_Info_T) is
+   begin
+      case Obj.Piece_Type is
+         when ARMY =>
+            Army_Move(Obj);
+         when TRANSPORT =>
+            Transport_Move(Obj);
+         when FIGHTER =>
+            Fighter_Move(Obj);
+         when PATROL|DESTROYER|SUBMARINE|CARRIER|BATTLESHIP =>
+            Ship_Move(Obj);
+         when others =>                 -- sats are moved before, we know no other
+            raise Program_Error;
+      end case;
+   end Move1;
 
--- /*
---  * Move an army.
---  *
---  * This is a multi-step algorithm:
---  *
---  * 1)  See if there is an object we can attack immediately.
---  * If so, attack it.
---  *
---  * 2)  Look for the nearest land objective.
---  *
---  * 3)  If we find an objective reachable by land, figure out
---  * how far away that objective is.  Based on the found objective,
---  * also figure out how close a loadable tt must be to be of
---  * interest.  If the objective is closer than the tt must be,
---  * head towards the objective.
---  *
---  * 4)  Otherwise, look for the nearest loading tt (or tt producing
---  * city).  If the nearest loading tt is farther than our land objective,
---  * head towards the land objective.
---  *
---  * 5)  Otherwise, head for the tt.
---  *
---  * 6)  If we still have no destination and we are in a city,
---  * attempt to leave the city.
---  *
---  * 7)  Once we have a destination, find the best move toward that
---  * destination.  (If there is no destination, sit around and wait.)
---  */
+-- Move an army.
+--
+-- This is a multi-step algorithm:
+--
+-- 1) See if there is an object we can attack immediately.
+--    If so, attack it.
+--
+-- 2) Look for the nearest land objective.
+--
+-- 3) If we find an objective reachable by land, figure out
+--    how far away that objective is.  Based on the found objective,
+--    also figure out how close a loadable tt must be to be of
+--    interest.  If the objective is closer than the tt must be,
+--    head towards the objective.
+--
+-- 4) Otherwise, look for the nearest loading tt (or tt producing
+--    city).  If the nearest loading tt is farther than our land objective,
+--    head towards the land objective.
+--
+--  5)  Otherwise, head for the tt.
+--
+-- 6)  If we still have no destination and we are in a city,
+--    attempt to leave the city.
+--
+-- 7)  Once we have a destination, find the best move toward that
+--     destination.  (If there is no destination, sit around and wait.)
 
--- static void
--- army_move (piece_info_t *obj)
--- {
---         long new_loc;
---         path_map_t path_map2[MAP_SIZE];
---         long new_loc2;
---         int cross_cost; /* cost to enter water */
+   procedure Army_Move (Obj : in out Piece_Info_T) is
+      New_Loc : Location_T;
+      New_Loc2 : Location_T;
+      Pathmap : Path_Map;               -- file-global in original
+      Pathmap2 : Path_Map;
+      Cross_Cost : Integer;             -- cost to enter water
+      Amap: View_Map;                   -- file-global in original
+   begin
+      if Obj.Piece_Type /= ARMY
+      then
+         raise Program_Error;
+      end if;
 
---         obj->func = 0; /* army doesn't want a tt */
---         if (vmap_at_sea (comp_map, obj->loc)) { /* army can't move? */
---                 load_army (obj);
---                 obj->moved = piece_attr[ARMY].speed;
---                 if (!obj->ship) obj->func = 1; /* load army on ship */
---                 return;
---         }
---         if (obj->ship) /* is army on a transport? */
---                 new_loc = find_attack (obj->loc, army_attack, "+*");
---         else new_loc = find_attack (obj->loc, army_attack, ".+*");
+      Obj.Func := NOFUNC;               -- army doesn't want a tt
 
---         if (new_loc != obj->loc) { /* something to attack? */
---                 attack (obj, new_loc); /* attack it */
---                 if (map[new_loc].contents == '.' /* moved to ocean? */
---                   && obj->hits > 0) { /* object still alive? */
---                         kill_obj (obj, new_loc);
---                         scan (user_map, new_loc); /* rescan for user */
---                 }
---                 return;
---         }
---         if (obj->ship)
---         {
---                 if (obj->ship->func == 0)
---                 {
---                         if (!load_army (obj)) /* load army on best ship */
---                                 panic("couldn't load army");
---                         return; /* armies stay on a loading ship */
---                 }
---                 make_unload_map (amap, comp_map);
---                 new_loc = vmap_find_wlobj (path_map, amap, obj->loc, &tt_unload);
---                 move_objective (obj, path_map, new_loc, " ");
---                 return;
---         }
+      if Mapping.Vmap_At_Sea(Comp_Map, Obj.Loc) -- army can't move?
+      then
+         Load_Army(Obj);                -- make sure we're on the best ship present
+         Obj.Moved := Piece_Attr(ARMY).Speed;
+         -- old code checked obj.ship for null, but we would have excepted in that case
+         return;
+      end if;
 
---         new_loc = vmap_find_lobj (path_map, comp_map, obj->loc, &army_fight);
+      if Obj.Ship /= null               -- is army on a transport?
+      then
+         -- if we're on a ship, only attack targets on land
+         New_Loc := Find_Attack(Obj.Loc, Army_Attack, ('+'|'*' => TRUE, others => FALSE));
+      else
+         -- otherwise, sacrifice ourselves to kill nearby ships/planes if needed
+         New_Loc := Find_Attack(Obj.Loc, Army_Attack, ('.'|'+'|'*' => TRUE, others => FALSE));
+      end if;
 
---         if (new_loc != obj->loc) {
---                 /* something interesting on land? */
---                 switch (comp_map[new_loc].contents)
---                 {
---                     case 'A':
---                     case 'O':
---                         cross_cost = 60; /* high cost if enemy present */
---                         break;
---                     case '*':
---                         cross_cost = 30; /* medium cost for attackable city */
---                         break;
---                     case ' ':
---                         cross_cost = 14; /* low cost for exploring */
---                         break;
---                     default:
---                         panic("unrecognized objective");
---                         break;
---                 }
---                 cross_cost = path_map[new_loc].cost * 2 - cross_cost;
---         }
---         else cross_cost = INFINITY;
+      if New_Loc /= Obj.Loc             -- something to attack?
+      then
+         Attack.Attack(Obj, New_Loc);
+         if Comp_Map(New_Loc).Contents = '.' and Obj.Hits > 0 -- moved to ocean and survived
+         then
+            Objects.Kill_Obj(Obj, New_Loc);     -- sacrificed to defend land
+            Objects.Scan(User_Map, New_Loc);    -- rescan for user, since army is gone
+         end if;
 
---         if (new_loc == obj->loc || cross_cost > 0) {
---                 /* see if there is something interesting to load */
---                 make_army_load_map (obj, amap, comp_map);
---                 new_loc2 = vmap_find_lwobj (path_map2, amap, obj->loc, &army_load, cross_cost);
+         return;
+      end if;
 
---                 if (new_loc2 != obj->loc) { /* found something? */
---                         board_ship (obj, path_map2, new_loc2);
---                         return;
---                 }
---         }
+      if Obj.Ship /= null               -- otherwise, if on a ship
+      then
+         if Obj.Ship.Func = NOFUNC
+         then
+            Load_Army(Obj);             -- original code paniced on fail, we except
+            return;                     -- armies stay on a loading ship
+         end if;
 
---         move_objective (obj, path_map, new_loc, " ");
--- }
+         Make_Unload_Map(Amap, Comp_Map);
+         Mapping.Vmap_Find_Wlobj(New_Loc, Pathmap, Amap, Obj.Loc, Tt_Unload);
+         Move_Objective(Obj, Pathmap, New_Loc, (' ' => TRUE, others => False));
+         return;
+      end if;
+
+      -- otherwise (not on a ship)
+      Mapping.Vmap_Find_Lobj(New_Loc, Pathmap, Comp_Map, Obj.Loc, Army_Fight);
+
+      if New_Loc /= Obj.Loc
+      then
+         -- something interesting on land?
+         case Comp_Map(New_Loc).Contents is
+            -- by setting cross_cost, we argue against going elsewhere on the map
+            when 'A'|'O' =>
+               Cross_Cost := 60;        -- highest cost if enemy present
+            when '*' =>
+               Cross_Cost := 30;        -- medium cost for attackable city
+            when ' ' =>
+               Cross_Cost := 14;        -- low cost for exploring
+            when others =>
+               Utility.Panic("unrecognized objective");
+         end case;
+         Cross_Cost := Pathmap(New_Loc).Cost * 2 - Cross_Cost;
+      else
+         Cross_Cost := INFINITY;
+      end if;
+
+      -- see if there is something interesting to go to by water
+      if Cross_Cost > 0                 -- possible to be false only due to normalization after case above
+      then
+         Make_Army_Load_Map(Obj, Amap, Comp_Map);
+         Mapping.Vmap_Find_Lwobj(New_Loc2, Pathmap2, Amap, Obj.Loc, Army_Load, Cross_Cost);
+         if New_Loc2 /= Obj.loc         -- found something?
+         then
+            Board_Ship(Obj, Pathmap2, New_Loc2);
+            return;
+         end if;
+      end if;
+
+      Move_Objective(Obj, Pathmap, New_Loc, (' ' => TRUE, others => FALSE));
+
+   end Army_Move;
 
 -- /* Remove pruned explore locs from a view map. */
 

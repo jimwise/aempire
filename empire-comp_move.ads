@@ -22,12 +22,16 @@ private
 
    Ratio : Ratio_Range;
 
+-- original code had shared:
+--   static view_map_t amap[MAP_SIZE]; /* temp view map */
+--   static path_map_t path_map[MAP_SIZE];
+-- but these don't seem to need to be shared.
+
    procedure Do_Cities;
    procedure Do_Pieces;
    procedure Check_Endgame;
 
    procedure Comp_Prod (Cityp : in out City_Info_T; Is_Land_Locked : in Boolean);
-   -- XXX city_count needs to be in/out?  Or is reset before each call?
    procedure Comp_Set_Needed (Cityp : in out City_Info_T; City_Count : in out Piece_Value_Array; Army_Ok : in Boolean; Is_Land_Locked : in Boolean);
    procedure Comp_Set_Prod (Cityp : in out City_Info_T; Ptype : in Piece_Type_T);
    function Need_More (City_Count : in Piece_Value_Array; Prod1 : in Piece_Type_T; Prod2 : in Piece_Type_T) return Piece_Type_T;
@@ -41,10 +45,9 @@ private
 
    procedure Move1 (Obj : in out Piece_Info_T);
    procedure Move_Away (Vmap : in View_Map; Loc : in Location_T; Terrain : Acceptable_Terrain_Array);
-   procedure Move_Objective (Obj : Piece_Info_T; Pathmap : in out Path_Map; New_Loc : in Location_T; Adj_List : in Content_Value_Array);
-
-   -- XXX `success' result only checked in one place (Board_Ship).  should go.
-   procedure Load_Army (Obj : in out Piece_Info_T; Success : out Boolean);
+   procedure Move_Objective (Obj : Piece_Info_T; Pathmap : in out Path_Map; New_Loc : in Location_T; Adj_List : in Acceptable_Content_Array);
+   Could_Not_Load : exception;
+   procedure Load_Army (Obj : in out Piece_Info_T);
    procedure Board_Ship (Obj : in out Piece_Info_T; Pmap : in out Path_Map; Loc : Location_T);
    procedure Find_Best_Tt (Best : in out Piece_Info_P; Loc : in Location_T);
 
