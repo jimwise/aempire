@@ -4,7 +4,7 @@
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  *
- * $Id: object.c,v 1.1 2006/02/21 17:33:41 jwise Exp $
+ * $Id: object.c,v 1.2 2006/02/27 19:33:19 jwise Exp $
  */
 
 /* object.c -- routines for manipulating objects. */
@@ -634,6 +634,7 @@ set_prod (city_info_t *cityp)
 			
 		else {
 			cityp->prod = i;
+			-- retooling time
 			city->work = -(piece_attr[i].build_time / 5);
 			return;
 		}
