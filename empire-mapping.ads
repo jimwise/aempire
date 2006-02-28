@@ -7,7 +7,7 @@ package Empire.Mapping is
 
    procedure Vmap_Find_Aobj (New_Loc: out Location_T; Pmap : out Path_Map; Vmap : in View_Map; Loc : in Location_T; Move_Info : in Move_Info_T);
    procedure Vmap_Find_Dest (New_Loc: out Location_T; Pmap : out Path_Map; Vmap : in View_Map; Cur_Loc : Location_T; Dest_Loc : Location_T; Owner : Owner_T; Terrain : Terrain_T);
-   procedure Vmap_Find_Dir (New_Loc: out Location_T; Pmap : out Path_Map; Vmap : in View_Map; Loc : in Location_T; Terrain : in Acceptable_Content_Array; Adj_Char : in Content_Value_Array);
+   procedure Vmap_Find_Dir (New_Loc: out Location_T; Pmap : out Path_Map; Vmap : in View_Map; Loc : in Location_T; Terrain : in Acceptable_Terrain_Array; Adj_Char : in Content_Value_Array);
    procedure Vmap_Find_Lobj (New_Loc: out Location_T; Pmap : out Path_Map; Vmap : in View_Map; Loc : in Location_T; Move_Info : in Move_Info_T);
    procedure Vmap_Find_Lwobj (New_Loc: out Location_T; Pmap : out Path_Map; Vmap : in View_Map; Loc : in Location_T; Move_Info : in Move_Info_T; Beat_Cost : Integer);
    procedure Vmap_Find_Wobj (New_Loc: out Location_T; Pmap : out Path_Map; Vmap : in View_Map; Loc : in Location_T; Move_Info : in Move_Info_T);
