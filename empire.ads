@@ -66,7 +66,7 @@ package Empire is
 
    -- in addition to terrain and user types, planning algorithms use following special symbols in view maps
    -- '$' represents loading tt must be first
-   --  'x' represents tt producing city
+   --  'x' represents transport-producing city
    --  '0' .. '9' represent explorable territory
 
    type Content_Display_T is
@@ -95,6 +95,13 @@ package Empire is
    -- in original, function_t was overloaded, with negative values meaning as indicated
    -- below, and positive values indicatign a location_t destination.
    -- we now use MOVE_TO_DEST, and the piece_info_t's (new) `Dest' field.
+   --
+   -- also, despite defined values, the original computer move implementation (compmove.c)
+   -- used two values, '0' and '1' (only), giving them the meaning 'LOADING' and 'UNLOADING'.
+   -- for now, we include these in the type.
+   --
+   -- XXX XXX better would be to make Piece_Info_T a variant record, where `Func' took on
+   -- a new User_Function_T or Comp_Function_T depending on Owner
    type Function_T is
       (NOFUNC,                          -- no programmed function (-1)
        RANDOM,                          -- move randomly (-2)
@@ -115,7 +122,9 @@ package Empire is
        MOVE_SW,                         -- move southwest (-17)
        MOVE_W,                          -- move west (-18)
        MOVE_NW,                         -- move northwest (-19)
-       MOVE_TO_DEST);                   -- move to Obj.Destination;
+       MOVE_TO_DEST,                    -- move to Obj.Destination
+       COMP_LOADING,                    -- Comp_Move only
+       COMP_UNLOADING);                 -- Comp_Move only
 
    -- if we determine how to represent T_PATH, this could be replaced with a set of constants of
    -- type Acceptable_Content_Array
@@ -158,7 +167,7 @@ package Empire is
          Ship : Piece_Info_P;           -- pointer to containing ship
          Cargo : Piece_Info_P;          -- pointer to cargo list
          Count : Integer;               -- count of items on board
-         Piece_Range : Integer;               -- current range if applicable
+         Piece_Range : Integer;         -- current range if applicable
       end record;
 
 
@@ -288,9 +297,9 @@ package Empire is
    Debug : Boolean;                     -- true IFF in debugging mode
    Print_Debug : Boolean;               -- true IFF we print debugging output
    subtype Vmap_Debug_Option is Character; -- XXX restrict to A, I, L, S, U
-   Print_Vmap : Vmap_Debug_Option;      -- option for printing vmaps;
+   Print_Vmap : Vmap_Debug_Option;      -- option for printing vmaps - XXX should probably be a _set_ of options
    Trace_Pmap : Boolean;                -- true IFF we are tracing pmaps
-   Win : Boolean;                       -- true IFF games is over
+   Win : Owner_T := UNOWNED;            -- true IFF games is over
    Save_Movie : Boolean;                -- true IFF we're saving movie screens
    User_Score : Integer;                -- user `score'
    Comp_Score : Integer;                -- computer `score'
@@ -310,12 +319,12 @@ package Empire is
    type City_Char_Array is array (Owner_T) of Content_Display_T;
    type Piece_Attr_Array is array (Piece_Type_T range ARMY .. SATELLITE) of Piece_Attr_T;
    type Dir_Offset_Array is array (Direction_T) of Integer;
-   type Func_Name_Array is array (Function_T) of String_P;
+   type Function_Name_Array is array (Function_T) of String_P;
    type Move_Order_Array is array (Natural range <>) of Piece_Type_T;
 
    Piece_Attr : constant Piece_Attr_array;
    Dir_Offset : constant Dir_Offset_Array;
-   Func_Name : constant Func_Name_Array;
+   Function_Name : constant Function_Name_Array;
    Move_Order : constant Move_Order_Array;
    Tt_Attack : constant Content_Value_Array;
    Army_Attack : constant Content_Value_Array;
@@ -453,7 +462,7 @@ private
       NORTHWEST => -MAP_WIDTH - 1);
 
   -- names of movement functions
-   Func_Name : constant Func_Name_Array :=
+   Function_Name : constant Function_Name_Array :=
      (NOFUNC => new String'("none"),
       RANDOM => new String'("random"),
       SENTRY => new String'("sentry"),
@@ -473,7 +482,9 @@ private
       MOVE_SW => new String'("Z"),
       MOVE_W => new String'("A"),
       MOVE_NW => new String'("Q"),
-      MOVE_TO_DEST => new String'("destination"));
+      MOVE_TO_DEST => new String'("destination"),
+      COMP_LOADING => new String'("computer-internal-loading"), -- only used in debug output of Empire.Comp_Move
+      COMP_UNLOADING => new String'("computer-internal-unloading")); -- likewise
 
    -- the order in which pieces should be moved
    -- alternative (easy enough) would be to put piece_type_t in move order.
@@ -536,33 +547,41 @@ private
    -- the computer unloads its tts.
 
    Tt_Unload : constant Move_Info_T :=
-     (Owner => COMP, Objective_Weights =>
-        ('9'|'8'|'7'|'6'|'5'|'4' => 1, '3' => 11, '2' => 21, '1' => 41,
-         '0' => 101, ' ' => 61, others => 0));
+     (Owner => COMP,
+      Objective_Weights => ('9'|'8'|'7'|'6'|'5'|'4' => 1, '3' => 11, '2' => 21, '1' => 41,
+                            '0' => 101, ' ' => 61, others => 0));
 
    Army_Fight : constant Move_Info_T :=
      (Owner => COMP, Objective_Weights => ('O'|'*'|'T'|'A' => 1, ' ' => 11, others => 0));
+
    Army_Load : constant Move_Info_T :=
      (Owner => COMP, Objective_Weights => ('$' => 1, 'x' => W_TT_BUILD, others => 0));
+
    Fighter_Fight : constant Move_Info_T :=
      (Owner => COMP, Objective_Weights => ('T'|'C' => 1, 'F'|'B'|'S'|'D'|'P'|'A' => 5,
                                            ' ' => 9, others => 0));
+
    Ship_Fight : constant Move_Info_T :=
      (Owner => COMP, Objective_Weights => ('T'|'C' => 1, 'B'|'S'|'D'|'P' => 3, ' ' => 21,
                                            others => 0));
-   Ship_Repair : constant Move_Info_T := (Owner => COMP, Objective_Weights => ('X' => 1,
-                                                                               others => 0));
 
-   User_Army : constant Move_Info_T := (Owner => USER, Objective_Weights => (' ' => 1,
-                                                                             others => 0));
-   User_Army_Attack : constant Move_Info_T := (Owner => USER, Objective_Weights =>
-                                                 ('*'|'X'|'a' => 1, ' ' => 12, others => 0));
-   User_Fighter : constant Move_Info_T := (Owner => USER, Objective_Weights => (' ' => 1,
-                                                                                others => 0));
-   User_Ship : constant Move_Info_T := (Owner => USER, Objective_Weights => (' ' => 1,
-                                                                             others => 0));
-   User_Ship_Repair : constant Move_Info_T := (Owner => USER, Objective_Weights => ('O' => 1,
-                                                                                    others => 0));
+   Ship_Repair : constant Move_Info_T :=
+     (Owner => COMP, Objective_Weights => ('X' => 1, others => 0));
+
+   User_Army : constant Move_Info_T :=
+     (Owner => USER, Objective_Weights => (' ' => 1, others => 0));
+
+   User_Army_Attack : constant Move_Info_T :=
+     (Owner => USER, Objective_Weights => ('*'|'X'|'a' => 1, ' ' => 12, others => 0));
+
+   User_Fighter : constant Move_Info_T :=
+     (Owner => USER, Objective_Weights => (' ' => 1, others => 0));
+
+   User_Ship : constant Move_Info_T :=
+     (Owner => USER, Objective_Weights => (' ' => 1, others => 0));
+
+   User_Ship_Repair : constant Move_Info_T :=
+     (Owner => USER, Objective_Weights => ('O' => 1, others => 0));
 
    -- Various help texts.
    Help_Cmd : constant Help_Array :=
