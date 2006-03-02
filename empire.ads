@@ -41,7 +41,8 @@ package Empire is
 
    VERSION_STRING : constant String := "ADA EMPIRE, Version 1.4_ALPHA0, February 2006";
 
-   type Owner_t is (UNOWNED, USER, COMP);
+   type Owner_T is (UNOWNED, USER, COMP);
+   type Acceptable_Owner_Array is array (Owner_T) of Boolean;
 
    type Piece_Type_T is
       (ARMY,
@@ -56,6 +57,7 @@ package Empire is
        NOPIECE);
 
   type Piece_Value_Array is array (Piece_Type_T) of Integer;
+  type Acceptable_Piece_Array is array (Piece_Type_T) of Boolean;
   type Piece_Value_P is access all Piece_Value_Array;
 
   type Piece_Class_T is
