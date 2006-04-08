@@ -24,7 +24,7 @@ package Empire.Curses_Interface is
    procedure Display_Score;
    procedure Help (Text : in Help_Array);
    procedure Kill_Display;
-   procedure Move_Cursor (Cursor : in out Location_T; Offset : in Integer; Same_Screen : out Boolean);
+   procedure Move_Cursor (Cursor : in out Location_T; Offset : in Integer);
    type Movie_Screen is array (Location_T) of Content_Display_T;
    procedure Print_Movie_Screen (Mapbuf : in Movie_Screen);
    procedure Print_Pzoom (Prompt : in String; Pmap : in Path_Map; Vmap : in View_Map);
@@ -33,5 +33,8 @@ package Empire.Curses_Interface is
    procedure Print_Sector_C (Sec : in Sector_T);
    procedure Print_Zoom (Vmap : in View_Map);
    procedure Sector_Change;
+
+   procedure Describe_City (Loc : in Location_T; Cit : in City_Info_T);
+   procedure Describe_Obj (Loc : in Location_T; Obj : in Piece_Info_T);
 
 end Empire.Curses_Interface;
