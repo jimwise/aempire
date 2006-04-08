@@ -134,13 +134,10 @@ package body Empire.Comp_Move is
       loop
          if Cont_Map(I)                 -- for each cell of continent
          then
-            if Comp_Map(I).Contents = 'X'
+            P := Objects.Find_City_At_Loc(I, Owners => (COMP => TRUE, others => FALSE));
+            if (P /= null) and (P.Prod = ARMY)
             then
-               P := Objects.Find_City(I);
-               if P.Prod = ARMY
-               then
-                  Comp_Army_Count := Comp_Army_Count + 1;
-               end if;
+               Comp_Army_Count := Comp_Army_Count + 1;
             end if;
          end if;
       end loop;
