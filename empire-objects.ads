@@ -1,7 +1,4 @@
 package Empire.Objects is
-   procedure Describe_City (Loc : in Location_T; Cit : in City_Info_T);
-   procedure Describe_Obj (Loc : in Location_T; Obj : in Piece_Info_T);
-
    procedure Disembark (Obj : in out Piece_Info_T);
    procedure Embark (Ship : in out Piece_Info_T; Obj : in out Piece_Info_T);
 
