@@ -1,9 +1,11 @@
 package Empire.Objects is
-   procedure Describe_Obj (Obj : in Piece_Info_T);
+   procedure Describe_City (Loc : in Location_T; Cit : in City_Info_T);
+   procedure Describe_Obj (Loc : in Location_T; Obj : in Piece_Info_T);
+
    procedure Disembark (Obj : in out Piece_Info_T);
    procedure Embark (Ship : in out Piece_Info_T; Obj : in out Piece_Info_T);
 
-   function Find_City_At_Loc (Loc : in Location_T, Owners : in Acceptable_Owner_Array := (others => TRUE)) return City_Info_P;
+   function Find_City_At_Loc (Loc : in Location_T; Owners : in Acceptable_Owner_Array := (others => TRUE)) return City_Info_P;
    function Find_Obj_At_Loc (Loc : in Location_T; Types : in Acceptable_Piece_Array := (SATELLITE => FALSE, others => TRUE); Owners : Acceptable_Owner_Array := (others => TRUE)) return Piece_Info_P;
 
    procedure Find_Nearest_City (Loc : in Location_T; Owner : in Owner_T; City_Loc : out Location_T; estimated_Cost : out Integer);
