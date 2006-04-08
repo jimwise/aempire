@@ -4,7 +4,7 @@
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  *
- * $Id: display.c,v 1.1 2006/02/21 17:33:41 jwise Exp $
+ * $Id: display.c,v 1.2 2006/04/08 02:34:21 jwise Exp $
  */
 
 /*
@@ -295,7 +295,7 @@ move_cursor (long *cursor, int offset)
 
 	if (!on_screen (t))
 		return (FALSE); /* loc is off screen */
-	
+	-- !!!! in Ada version, Ui.alert instead of returning false (verified with only call site)
 	*cursor = t; /* update cursor position */
 	save_cursor = *cursor;
 	       
