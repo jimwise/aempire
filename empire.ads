@@ -92,7 +92,8 @@ package Empire is
        SOUTH,
        SOUTHWEST,
        WEST,
-       NORTHWEST);
+       NORTHWEST,
+       NODIRECTION);
 
    -- in original, function_t was overloaded, with negative values meaning as indicated
    -- below, and positive values indicatign a location_t destination.
@@ -124,7 +125,7 @@ package Empire is
        MOVE_SW,                         -- move southwest (-17)
        MOVE_W,                          -- move west (-18)
        MOVE_NW,                         -- move northwest (-19)
-       MOVE_TO_DEST,                    -- move to Obj.Destination
+       MOVE_TO_DEST,                    -- move to Obj.Dest
        COMP_LOADING,                    -- Comp_Move only
        COMP_UNLOADING);                 -- Comp_Move only
 
@@ -194,13 +195,15 @@ package Empire is
          Piece_Range : Integer;         -- range of piece
       end record;
 
+   type Dest_Array is array (Piece_Type_T) of Location_T;
    type Function_Array is array (Piece_Type_T) of Function_T;
    type City_Info_T is
       record
          Loc : Location_T;                -- location of city
          Owner : Owner_T;
-         func : Function_Array;             -- function for each object (XXX size?)
-         Work : Integer;                -- units of work performed
+         Func : Function_Array;         -- function for each object (XXX size?)
+         Dest : Dest_Array;             -- destination if func is MOVE_TO_DEST
+         work : Integer;                -- units of work performed
          Prod : Piece_Type_T;           -- item being produced
       end record;
 
@@ -461,7 +464,8 @@ private
       SOUTH => MAP_WIDTH,
       SOUTHWEST => MAP_WIDTH - 1,
       WEST => -1,
-      NORTHWEST => -MAP_WIDTH - 1);
+      NORTHWEST => -MAP_WIDTH - 1,
+      NODIRECTION => 0);
 
   -- names of movement functions
    Function_Name : constant Function_Name_Array :=
