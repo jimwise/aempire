@@ -35,7 +35,7 @@ begin
 
    Free_List := null;
 
-   Object := (others => (Hits => 0, Owner => UNOWNED);
+   Object := (others => (Hits => 0, Owner => UNOWNED));
 
 --         for (i = 0; i < LIST_SIZE; i++)
 --         {
