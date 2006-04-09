@@ -267,7 +267,7 @@ package Empire is
    type View_Map_T is
       record
          Contents : Content_Display_T;  -- '+', '.', '*', 'A', 'a', etc
-         Seen : Integer;                -- date when last updated
+         Seen : Natural;                -- date when last updated
       end record;
    type View_Map is array (Location_T) of View_Map_T;
 
@@ -296,12 +296,12 @@ package Empire is
    Save_Interval : Integer;             -- turns between autosaves
    Traditional : Integer := 0;          -- `traditional' movement keys
 
-   Date : Integer;                      -- number of game turns played
+   Date : Natural;                      -- number of game turns played
    Automove : Boolean;                  -- true IFF user is in automove mode
    Resigned : Boolean;                  -- true IFF computer resigned
    Debug : Boolean;                     -- true IFF in debugging mode
    Print_Debug : Boolean;               -- true IFF we print debugging output
-   subtype Vmap_Debug_Option is Character; -- XXX restrict to A, I, L, S, U
+   subtype Vmap_Debug_Option is Character; -- XXX Restrict to [AILSU0] (0 is none)
    Print_Vmap : Vmap_Debug_Option;      -- option for printing vmaps - XXX should probably be a _set_ of options
    Trace_Pmap : Boolean;                -- true IFF we are tracing pmaps
    Win : Owner_T := UNOWNED;            -- true IFF games is over
