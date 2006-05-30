@@ -9,12 +9,6 @@ with Empire.Math;
 with Empire.Objects;
 with Empire.Ui;
 
---    procedure Map;
---    procedure Movie;
---    procedure Quit;
---    procedure Restore;
---    procedure Sector;
-
 package body Empire.Commands is
 
   -- Debugging commands should be implemented here.
