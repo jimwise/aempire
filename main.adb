@@ -61,7 +61,7 @@ begin
            end if;
 
          when 't' =>
-            Empire.Traditional := 1;
+            Empire.Traditional := TRUE;
 
          when 'C' =>
             Empire.Color := FALSE;
