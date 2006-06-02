@@ -1,5 +1,6 @@
-.depend
-cempire
-empsave.dat
-empmovie.dat
 *.ali
+.depend
+build
+cempire
+empmovie.dat
+empsave.dat
