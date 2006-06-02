@@ -1,0 +1,263 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A2CBDE000A2FA21B005315C2 /* empire-commands.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDDB0A2FA21B005315C2 /* empire-commands.adb */; };
+		A2CBDE020A2FA21B005315C2 /* empire-comp_move.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDDD0A2FA21B005315C2 /* empire-comp_move.adb */; };
+		A2CBDE050A2FA21B005315C2 /* empire-editing.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE00A2FA21B005315C2 /* empire-editing.adb */; };
+		A2CBDE070A2FA21B005315C2 /* empire-game.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE20A2FA21B005315C2 /* empire-game.adb */; };
+		A2CBDE0A0A2FA21B005315C2 /* empire-locations.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE50A2FA21B005315C2 /* empire-locations.adb */; };
+		A2CBDE0D0A2FA21B005315C2 /* empire-math.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE80A2FA21B005315C2 /* empire-math.adb */; };
+		A2CBDE0F0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDEA0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb */; };
+		A2CBDE140A2FA21B005315C2 /* empire.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDEF0A2FA21B005315C2 /* empire.adb */; };
+		A2CBDE180A2FA21B005315C2 /* main.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDF50A2FA21B005315C2 /* main.adb */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A23A2F7C0A2FE01C000E6E15 /* AEmpire */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = AEmpire; path = build/Debug/AEmpire; sourceTree = "<group>"; };
+		A2CBDDD30A2FA21B005315C2 /* attack.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = attack.c; sourceTree = "<group>"; };
+		A2CBDDD40A2FA21B005315C2 /* BUGS */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = BUGS; sourceTree = "<group>"; };
+		A2CBDDD50A2FA21B005315C2 /* cempire.6 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = cempire.6; sourceTree = "<group>"; };
+		A2CBDDD60A2FA21B005315C2 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
+		A2CBDDD70A2FA21B005315C2 /* dispfuncs-snippet */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = "dispfuncs-snippet"; sourceTree = "<group>"; };
+		A2CBDDD80A2FA21B005315C2 /* display.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = display.c; sourceTree = "<group>"; };
+		A2CBDDD90A2FA21B005315C2 /* empire-ai.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-ai.ads"; sourceTree = "<group>"; };
+		A2CBDDDA0A2FA21B005315C2 /* empire-attack.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-attack.ads"; sourceTree = "<group>"; };
+		A2CBDDDB0A2FA21B005315C2 /* empire-commands.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "empire-commands.adb"; sourceTree = "<group>"; };
+		A2CBDDDC0A2FA21B005315C2 /* empire-commands.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-commands.ads"; sourceTree = "<group>"; };
+		A2CBDDDD0A2FA21B005315C2 /* empire-comp_move.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "empire-comp_move.adb"; sourceTree = "<group>"; };
+		A2CBDDDE0A2FA21B005315C2 /* empire-comp_move.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-comp_move.ads"; sourceTree = "<group>"; };
+		A2CBDDDF0A2FA21B005315C2 /* empire-curses_interface.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-curses_interface.ads"; sourceTree = "<group>"; };
+		A2CBDDE00A2FA21B005315C2 /* empire-editing.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "empire-editing.adb"; sourceTree = "<group>"; };
+		A2CBDDE10A2FA21B005315C2 /* empire-editing.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-editing.ads"; sourceTree = "<group>"; };
+		A2CBDDE20A2FA21B005315C2 /* empire-game.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "empire-game.adb"; sourceTree = "<group>"; };
+		A2CBDDE30A2FA21B005315C2 /* empire-game.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-game.ads"; sourceTree = "<group>"; };
+		A2CBDDE40A2FA21B005315C2 /* empire-lists.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-lists.ads"; sourceTree = "<group>"; };
+		A2CBDDE50A2FA21B005315C2 /* empire-locations.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "empire-locations.adb"; sourceTree = "<group>"; };
+		A2CBDDE60A2FA21B005315C2 /* empire-locations.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-locations.ads"; sourceTree = "<group>"; };
+		A2CBDDE70A2FA21B005315C2 /* empire-mapping.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-mapping.ads"; sourceTree = "<group>"; };
+		A2CBDDE80A2FA21B005315C2 /* empire-math.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "empire-math.adb"; sourceTree = "<group>"; };
+		A2CBDDE90A2FA21B005315C2 /* empire-math.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-math.ads"; sourceTree = "<group>"; };
+		A2CBDDEA0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "empire-objects-describe_city-snippet.adb"; sourceTree = "<group>"; };
+		A2CBDDEB0A2FA21B005315C2 /* empire-objects.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-objects.ads"; sourceTree = "<group>"; };
+		A2CBDDEC0A2FA21B005315C2 /* empire-ui.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-ui.ads"; sourceTree = "<group>"; };
+		A2CBDDED0A2FA21B005315C2 /* empire-user_move.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-user_move.ads"; sourceTree = "<group>"; };
+		A2CBDDEE0A2FA21B005315C2 /* empire-utility.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = "empire-utility.ads"; sourceTree = "<group>"; };
+		A2CBDDEF0A2FA21B005315C2 /* empire.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = empire.adb; sourceTree = "<group>"; };
+		A2CBDDF00A2FA21B005315C2 /* empire.ads */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.ads; path = empire.ads; sourceTree = "<group>"; };
+		A2CBDDF10A2FA21B005315C2 /* empire.gpr */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = empire.gpr; sourceTree = "<group>"; };
+		A2CBDDF20A2FA21B005315C2 /* find-stuff-snippets.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = "find-stuff-snippets.adb"; sourceTree = "<group>"; };
+		A2CBDDF30A2FA21B005315C2 /* game.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = game.c; sourceTree = "<group>"; };
+		A2CBDDF40A2FA21B005315C2 /* install-sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; path = "install-sh"; sourceTree = "<group>"; };
+		A2CBDDF50A2FA21B005315C2 /* main.adb */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.ada.adb; path = main.adb; sourceTree = "<group>"; };
+		A2CBDDF60A2FA21B005315C2 /* map.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = map.c; sourceTree = "<group>"; };
+		A2CBDDF70A2FA21B005315C2 /* object.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = object.c; sourceTree = "<group>"; };
+		A2CBDDF80A2FA21B005315C2 /* READ.ME */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = READ.ME; sourceTree = "<group>"; };
+		A2CBDDF90A2FA21B005315C2 /* term.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = term.c; sourceTree = "<group>"; };
+		A2CBDDFA0A2FA21B005315C2 /* usermove.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = usermove.c; sourceTree = "<group>"; };
+		A2CBDDFB0A2FA21B005315C2 /* util.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = util.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* AEmpire */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = AEmpire;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				A2CBDDD30A2FA21B005315C2 /* attack.c */,
+				A2CBDDD40A2FA21B005315C2 /* BUGS */,
+				A2CBDDD50A2FA21B005315C2 /* cempire.6 */,
+				A2CBDDD60A2FA21B005315C2 /* COPYING */,
+				A2CBDDD70A2FA21B005315C2 /* dispfuncs-snippet */,
+				A2CBDDD80A2FA21B005315C2 /* display.c */,
+				A2CBDDD90A2FA21B005315C2 /* empire-ai.ads */,
+				A2CBDDDA0A2FA21B005315C2 /* empire-attack.ads */,
+				A2CBDDDB0A2FA21B005315C2 /* empire-commands.adb */,
+				A2CBDDDC0A2FA21B005315C2 /* empire-commands.ads */,
+				A2CBDDDD0A2FA21B005315C2 /* empire-comp_move.adb */,
+				A2CBDDDE0A2FA21B005315C2 /* empire-comp_move.ads */,
+				A2CBDDDF0A2FA21B005315C2 /* empire-curses_interface.ads */,
+				A2CBDDE00A2FA21B005315C2 /* empire-editing.adb */,
+				A2CBDDE10A2FA21B005315C2 /* empire-editing.ads */,
+				A2CBDDE20A2FA21B005315C2 /* empire-game.adb */,
+				A2CBDDE30A2FA21B005315C2 /* empire-game.ads */,
+				A2CBDDE40A2FA21B005315C2 /* empire-lists.ads */,
+				A2CBDDE50A2FA21B005315C2 /* empire-locations.adb */,
+				A2CBDDE60A2FA21B005315C2 /* empire-locations.ads */,
+				A2CBDDE70A2FA21B005315C2 /* empire-mapping.ads */,
+				A2CBDDE80A2FA21B005315C2 /* empire-math.adb */,
+				A2CBDDE90A2FA21B005315C2 /* empire-math.ads */,
+				A2CBDDEA0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb */,
+				A2CBDDEB0A2FA21B005315C2 /* empire-objects.ads */,
+				A2CBDDEC0A2FA21B005315C2 /* empire-ui.ads */,
+				A2CBDDED0A2FA21B005315C2 /* empire-user_move.ads */,
+				A2CBDDEE0A2FA21B005315C2 /* empire-utility.ads */,
+				A2CBDDEF0A2FA21B005315C2 /* empire.adb */,
+				A2CBDDF00A2FA21B005315C2 /* empire.ads */,
+				A2CBDDF10A2FA21B005315C2 /* empire.gpr */,
+				A2CBDDF20A2FA21B005315C2 /* find-stuff-snippets.adb */,
+				A2CBDDF30A2FA21B005315C2 /* game.c */,
+				A2CBDDF40A2FA21B005315C2 /* install-sh */,
+				A2CBDDF50A2FA21B005315C2 /* main.adb */,
+				A2CBDDF60A2FA21B005315C2 /* map.c */,
+				A2CBDDF70A2FA21B005315C2 /* object.c */,
+				A2CBDDF80A2FA21B005315C2 /* READ.ME */,
+				A2CBDDF90A2FA21B005315C2 /* term.c */,
+				A2CBDDFA0A2FA21B005315C2 /* usermove.c */,
+				A2CBDDFB0A2FA21B005315C2 /* util.c */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A23A2F7C0A2FE01C000E6E15 /* AEmpire */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1F1599520A213539002CCE60 /* AEmpire */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1F1599550A213557002CCE60 /* Build configuration list for PBXNativeTarget "AEmpire" */;
+			buildPhases = (
+				1F1599510A213539002CCE60 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AEmpire;
+			productName = AEmpire;
+			productReference = A23A2F7C0A2FE01C000E6E15 /* AEmpire */;
+			productType = "org.macada.product-type.adatool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "AEmpire" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* AEmpire */;
+			projectDirPath = "";
+			targets = (
+				1F1599520A213539002CCE60 /* AEmpire */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1F1599510A213539002CCE60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A2CBDE000A2FA21B005315C2 /* empire-commands.adb in Sources */,
+				A2CBDE020A2FA21B005315C2 /* empire-comp_move.adb in Sources */,
+				A2CBDE050A2FA21B005315C2 /* empire-editing.adb in Sources */,
+				A2CBDE070A2FA21B005315C2 /* empire-game.adb in Sources */,
+				A2CBDE0A0A2FA21B005315C2 /* empire-locations.adb in Sources */,
+				A2CBDE0D0A2FA21B005315C2 /* empire-math.adb in Sources */,
+				A2CBDE0F0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb in Sources */,
+				A2CBDE140A2FA21B005315C2 /* empire.adb in Sources */,
+				A2CBDE180A2FA21B005315C2 /* main.adb in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB928A08733DD80010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = Debug;
+		};
+		1DEB928B08733DD80010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = Release;
+		};
+		1F1599560A213557002CCE60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = "$(HOME)/bin";
+				OTHER_ADALINKFLAGS = "-lgcc_s.1";
+				PRODUCT_NAME = AEmpire;
+			};
+			name = Debug;
+		};
+		1F1599570A213557002CCE60 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				INSTALL_PATH = "$(HOME)/bin";
+				OTHER_ADALINKFLAGS = "-lgcc_s.1";
+				PRODUCT_NAME = AEmpire;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "AEmpire" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB928A08733DD80010E9CD /* Debug */,
+				1DEB928B08733DD80010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1F1599550A213557002CCE60 /* Build configuration list for PBXNativeTarget "AEmpire" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1F1599560A213557002CCE60 /* Debug */,
+				1F1599570A213557002CCE60 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
