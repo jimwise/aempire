@@ -154,6 +154,8 @@ package Empire is
          Next : Piece_Info_P;
          Prev : Piece_Info_P;
       end record;
+   
+   type Link_Type_T is (PIECE_LINK, LOC_LINK, CARGO_LINK);
 
    type Piece_Info_T is
       record
@@ -291,10 +293,10 @@ package Empire is
    -- miscellaneous global variables
 
    Smooth : Integer;                    -- number of times to smooth map
-   Water_Ratio : Integer;               -- percentage of map that is water
-   Min_City_Dist : Integer;             -- minimum distance between two cities
-   Save_Interval : Integer;             -- turns between autosaves
-   Traditional : Integer := 0;          -- `traditional' movement keys
+   Water_Ratio : Natural;               -- percentage of map that is water
+   Min_City_Dist : Natural;             -- minimum distance between two cities
+   Save_Interval : Natural;             -- turns between autosaves
+   Traditional : Boolean := FALSE;      -- `traditional' movement keys
 
    Date : Natural;                      -- number of game turns played
    Automove : Boolean;                  -- true IFF user is in automove mode
