@@ -4,7 +4,7 @@
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  *
- * $Id: display.c,v 1.2 2006/04/08 02:34:21 jwise Exp $
+ * $Id: display.c,v 1.3 2008/03/02 23:46:26 jwise Exp $
  */
 
 /*
@@ -99,6 +99,7 @@ sector_change (void)
 int
 cur_sector (void)
 {
+  -- NEED TO return 0 in first case, not -1 (FOR NOW)
 	if (whose_map != USER)
 		return (-1);
 
