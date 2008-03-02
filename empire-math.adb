@@ -10,9 +10,11 @@
 --
 --     dist (a, b) -- returns the straight-line distance between two locations.
 
-with Ada.Numerics.Elementary_Functions.Sqrt;
-use Ada.Numerics.Elementary_Functions.Sqrt;
+with Empire.Locations;
+with Ada.Numerics.Elementary_Functions;
+use Ada.Numerics.Elementary_Functions;
 with Ada.Numerics.Float_Random;
+use Ada.Numerics.Float_Random;
 
 package body Empire.Math is
 
@@ -23,12 +25,12 @@ package body Empire.Math is
       Ay := Locations.Loc_Col(A);
       Bx := Locations.Loc_Row(B);
       By := Locations.Loc_Col(B);
-
-      return (Sqrt( ((Ax-Bx) * (abs Ax-Bx)) + ((Ay-By) * (Ay-By))));
+      
+      -- XXX use an integer equivalent, possibly isqrt from cempire.
+      return Integer(Sqrt( Float((Ax-Bx) * (abs Ax-Bx)) + Float((Ay-By) * (Ay-By))));
    end Dist;
 
    procedure Rand_Init is
-      G : Generator;
    begin
       Reset(G);
    end Rand_Init;

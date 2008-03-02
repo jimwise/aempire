@@ -7,19 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A2CBDE000A2FA21B005315C2 /* empire-commands.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDDB0A2FA21B005315C2 /* empire-commands.adb */; };
-		A2CBDE020A2FA21B005315C2 /* empire-comp_move.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDDD0A2FA21B005315C2 /* empire-comp_move.adb */; };
-		A2CBDE050A2FA21B005315C2 /* empire-editing.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE00A2FA21B005315C2 /* empire-editing.adb */; };
-		A2CBDE070A2FA21B005315C2 /* empire-game.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE20A2FA21B005315C2 /* empire-game.adb */; };
-		A2CBDE0A0A2FA21B005315C2 /* empire-locations.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE50A2FA21B005315C2 /* empire-locations.adb */; };
-		A2CBDE0D0A2FA21B005315C2 /* empire-math.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE80A2FA21B005315C2 /* empire-math.adb */; };
-		A2CBDE0F0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDEA0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb */; };
-		A2CBDE140A2FA21B005315C2 /* empire.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDEF0A2FA21B005315C2 /* empire.adb */; };
-		A2CBDE180A2FA21B005315C2 /* main.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDF50A2FA21B005315C2 /* main.adb */; };
+		A26099030A2FFA8C00425A0F /* empire.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDEF0A2FA21B005315C2 /* empire.adb */; };
+		A26099040A2FFA9200425A0F /* empire-math.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE80A2FA21B005315C2 /* empire-math.adb */; };
+		A26099050A2FFA9500425A0F /* empire-locations.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE50A2FA21B005315C2 /* empire-locations.adb */; };
+		A26099060A2FFA9900425A0F /* empire-game.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE20A2FA21B005315C2 /* empire-game.adb */; };
+		A26099070A2FFA9B00425A0F /* empire-editing.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDE00A2FA21B005315C2 /* empire-editing.adb */; };
+		A26099080A2FFAA100425A0F /* empire-comp_move.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDDD0A2FA21B005315C2 /* empire-comp_move.adb */; };
+		A26099090A2FFAA300425A0F /* empire-commands.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDDB0A2FA21B005315C2 /* empire-commands.adb */; };
+		A260990A0A2FFAAF00425A0F /* main.adb in Sources */ = {isa = PBXBuildFile; fileRef = A2CBDDF50A2FA21B005315C2 /* main.adb */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A23A2F7C0A2FE01C000E6E15 /* AEmpire */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = AEmpire; path = build/Debug/AEmpire; sourceTree = "<group>"; };
+		A26098F60A2FFA4700425A0F /* aempire */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = aempire; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2CBDDD30A2FA21B005315C2 /* attack.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = attack.c; sourceTree = "<group>"; };
 		A2CBDDD40A2FA21B005315C2 /* BUGS */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = BUGS; sourceTree = "<group>"; };
 		A2CBDDD50A2FA21B005315C2 /* cempire.6 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = cempire.6; sourceTree = "<group>"; };
@@ -62,6 +61,16 @@
 		A2CBDDFA0A2FA21B005315C2 /* usermove.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = usermove.c; sourceTree = "<group>"; };
 		A2CBDDFB0A2FA21B005315C2 /* util.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = util.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A26098F40A2FFA4700425A0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		08FB7794FE84155DC02AAC07 /* AEmpire */ = {
@@ -125,7 +134,7 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A23A2F7C0A2FE01C000E6E15 /* AEmpire */,
+				A26098F60A2FFA4700425A0F /* aempire */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -140,19 +149,20 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1F1599520A213539002CCE60 /* AEmpire */ = {
+		A26098F50A2FFA4700425A0F /* aempire */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1F1599550A213557002CCE60 /* Build configuration list for PBXNativeTarget "AEmpire" */;
+			buildConfigurationList = A26098FC0A2FFA6500425A0F /* Build configuration list for PBXNativeTarget "aempire" */;
 			buildPhases = (
-				1F1599510A213539002CCE60 /* Sources */,
+				A26098F30A2FFA4700425A0F /* Sources */,
+				A26098F40A2FFA4700425A0F /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = AEmpire;
-			productName = AEmpire;
-			productReference = A23A2F7C0A2FE01C000E6E15 /* AEmpire */;
+			name = aempire;
+			productName = aempire;
+			productReference = A26098F60A2FFA4700425A0F /* aempire */;
 			productType = "org.macada.product-type.adatool";
 		};
 /* End PBXNativeTarget section */
@@ -165,25 +175,24 @@
 			mainGroup = 08FB7794FE84155DC02AAC07 /* AEmpire */;
 			projectDirPath = "";
 			targets = (
-				1F1599520A213539002CCE60 /* AEmpire */,
+				A26098F50A2FFA4700425A0F /* aempire */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		1F1599510A213539002CCE60 /* Sources */ = {
+		A26098F30A2FFA4700425A0F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A2CBDE000A2FA21B005315C2 /* empire-commands.adb in Sources */,
-				A2CBDE020A2FA21B005315C2 /* empire-comp_move.adb in Sources */,
-				A2CBDE050A2FA21B005315C2 /* empire-editing.adb in Sources */,
-				A2CBDE070A2FA21B005315C2 /* empire-game.adb in Sources */,
-				A2CBDE0A0A2FA21B005315C2 /* empire-locations.adb in Sources */,
-				A2CBDE0D0A2FA21B005315C2 /* empire-math.adb in Sources */,
-				A2CBDE0F0A2FA21B005315C2 /* empire-objects-describe_city-snippet.adb in Sources */,
-				A2CBDE140A2FA21B005315C2 /* empire.adb in Sources */,
-				A2CBDE180A2FA21B005315C2 /* main.adb in Sources */,
+				A26099030A2FFA8C00425A0F /* empire.adb in Sources */,
+				A26099040A2FFA9200425A0F /* empire-math.adb in Sources */,
+				A26099050A2FFA9500425A0F /* empire-locations.adb in Sources */,
+				A26099060A2FFA9900425A0F /* empire-game.adb in Sources */,
+				A26099070A2FFA9B00425A0F /* empire-editing.adb in Sources */,
+				A26099080A2FFAA100425A0F /* empire-comp_move.adb in Sources */,
+				A26099090A2FFAA300425A0F /* empire-commands.adb in Sources */,
+				A260990A0A2FFAAF00425A0F /* main.adb in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -193,6 +202,7 @@
 		1DEB928A08733DD80010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CVS_RSH = ssh;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
@@ -203,6 +213,7 @@
 		1DEB928B08733DD80010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CVS_RSH = ssh;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
@@ -210,7 +221,7 @@
 			};
 			name = Release;
 		};
-		1F1599560A213557002CCE60 /* Debug */ = {
+		A26098FD0A2FFA6500425A0F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -219,11 +230,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/bin";
 				OTHER_ADALINKFLAGS = "-lgcc_s.1";
-				PRODUCT_NAME = AEmpire;
+				PRODUCT_NAME = aempire;
 			};
 			name = Debug;
 		};
-		1F1599570A213557002CCE60 /* Release */ = {
+		A26098FE0A2FFA6500425A0F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -231,7 +242,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				INSTALL_PATH = "$(HOME)/bin";
 				OTHER_ADALINKFLAGS = "-lgcc_s.1";
-				PRODUCT_NAME = AEmpire;
+				PRODUCT_NAME = aempire;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -248,11 +259,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1F1599550A213557002CCE60 /* Build configuration list for PBXNativeTarget "AEmpire" */ = {
+		A26098FC0A2FFA6500425A0F /* Build configuration list for PBXNativeTarget "aempire" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1F1599560A213557002CCE60 /* Debug */,
-				1F1599570A213557002CCE60 /* Release */,
+				A26098FD0A2FFA6500425A0F /* Debug */,
+				A26098FE0A2FFA6500425A0F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

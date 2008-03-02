@@ -12,7 +12,6 @@ with Empire.User_Move;
 
 package body Empire is
 
-
    procedure Run_Empire is
       Order : Character;
       Turn : Natural := 0; -- distinct from date to track save_interval even if we loaded a saved game
@@ -101,14 +100,16 @@ package body Empire is
             Ui.Help(Help_Cmd);
 
          when 'J' =>                    -- edit mode
-            begin
-               Sec := Ui.Cur_Sector;
-               Editing.Edit(Locations.Sector_Loc(Sec));
-            exception
-               when Ui.No_Current_Sector =>
-                  Ui.Print_Sector_U(Sector_T'First);
-                  Editing.Edit(Locations.Sector_Loc(Sec));
-            end;
+            Sec := Ui.Cur_Sector;
+            -- in C, this was only done if we were switching
+            -- from view of non-user map, but it's cheap to
+            -- always do it if sector is 0.
+            -- XXX may be better to add an out boolean to Cur_Sector
+            if Sec = Sector_T'First
+            then
+               Ui.Print_Sector_U(sec);
+            end if;
+            Editing.Edit(Locations.Sector_Loc(Sec));
 
          when 'M' =>                    -- move
             User_Move.User_Move;

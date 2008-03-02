@@ -13,7 +13,6 @@
 --             default is 10
 --
 
-
 with Text_IO;
 with Ada.Command_Line;
 with Ada.Numerics.Elementary_Functions;

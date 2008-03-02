@@ -135,7 +135,7 @@ package body Empire.Comp_Move is
          if Cont_Map(I)                 -- for each cell of continent
          then
             P := Objects.Find_City_At_Loc(I, Owners => (COMP => TRUE, others => FALSE));
-            if (P /= null) and (P.Prod = ARMY)
+            if (P /= null) and then (P.Prod = ARMY)
             then
                Comp_Army_Count := Comp_Army_Count + 1;
             end if;
@@ -832,7 +832,7 @@ package body Empire.Comp_Move is
       loop
          if (P.Piece_Type = TRANSPORT) and (Objects.Obj_Capacity(P.all) > P.Count)
          then
-            if (Best = null) or (P.Count >= Best.Count)
+            if (Best = null) or else (P.Count >= Best.Count)
             then
                Best := P;
             end if;
@@ -1105,7 +1105,7 @@ package body Empire.Comp_Move is
          then
             -- XXX spaces right?
             Ui.Info("No destination found for" & Piece_Type_T'Image(Obj.Piece_Type) & " at " & Location_T'Image(Obj.Loc) &
-                    "; func=" & Function_Name(Obj.Func));
+                    "; func=" & Function_Name(Obj.Func).all);
          end if;
 
          return;
@@ -1166,7 +1166,7 @@ package body Empire.Comp_Move is
             then
                -- XXX spaces right?
                Ui.Info("Cannot move " & Piece_Type_T'Image(Obj.Piece_Type) & " at " & Location_T'Image(Obj.Loc) &
-                       " toward objective at " & Location_T'Image(New_Loc) & "; func=" & Function_Name(Obj.Func));
+                       " toward objective at " & Location_T'Image(New_Loc) & "; func=" & Function_Name(Obj.Func).all);
             end if;
          end if;
       else

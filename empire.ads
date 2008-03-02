@@ -81,6 +81,19 @@ package Empire is
    type Acceptable_Terrain_Array is array (Terrain_Display_T range '.' .. '*') of Boolean;
    type Content_Value_Array is array (Content_Display_T) of Integer;
 
+   User_Content : Constant Acceptable_Content_Array :=
+     (
+      'a'|'f'|'p'|'d'|'s'|'t'|'c'|'b'|'z'|'x' => True,
+      others => False
+     );
+
+   Comp_Content : Constant Acceptable_Content_Array :=
+     (
+      'A'|'F'|'P'|'D'|'S'|'T'|'C'|'B'|'Z'|'X' => True,
+      others => False
+     );
+
+
    package Content_IO is new Ada.Text_IO.Enumeration_IO(Content_Display_T);
    package Terrain_IO is new Ada.Text_IO.Enumeration_IO(Terrain_Display_T);
 
@@ -154,7 +167,7 @@ package Empire is
          Next : Piece_Info_P;
          Prev : Piece_Info_P;
       end record;
-   
+
    type Link_Type_T is (PIECE_LINK, LOC_LINK, CARGO_LINK);
 
    type Piece_Info_T is
@@ -498,6 +511,8 @@ private
    -- alternative (easy enough) would be to put piece_type_t in move order.
    -- we can do this because we don't rely on all ships being > fighter
    -- as the c code does.
+   --
+   -- NOTA BENE:  for user, move order is obeyed WITHIN EACH SECTOR
    Move_Order : constant Move_Order_Array :=
      (SATELLITE, TRANSPORT, CARRIER, BATTLESHIP, PATROL, SUBMARINE, DESTROYER, ARMY, FIGHTER);
 
