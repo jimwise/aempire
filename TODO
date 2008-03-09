@@ -1,0 +1,1 @@
+* abstract Content_Display_T, so we use superset type, and then make Piece_Type_T and Terrain_Type_T subranges thereof?
