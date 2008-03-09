@@ -8,8 +8,9 @@ package Empire.Objects is
    procedure Find_Nearest_City (Loc : in Location_T; Owner : in Owner_T; City_Loc : out Location_T; estimated_Cost : out Integer);
    function Find_Nfull (Ptype : in Piece_Type_T; Loc : in Location_T) return Piece_Info_P;
    function Find_Obj (Ptype : in Piece_Type_T; Loc : in Location_T) return Piece_Info_P;
-   function Find_Obj_At_Loc (Loc : in Location_T) return Piece_Info_P;
-   function Find_Transport (Owner : in Owner_T; Loc : in Location_T) return Location_T;
+   -- originals returned Loc as found loc to indicate none found
+   procedure Find_Transport (Owner : in Owner_T; Loc : in Location_T; Found : out Boolean; Found_Loc : out Location_T);
+   procedure Find_Carrier (Owner : in Owner_T; Loc : in Location_T; Found : out Boolean; Found_Loc : out Location_t);
    -- this _really_ belongs elsewhere, since it queries the user
    function Get_Piece_Name return Piece_Type_T;
    function Good_Loc (Obj : in Piece_Info_T; Loc: in Location_T) return Boolean;

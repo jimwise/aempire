@@ -44,6 +44,9 @@ package Empire is
    type Owner_T is (UNOWNED, USER, COMP);
    type Acceptable_Owner_Array is array (Owner_T) of Boolean;
 
+   -- when adding a new piece type, must add here, in piece_attr below,
+   -- and at least also in switch in Empire.Mapping.Vmap_Cont_Scan
+   -- XXX (undoubtedly others, too)
    type Piece_Type_T is
       (ARMY,
        FIGHTER,
@@ -74,22 +77,22 @@ package Empire is
    type Content_Display_T is
       ('.', '+', '*', 'O', 'X', ' ',
        'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd', 'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z',
-       '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-   type Terrain_Display_T is ('.', '+', '*');
+       '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%');
+   type Terrain_Display_T is ('.', '+', '*', 'O', 'X');
 
    type Acceptable_Content_Array is array (Content_Display_T) of Boolean;
-   type Acceptable_Terrain_Array is array (Terrain_Display_T range '.' .. '*') of Boolean;
+   type Acceptable_Terrain_Array is array (Terrain_Display_T) of Boolean;
    type Content_Value_Array is array (Content_Display_T) of Integer;
-
-   User_Content : Constant Acceptable_Content_Array :=
-     (
-      'a'|'f'|'p'|'d'|'s'|'t'|'c'|'b'|'z'|'x' => True,
-      others => False
-     );
 
    Comp_Content : Constant Acceptable_Content_Array :=
      (
-      'A'|'F'|'P'|'D'|'S'|'T'|'C'|'B'|'Z'|'X' => True,
+      'a'|'f'|'p'|'d'|'s'|'t'|'c'|'b'|'z'|'X' => True,
+      others => False
+     );
+
+   User_Content : Constant Acceptable_Content_Array :=
+     (
+      'A'|'F'|'P'|'D'|'S'|'T'|'C'|'B'|'Z'|'O' => True,
       others => False
      );
 
@@ -125,9 +128,7 @@ package Empire is
        FILL,                            -- load transport (-4)
        LAND,                            -- land fighter at city (-5)
        EXPLORE,                         -- explore (-6)
-       ARMYLOAD,                        -- move toward and board a transport (-7)
        ARMYATTACK,                      -- army looks for city to attack (-8)
-       TTLOAD,                          -- transport moves toward loading armies (-9)
        REPAIR,                          -- ship moves toward port (-10)
        WFTRANSPORT,                     -- army boards a transport (-11)
        MOVE_N,                          -- move north (-12)
@@ -142,8 +143,21 @@ package Empire is
        COMP_LOADING,                    -- Comp_Move only
        COMP_UNLOADING);                 -- Comp_Move only
 
+   Move_Func_Directions : constant array (Function_T range MOVE_N .. MOVE_NW) of Direction_T :=
+     (
+      MOVE_N => NORTH,
+      MOVE_NE => NORTHEAST,
+      MOVE_E => EAST,
+      MOVE_SE => SOUTHEAST,
+      MOVE_S => SOUTH,
+      MOVE_SW => SOUTHWEST,
+      MOVE_W => WEST,
+      MOVE_NW => NORTHWEST
+     );
+
+
    -- if we determine how to represent T_PATH, this could be replaced with a set of constants of
-   -- type Acceptable_Content_Array
+   -- type Acceptable_Terrain_Array
    type Terrain_T is
       (T_UNKNOWN,
        T_PATH,
@@ -236,13 +250,13 @@ package Empire is
 
    type Scan_Counts_T is
       record
-         User_Cities : Integer;         -- number of user cities on continent
-         User_Objects : Piece_Value_Array;
-         Comp_Cities : Integer;
-         Comp_Objects : Piece_Value_Array;
-         Size : Integer;                -- size of continent in cells
-         Unowned_Cities : Integer;      -- number of unowned cities
-         Unexplored : Integer;          -- unexplored territory
+         User_Cities : Integer := 0;    -- number of user cities on continent
+         User_Objects : Piece_Value_Array := (others => 0);
+         Comp_Cities : Integer := 0;
+         Comp_Objects : Piece_Value_Array := (others => 0);
+         Size : Integer := 0;           -- size of continent in cells
+         Unowned_Cities : Integer := 0; -- number of unowned cities
+         Unexplored : Integer := 0;     -- unexplored territory
       end record;
 
    -- Information we need for finding a path for moving a piece
@@ -316,7 +330,7 @@ package Empire is
    Resigned : Boolean;                  -- true IFF computer resigned
    Debug : Boolean;                     -- true IFF in debugging mode
    Print_Debug : Boolean;               -- true IFF we print debugging output
-   subtype Vmap_Debug_Option is Character; -- XXX Restrict to [AILSU0] (0 is none)
+   subtype Vmap_Debug_Option is Character; -- XXX Restrict to [AILSU0] (0 is none) XXX and perhaps allow multiple
    Print_Vmap : Vmap_Debug_Option;      -- option for printing vmaps - XXX should probably be a _set_ of options
    Trace_Pmap : Boolean;                -- true IFF we are tracing pmaps
    Win : Owner_T := UNOWNED;            -- true IFF games is over
@@ -389,9 +403,11 @@ private
    -- values for Piece_Attr.*.Terrain.  XXX We could dispatch based on
    -- Class now, but don't yet
 
-   GROUND_TERRAIN : constant Acceptable_Terrain_Array := ('+'|'*' => TRUE, '.' => FALSE);
+   -- XXX verify that this is okay -- that owned cities belong here (or cities at all)
+   GROUND_TERRAIN : constant Acceptable_Terrain_Array := ('+'|'*'|'O'|'X' => TRUE, others => FALSE);
    AIRCRAFT_TERRAIN : constant Acceptable_Terrain_Array := (others => TRUE);
-   SHIP_TERRAIN : constant Acceptable_Terrain_Array := ('.'|'*' => TRUE, '+' => FALSE);
+   -- XXX verify that this is okay -- that owned cities belong here
+   SHIP_TERRAIN : constant Acceptable_Terrain_Array := ('.'|'*'|'X'|'O' => TRUE, others => FALSE);
    SPACECRAFT_TERRAIN : constant Acceptable_Terrain_Array := AIRCRAFT_TERRAIN;
 
    Piece_Attr : constant Piece_Attr_Array :=
@@ -490,9 +506,7 @@ private
       FILL => new String'("fill"),
       LAND => new String'("land"),
       EXPLORE => new String'("explore"),
-      ARMYLOAD => new String'("load"),
       ARMYATTACK => new String'("attack"),
-      TTLOAD => new String'("load"),
       REPAIR => new String'("repair"),
       WFTRANSPORT => new String'("transport"),
       MOVE_N => new String'("W"),

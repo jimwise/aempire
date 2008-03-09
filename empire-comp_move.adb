@@ -430,6 +430,7 @@ package body Empire.Comp_Move is
             Changed_Loc := TRUE;
          end if;
 
+         -- XXX why the check for hits > 0?
          if (Piece_Attr(Obj.Piece_Type).Piece_Range /= INFINITY) and
            Obj.Hits > 0                 -- if we're range-limited
          then
@@ -566,7 +567,7 @@ package body Empire.Comp_Move is
       end if;
 
       -- otherwise (not on a ship)
-      Mapping.Vmap_Find_Lobj(New_Loc, Pmap, Comp_Map, Obj.Loc, Army_Fight);
+      Mapping.Vmap_Find_Ground_Obj(New_Loc, Pmap, Comp_Map, Obj.Loc, Army_Fight);
 
       if New_Loc /= Obj.Loc
       then
@@ -591,7 +592,7 @@ package body Empire.Comp_Move is
       if Cross_Cost > 0                 -- possible to be false only due to normalization after case above
       then
          Make_Army_Load_Map(Obj, Amap, Comp_Map);
-         Mapping.Vmap_Find_Lwobj(New_Loc2, Pmap2, Amap, Obj.Loc, Army_Load, Cross_Cost);
+         Mapping.Vmap_Find_Landsea_Obj(New_Loc2, Pmap2, Amap, Obj.Loc, Army_Load, Cross_Cost);
          if New_Loc2 /= Obj.loc         -- found something?
          then
             -- Load an army onto a ship.  First look for an adjacent ship.
@@ -918,6 +919,10 @@ package body Empire.Comp_Move is
       loop
          New_Loc := Loc + Dir_Offset(I);
 
+         -- XXX XXX XXX why do we look at map, not Comp_map?!!!!
+         -- XXX XXX XXX (not a cheat, since we only look at adjacent, but surely better
+         -- XXX XXX XXX not to do this!)
+         -- (and if changing this, see XXX above (!))
          if Map(New_Loc).On_Board and Terrain(Map(New_Loc).Contents)
          then
             P := Obj_List(Comp_Map(New_Loc).Contents);
@@ -968,7 +973,7 @@ package body Empire.Comp_Move is
       if Obj.Func = COMP_LOADING
       then
          Make_Tt_Load_Map(Amap, Comp_Map);
-         Mapping.Vmap_Find_Wlobj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Load);
+         Mapping.Vmap_Find_Sealand_Obj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Load);
 
          if New_Loc = Obj.loc           -- nothing to load?
          then
@@ -978,13 +983,13 @@ package body Empire.Comp_Move is
             then
                Ui.Print_Zoom(Amap);
             end if;
-            Mapping.Vmap_Find_Wobj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Explore);
+            Mapping.Vmap_Find_Ship_Obj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Explore);
          end if;
 
          Move_Objective(Obj, Pmap, New_Loc, ('a' => 2, ' ' => 1, others => 0));
       else
          Make_Unload_Map(Amap, Comp_Map);
-         Mapping.Vmap_Find_Wlobj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Unload);
+         Mapping.Vmap_Find_Sealand_Obj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Unload);
          Move_Objective(Obj, Pmap, New_Loc, (' ' => 1, others => 0));
       end if;
    end Transport_Move;
@@ -1011,7 +1016,7 @@ package body Empire.Comp_Move is
          return;
       end if;
 
-      -- return to base if low on fuel
+      -- return to base if low on fuel XXX: should check for carriers
       Objects.Find_Nearest_City(Obj.Loc, COMP, New_Loc, City_Cost);
       if Obj.Piece_range <= City_Cost + 2
       then
@@ -1025,7 +1030,7 @@ package body Empire.Comp_Move is
 
       if New_Loc = Obj.Loc              -- no nearby city?
       then
-         Mapping.Vmap_Find_Aobj(New_Loc, Pmap, Comp_Map, Obj.Loc, Fighter_Fight);
+         Mapping.Vmap_Find_Aircraft_Obj(New_Loc, Pmap, Comp_Map, Obj.Loc, Fighter_Fight);
       end if;
 
       Move_Objective(Obj, Pmap, New_Loc, (' ' => 1, others => 0));
@@ -1055,7 +1060,7 @@ package body Empire.Comp_Move is
             return;
          end if;
          -- otherwise, go there
-         Mapping.Vmap_Find_Wobj(New_Loc, Pmap, Comp_Map, Obj.Loc, Ship_Repair);
+         Mapping.Vmap_Find_Ship_Obj(New_Loc, Pmap, Comp_Map, Obj.Loc, Ship_Repair);
          Adj_List := ('.' => 1, others => 0);
       else
          New_Loc := Find_Attack(Obj.Loc, Ship_Attack, ('.' => TRUE, others => FALSE));
@@ -1072,7 +1077,7 @@ package body Empire.Comp_Move is
             Ui.Print_Zoom(Amap);
          end if;
 
-         Mapping.Vmap_Find_Wobj(New_Loc, Pmap, Amap, Obj.Loc, Ship_Fight);
+         Mapping.Vmap_Find_Ship_Obj(New_Loc, Pmap, Amap, Obj.Loc, Ship_Fight);
          Adj_List := Ship_Fight.Objective_Weights;
       end if;
 
@@ -1130,9 +1135,9 @@ package body Empire.Comp_Move is
          when GROUND =>
             Terrain := ('+' => TRUE, others => FALSE);
          when AIRCRAFT =>
-            Terrain := ('+'|'.'|'*' => TRUE, others => FALSE);
+            Terrain := ('+'|'.'|'X' => TRUE, others => FALSE);
          when SHIP =>
-            Terrain := ('.'|'*' => TRUE, others => FALSE);
+            Terrain := ('.'|'X' => TRUE, others => FALSE);
          when SPACECRAFT =>
             -- can't happen -- we don't do controlled movement for SAT
             raise Program_Error;

@@ -4,7 +4,7 @@
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  *
- * $Id: object.c,v 1.2 2006/02/27 19:33:19 jwise Exp $
+ * $Id: object.c,v 1.3 2008/03/09 03:44:08 jwise Exp $
  */
 
 /* object.c -- routines for manipulating objects. */
@@ -140,6 +140,7 @@ find_nfull (piece_type_t type, long loc)
  * of the transport if there is one.
  */
 
+-- XXX need to also implement find_carrier
 long
 find_transport (int owner, long loc)
 {
@@ -391,6 +392,7 @@ bounce (long loc, long dir1, long dir2, long dir3)
 {
 	int new_loc;
 
+	-- see Empire.Move_Func_Directions
 	new_loc = loc + dir_offset[MOVE_DIR (dir1)];
 	if (map[new_loc].on_board) return dir1;
 

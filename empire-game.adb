@@ -340,8 +340,8 @@ package body Empire.Game is
       Ncont := 0;
       Mapi := 0;
 
+      while Ncont < Max_Cont
       loop
-         exit when Ncont >= Max_Cont;
          declare
             B : Boolean;
          begin
@@ -627,13 +627,16 @@ package body Empire.Game is
       Count : Natural;
    begin
       Ship := List;
+
+      while Ship /= null
       loop
-         exit when Ship = null;
          Count := Ship.Count;           --  expected number of pieces
          Ship.Count := 0;
          Obj := Map(Ship.Loc).Objp;
+
+         while Count > 0 and Obj /= null
          loop
-            exit when (Count = 0) or (Obj = null);
+
             if (Obj.Ship = null) and (Obj.Piece_Type = Ptype)
             then
                Objects.Embark(Ship.all, Obj.all);

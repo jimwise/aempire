@@ -90,7 +90,7 @@ package body Empire.Editing is
    end E_Goto_Sector;
 
 -- Set function for the piece at a location
-
+-- XXX could merge with Empire.User_Move.User_Obj_Func?
    procedure E_User_Obj_Func
      (Loc : in Location_T;
       Func : in Function_T;
@@ -208,6 +208,8 @@ package body Empire.Editing is
 
 --  Set a city's function.  We get the piece type to set, then the function itself.
 
+   -- XXX XXX XXX this is identical to User_Set_City_Func -- except that it
+   -- XXX XXX XXX supports a path.  the two should be merged
    procedure E_City_Func (Loc : in Location_T; Path : out Path_T) is
       Ptype : Piece_Type_T;
       E : Character;
