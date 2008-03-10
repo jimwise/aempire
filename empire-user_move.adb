@@ -902,7 +902,8 @@ package body Empire.User_Move is
    procedure Move_Army_To_City (Obj : in out Piece_Info_T; Loc : Location_T) is
       Tt : Piece_Info_P;
    begin
-      Tt := Objects.Find_Nfull(TRANSPORT, Loc);
+      Tt := Objects.Find_Obj_At_Loc(Loc, (TRANSPORT => True, others => False),
+                                    (USER => True, others => False), True);
 
       if Tt /= null
       then
