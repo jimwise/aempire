@@ -42,24 +42,36 @@ package Empire.Mapping is
    procedure Vmap_Find_Dest
      (New_Loc  :    out Location_T;
       Pmap     :    out Path_Map;
-      Vmap     : in     View_Map;
+      Vmap     : in out View_Map;       --  XXX XXX XXX see note in package body
       Cur_Loc  :        Location_T;
       Dest_Loc :        Location_T;
       Owner    :        Owner_T;
       Terrain  :        Terrain_T);
    procedure Vmap_Find_Dir
-     (New_Loc  :    out Location_T;
-      Pmap     :    out Path_Map;
-      Vmap     : in     View_Map;
-      Loc      : in     Location_T;
-      Terrain  : in     Acceptable_Terrain_Array;
-      Adj_Char : in     Content_Value_Array);
+     (Found_Loc :    out Location_T;
+      Pmap      : in     Path_Map;
+      Vmap      : in     View_Map;
+      Loc       : in     Location_T;
+      Terrain   : in     Acceptable_Content_Array;
+      Adj_Char  : in     Content_Value_Array);
 
-   procedure Vmap_Mark_Adjacent (Pmap : in out Path_Map; Loc : in Location_T);
-   procedure Vmap_Mark_Near_path (Pmap : in out Path_Map; Loc : in Location_T);
-   procedure Vmap_Mark_Path (Pmap : in out Path_Map; Vmap : in View_Map; Loc : in Location_T);
-   procedure Vmap_Mark_Up_Cont (Cont_Map : out Continent_Map; Vmap : in View_Map; Loc : in Location_T; Bad_Terrain : Terrain_Display_T);
-   procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map);
+   procedure Vmap_Mark_Adjacent
+     (Pmap : in out Path_Map;
+      Loc  : in     Location_T);
+   procedure Vmap_Mark_Near_Path
+     (Pmap : in out Path_Map;
+      Loc  : in     Location_T);
+   procedure Vmap_Mark_Path
+     (Pmap : in out Path_Map;
+      Vmap : in     View_Map;
+      Dest : in     Location_T);
+   procedure Vmap_Mark_Up_Cont
+     (Cont_Map    :    out Continent_Map;
+      Vmap        : in     View_Map;
+      Loc         : in     Location_T;
+      Bad_Terrain :        Terrain_Display_T);
+   procedure Vmap_Prune_Explore_Locs
+     (Vmap : in out View_Map);
 
 private
 
@@ -115,7 +127,7 @@ private
    function Vmap_Count_Adjacent
      (Vmap     : in View_Map;
       Loc      : in Location_T;
-      Adj_Type : in Acceptable_Content_Array) --  XXX ???
+      Adj_Type : in Content_Value_Array)
      return Integer;
 
    function Vmap_Count_Path
@@ -137,10 +149,7 @@ private
    -- XXX XXX XXX these globals are used to cache current best objective
    -- XXX XXX XXX we need a way to pass this information around, as we
    -- XXX XXX XXX currently have a complex non-reentrant sequence of calls
-   Best_Loc : Location_T;
+
+   Best_Loc : Location_T;               --  cost and location of best objective
    Best_Cost : Integer;
-
-   --  static int best_cost; /* cost and location of best objective */
---  static long best_loc;
-
 end Empire.Mapping;

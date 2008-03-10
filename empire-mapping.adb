@@ -6,6 +6,18 @@ package body Empire.Mapping is
    -- This file contains routines for playing around with view_maps,
    -- real_maps, path_maps, and cont_maps.
 
+   -- XXX XXX XXX the old version of this kept four statically allocated
+   -- XXX XXX XXX perimeter_t's, and passed around pointers to these
+   -- XXX XXX XXX then, at numerous points, it `swapped' these by
+   -- XXX XXX XXX updating the pointers.
+   --
+   -- XXX XXX XXX we do structure copies, which is much more expensive
+   -- XXX XXX XXX for now, but will fix this when we move to less static
+   -- XXX XXX XXX structures, in the short term.
+   --
+   -- XXX XXX XXX (As an idea of scale, each perimeter_t contains one integer
+   -- XXX XXX XXX per location_t value.
+
    -- Map out a continent.  We are given a location on the continent.
    -- We mark each square that is part of the continent and unexplored
    -- territory adjacent to the continent.  By adjusting the value of
@@ -806,292 +818,376 @@ package body Empire.Mapping is
    --
    -- Careful:  'loc' may be "off board" XXX XXX as above, is this necessary?
 
---  static void
---  expand_prune (view_map_t *vmap, path_map_t *pmap, long loc, int type, perimeter_t *to, int *explored)
---  {
---      int i;
---      long new_loc;
+   procedure Expand_Prune
+     (Vmap     : in out View_Map;
+      Pmap     : in out Path_Map;
+      Loc      : in     Location_T;
+      Ttype    : in     Terrain_T;
+      To       : in out Perimeter_T;
+      Explored : in out Integer)
+   is
+      New_Loc : Location_T;
+   begin
+      Explored := Explored + 1;
 
---      *explored += 1;
+      if Ttype = T_LAND
+      then
+         Vmap(Loc).Contents := '+';
+      else
+         Vmap(Loc).Contents := '.';
+      end if;
 
---      if (type == T_LAND) vmap[loc].contents = '+';
---      else vmap[loc].contents = '.';
+      for D in Direction_T'Range
+        loop
+           begin
+              New_Loc := Loc + Dir_Offset(D);
+              if Vmap(New_Loc).Contents = ' '
+              then
+                 if Pmap(New_Loc).Cost = 0 and Pmap(New_Loc).Inc_Cost = 0
+                 then
+                    To.List(To.Len) := New_Loc;
+                    To.Len := To.Len + 1;
+                 end if;
+                 if Ttype = T_LAND
+                 then
+                    Pmap(New_Loc).Cost := Pmap(New_Loc).Cost + 1;
+                 else
+                    Pmap(New_Loc).Inc_Cost := Pmap(New_Loc).Inc_Cost + 1;
+                 end if;
+              end if;
+           exception
+              when Constraint_Error => null; --  skips for off-board locations. XXX XXX
+           end;
+      end loop;
+   end Expand_Prune;
 
---      FOR_ADJ (loc, new_loc, i)
---      if (new_loc >= 0 && new_loc < MAP_SIZE && vmap[new_loc].contents == ' ') {
---              if (!pmap[new_loc].cost && !pmap[new_loc].inc_cost) {
---                      to->list[to->len] = new_loc;
---                      to->len += 1;
---              }
---              if (type == T_LAND)
---                      pmap[new_loc].cost += 1;
---              else pmap[new_loc].inc_cost += 1;
---      }
---  }
+   -- Find the shortest path from the current location to the
+   -- destination which passes over valid terrain.  We return
+   -- the destination if a path exists.  Otherwise we return the
+   -- origin.
+   --
+   -- This is similar to 'find_objective' except that we know our destination.
 
---  /*
---   * Find the shortest path from the current location to the
---   * destination which passes over valid terrain.  We return
---   * the destination if a path exists.  Otherwise we return the
---   * origin.
---   *
---   * This is similar to 'find_objective' except that we know our destination.
---   */
+   procedure Vmap_Find_Dest
+     (New_Loc  :    out Location_T;
+      Pmap     :    out Path_Map;
+      Vmap     : in out View_Map;       --  XXX XXX XXX this isn't quite right.  we unmodify it by end of function, but it would be very
+                                        --  expensive to make a copy
+      Cur_Loc  :        Location_T;
+      Dest_Loc :        Location_T;
+      Owner    :        Owner_T;
+      Terrain  :        Terrain_T)
+   is
+      From, To, Tmp : Perimeter_T;
+      Cur_Cost : Integer := 0;     --  cost to reach current perimeter
 
---  long
---  vmap_find_dest (path_map_t path_map[], view_map_t vmap[], long cur_loc, long dest_loc, int owner, int terrain)
---  {
---      perimeter_t *from;
---      perimeter_t *to;
---      int cur_cost;
---      int start_terrain;
---      move_info_t move_info;
---      char old_contents;
+      Start_Terrain : Terrain_T;
+      Move_Info : Move_Info_T;
+      Old_Contents : Content_Display_T;
+   begin
+      Old_Contents := Vmap(Dest_Loc).Contents;
+      Vmap(Dest_Loc).Contents := '%';   --  `magic' objective marker
+      Move_Info.Owner := Owner;
+      Move_Info.Objective_weights := ('%' => 1, others => 0);
 
---      old_contents = vmap[dest_loc].contents;
---      vmap[dest_loc].contents = '%'; /* mark objective */
---      move_info.city_owner = owner;
---      move_info.objectives = "%";
---      move_info.weights[0] = 1;
+      if Terrain = T_AIR
+      then
+         Start_Terrain := T_LAND;
+      else
+         Start_Terrain := Terrain;
+      end if;
 
---      from = &p1;
---      to = &p2;
+      Start_Perimeter(Pmap, From, Cur_Loc, Start_Terrain);
 
---      if (terrain == T_AIR) start_terrain = T_LAND;
---      else start_terrain = terrain;
+      loop
+         To.Len := 0;                   --  nothing in perim yet
+         Expand_Perimeter(Pmap, Vmap, Move_Info, From, Terrain, Cur_Cost, 1, 1, To, To);
+         Cur_Cost := Cur_Cost + 1;
+         if To.Len = 0 or Best_Cost <= Cur_Cost
+         then
+            Vmap(Dest_Loc).Contents := Old_Contents;
+            New_Loc := Best_Loc;
+            return;
+         end if;
+         Tmp := From;
+         From := To;
+         To := Tmp;
+      end loop;
+   end Vmap_Find_Dest;
 
---      start_perimeter (path_map, from, cur_loc, start_terrain);
---      cur_cost = 0; /* cost to reach current perimeter */
+   -- Starting with the destination, we recursively back track toward the source
+   -- marking all cells which are on a shortest path between the start and the
+   -- destination.  To do this, we know the distance from the destination to
+   -- the start.  The destination is on a path.  We then find the cells adjacent
+   -- to the destination and nearest to the source and place them on the path.
+   --
+   -- If we know square P is on the path, then S is on the path if S is
+   -- adjacent to P, the cost to reach S is less than the cost to reach P,
+   -- and the cost to move from S to P is the difference in cost between
+   -- S and P.
+   --
+   -- Someday, this routine should probably use perimeter lists as well.
 
---      for (;;) {
---              to->len = 0; /* nothing in perim yet */
---              expand_perimeter (path_map, vmap, &move_info, from,
---                                terrain, cur_cost, 1, 1, to, to);
---              cur_cost += 1;
---              if (to->len == 0 || best_cost <= cur_cost) {
---                      vmap[dest_loc].contents = old_contents;
---                      return best_loc;
---              }
---              SWAP (from, to);
---      }
---  }
+   procedure Vmap_Mark_Path
+     (Pmap : in out Path_Map;
+      Vmap : in     View_Map;
+      Dest : in     Location_T)
+   is
+      New_Dest : Location_T;
+   begin
+      if Pmap(Dest).Cost = 0
+      then
+         return;                        --  reached end of path (recursive exit condition)
+      end if;
 
---  /*
---   * Starting with the destination, we recursively back track toward the source
---   * marking all cells which are on a shortest path between the start and the
---   * destination.  To do this, we know the distance from the destination to
---   * the start.  The destination is on a path.  We then find the cells adjacent
---   * to the destination and nearest to the source and place them on the path.
---   *
---   * If we know square P is on the path, then S is on the path if S is
---   * adjacent to P, the cost to reach S is less than the cost to reach P,
---   * and the cost to move from S to P is the difference in cost between
---   * S and P.
---   *
---   * Someday, this routine should probably use perimeter lists as well.
---   */
+      if Pmap(Dest).Terrain = T_PATH
+      then
+         return;                        --  already marked (other recursive exit condition)
+      end if;
 
---  void
---  vmap_mark_path (path_map_t *path_map, const view_map_t *vmap, long dest)
---  {
---      int n;
---      long new_dest;
+      Pmap(Dest).Terrain := T_PATH;     --  this square is on path
 
---      if (path_map[dest].cost == 0) return; /* reached end of path */
---      if (path_map[dest].terrain == T_PATH) return; /* already marked */
+      -- loop to mark adjacent squares on shortest path
+      for D in Direction_T'Range
+      loop
+         New_Dest := Dest + Dir_Offset(D);
+         if Pmap(New_Dest).Cost = (Pmap(Dest).Cost - Pmap(Dest).Inc_Cost)
+         then
+            Vmap_Mark_Path(Pmap, Vmap, New_Dest);
+         end if;
+      end loop;
+   end Vmap_Mark_Path;
 
---      path_map[dest].terrain = T_PATH; /* this square is on path */
+   -- Create a marked path map.  We mark those squares adjacent to the
+   -- starting location which are on the board.  'find_dir' must be
+   -- invoked to decide which squares are actually valid.
 
---      /* loop to mark adjacent squares on shortest path */
---      FOR_ADJ (dest, new_dest, n)
---      if (path_map[new_dest].cost == path_map[dest].cost - path_map[dest].inc_cost)
---                      vmap_mark_path (path_map, vmap, new_dest);
+   procedure Vmap_Mark_Adjacent
+     (Pmap : in out Path_Map;
+      Loc  : in     Location_T)
+   is
+      New_Loc : Location_T;
+   begin
+      for D in Direction_T'Range
+      loop
+         New_Loc := Loc + Dir_Offset(D);
+         if Map(New_Loc).On_Board
+         then
+            Pmap(New_Loc).Terrain := T_PATH;
+         end if;
+      end loop;
+   end Vmap_Mark_Adjacent;
 
---  }
+   -- Modify a marked path map.  We mark those squares adjacent to the
+   -- starting location which are on the board and which are adjacent
+   -- to a location on the existing shortest path.
 
---  /*
---   * Create a marked path map.  We mark those squares adjacent to the
---   * starting location which are on the board.  'find_dir' must be
---   * invoked to decide which squares are actually valid.
---   */
+   procedure Vmap_Mark_Near_Path
+     (Pmap : in out Path_Map;
+      Loc  : in     Location_T)
+   is
+      New_Loc, Xloc : Location_T;
+      Hit_Loc : array (Direction_T) of Boolean := (others => True);
+   begin
+      for D in Direction_T'Range
+      loop
+         New_Loc := Loc + Dir_Offset(D);
+         if Map(New_Loc).On_Board
+         then
+            for E in Direction_T'Range
+            loop
+               Xloc := New_Loc + Dir_Offset(E);
+               if Map(New_Loc).On_Board
+               then
+                  if Xloc /= Loc and Pmap(Xloc).Terrain = T_PATH
+                  then
+                     Hit_Loc(D) := True;
+                     exit;
+                  end if;
+               end if;
+            end loop;
+         end if;
+      end loop;
+      for I in Direction_T'Range
+      loop
+         if Hit_Loc(I)
+         then
+            Pmap(Loc + Dir_Offset(I)).Terrain := T_PATH;
+         end if;
+      end loop;
+   end Vmap_Mark_Near_Path;
 
---  void
---  vmap_mark_adjacent (path_map_t path_map[], long loc)
---  {
---      int i;
---      long new_loc;
+   -- Look at each neighbor of 'loc'.  Select the first marked cell which
+   -- is on a short path to the desired destination, and which holds a valid
+   -- terrain.  Note that while this terrain is matched against a 'vmap',
+   -- it differs slightly from terrains used above.  This terrain is the
+   -- terrain to which we can move immediately, and does not include terrain
+   -- for which we would have to wait for another piece to move off of.
+   --
+   -- We prefer diagonal moves, and we try to have as many squares
+   -- as possible containing something in 'adj_char'.
+   --
+   -- For tie-breaking, we prefer moving to cells that are adjacent to
+   -- as many other squares on the path.  This should have a few benefits:
+   --
+   -- 1)  Fighters are less likely to be blocked from reaching a city
+   -- because they stay in the center of the path and increase the number
+   -- of options for subsequent moves.
+   --
+   -- 2)  Transports will approach a city so that as many armies
+   -- as possible can hop off the tt on one turn to take a valid
+   -- path toward the city.
+   --
+   -- 3)  User pieces will move more intuitively by staying in the
+   -- center of the best path.
 
---      FOR_ADJ_ON (loc, new_loc, i)
---              path_map[new_loc].terrain = T_PATH;
---  }
+   procedure Vmap_Find_Dir
+     (Found_Loc :    out Location_T;
+      Pmap      : in     Path_Map;
+      Vmap      : in     View_Map;
+      Loc       : in     Location_T;
+      Terrain   : in     Acceptable_Content_Array;
+      Adj_Char  : in     Content_Value_Array)
+   is
+      Count, Best_Count : Integer;
+      Best_Loc, New_Loc : Location_T;
+      Path_Count, Best_Path : Integer;
 
---  /*
---   * Modify a marked path map.  We mark those squares adjacent to the
---   * starting location which are on the board and which are adjacent
---   * to a location on the existing shortest path.
---   */
+      Order : constant array (1 .. 8) of Direction_T := (NORTHWEST, NORTHEAST,
+                                                         SOUTHWEST, SOUTHEAST,
+                                                         WEST, EAST, NORTH, SOUTH);
 
---  void
---  vmap_mark_near_path (path_map_t path_map[], long loc)
---  {
---      int i, j;
---      long new_loc, xloc;
---      int hit_loc[8];
+   begin
+      if Trace_Pmap
+      then
+         Ui.Print_Pzoom("Before Vmap_Find_Dir:", Pmap, Vmap);
+      end if;
 
---      memset(hit_loc, 0, 8 * sizeof(int));
+      -- no best yet
+      Best_Count := -2;                 --  was -INFINITY (where INFINITY was 100,000), but this should do
+      Best_Path := -1;
+      Best_Loc := Loc;
 
---      FOR_ADJ_ON (loc, new_loc, i) {
---              FOR_ADJ_ON (new_loc, xloc, j)
---              if (xloc != loc && path_map[xloc].terrain == T_PATH) {
---                      hit_loc[i] = 1;
---                      break;
---              }
---      }
---      for (i = 0; i < 8; i++)
---      if (hit_loc[i])
---      path_map[loc + dir_offset[i]].terrain = T_PATH;
---  }
+      for I in Order'Range
+      loop
+         New_Loc := Loc + Dir_Offset(Order(I)); --  shuffle order to chosen order
+         if Pmap(New_Loc).Terrain = T_PATH
+         then
+            if Terrain(Vmap(New_Loc).Contents) --  desirable square?
+            then
+               Count := Vmap_Count_Adjacent(Vmap, New_Loc, Adj_Char);
+               Path_Count := Vmap_Count_Path(Pmap, New_Loc);
 
---  /*
---   * Look at each neighbor of 'loc'.  Select the first marked cell which
---   * is on a short path to the desired destination, and which holds a valid
---   * terrain.  Note that while this terrain is matched against a 'vmap',
---   * it differs slightly from terrains used above.  This terrain is the
---   * terrain to which we can move immediately, and does not include terrain
---   * for which we would have to wait for another piece to move off of.
---   *
---   * We prefer diagonal moves, and we try to have as many squares
---   * as possible containing something in 'adj_char'.
---   *
---   * For tie-breaking, we prefer moving to cells that are adjacent to
---   * as many other squares on the path.  This should have a few benefits:
---   *
---   * 1)  Fighters are less likely to be blocked from reaching a city
---   * because they stay in the center of the path and increase the number
---   * of options for subsequent moves.
---   *
---   * 2)  Transports will approach a city so that as many armies
---   * as possible can hop off the tt on one turn to take a valid
---   * path toward the city.
---   *
---   * 3)  User pieces will move more intuitively by staying in the
---   * center of the best path.
---   */
+               --  remember best location
+               if Count > Best_Count or (Count = Best_Count and Path_Count > Best_Path)
+               then
+                  Best_Count := Count;
+                  Best_Path := Path_Count;
+                  Best_Loc := New_Loc;
+               end if;
+            end if;
+         end if;
+      end loop;
 
---  static direction_t order[] = {NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST,
---                                      WEST, EAST, NORTH, SOUTH};
+      Found_Loc := Best_Loc;
+      return;
+   end Vmap_Find_Dir;
 
---  long
---  vmap_find_dir (path_map_t path_map[], const view_map_t *vmap, long loc, const char *terrain, const char *adj_char)
---  {
---      int i, count, bestcount;
---      long bestloc, new_loc;
---      int path_count, bestpath;
---      char *p;
+   -- Count the number of adjacent squares of interest.
+   -- Squares are weighted based on value in the passed
+   -- Content_Value_Array (ordering was used in C version)
 
---      if (trace_pmap)
---              print_pzoom ("Before vmap_find_dir:", path_map, vmap);
+   function Vmap_Count_Adjacent
+     (Vmap     : in View_Map;
+      Loc      : in Location_T;
+      Adj_Type : in Content_Value_Array)
+     return Integer
+   is
+      Count : Integer := 0;
+      New_Loc : Location_T;
+   begin
+      for D in Direction_T'Range
+      loop
+         New_Loc := Loc + Dir_Offset(D);
+         if Map(New_Loc).On_Board
+         then
+            -- was an if in c version, but here just works (non-included types will have value of '0')
+            Count := Count + 8 * Adj_Type(Vmap(New_Loc).Contents);
+         end if;
+      end loop;
 
---      bestcount = -INFINITY; /* no best yet */
---      bestpath = -1;
---      bestloc = loc;
+      return Count;
+   end Vmap_Count_Adjacent;
 
---      for (i = 0; i < 8; i++) { /* for each adjacent square */
---              new_loc = loc + dir_offset[order[i]];
---              if (path_map[new_loc].terrain == T_PATH) { /* which is on path */
---                      p = strchr (terrain, vmap[new_loc].contents);
+   -- Count the number of adjacent cells that are on the path
 
---                      if (p != NULL) { /* desirable square? */
---                              count = vmap_count_adjacent (vmap, new_loc, adj_char);
---                              path_count = vmap_count_path (path_map, new_loc);
+   function Vmap_Count_Path
+     (Pmap : in Path_Map;
+      Loc  : in Location_T)
+     return Integer
+   is
+      Count : Integer := 0;
+      New_Loc : Location_T;
+   begin
 
---                              /* remember best location */
---                              if ((count > bestcount) || ((count == bestcount) && (path_count > bestpath)))
---                              {
---                                      bestcount = count;
---                                      bestpath = path_count;
---                                      bestloc = new_loc;
---                              }
---                      }
---              }
---      }
---      return (bestloc);
---  }
+      for D in Direction_T'Range
+      loop
+         New_Loc := Loc + Dir_Offset(D);
+         if Map(New_Loc).On_Board
+         then
+            if Pmap(New_Loc).Terrain = T_PATH
+            then
+               Count := Count + 1;
+            end if;
+         end if;
+      end loop;
 
---  /*
---   * Count the number of adjacent squares of interest.
---   * Squares are weighted so that the first in the list
---   * is the most interesting.
---   */
+      return Count;
+   end Vmap_Count_Path;
 
---  static int
---  vmap_count_adjacent (const view_map_t *vmap, long loc, const char *adj_char)
---  {
---      int i, count;
---      long new_loc;
---      char *p;
---      int len;
+   -- See if a location is on the shore.  We return true if a surrounding
+   -- cell contains water and is on the board.
+   -- XXX why 'R'?
 
---      len = strlen (adj_char);
+   function Rmap_Shore (Loc : in Location_T) return Boolean
+   is
+      New_Loc : Location_T;
+   begin
+      for D in Direction_T'Range
+      loop
+         New_Loc := Loc + Dir_Offset(D);
+         if Map(New_Loc).On_Board
+         then
+            if Map(New_Loc).Contents = '.'
+            then
+               return True;
+            end if;
+         end if;
+      end loop;
 
---      count = 0;
+      return False;
+   end Rmap_Shore;
 
---      FOR_ADJ_ON (loc, new_loc, i) {
---              p = strchr (adj_char, vmap[new_loc].contents);
---              if (p) count += 8 * (len - (p - adj_char));
---      }
---      return (count);
---  }
+   -- Return true if a location is surrounded by ocean.  Off board locations
+   -- are treated as ocean.
 
---  /* Count the number of adjacent cells that are on the path. */
+   function Vmap_At_Sea (Vmap : in View_Map; Loc : in Location_T) return Boolean
+   is
+      New_Loc : Location_T;
+   begin
+      for D in Direction_T'Range
+      loop
+         New_Loc := Loc + Dir_Offset(D);
+         if Map(New_Loc).On_Board
+         then
+            if Vmap(New_Loc).Contents = ' ' or Vmap(New_Loc).Contents = '+' or Map(New_Loc).Contents /= '.'
+            then
+               return False;
+            end if;
+         end if;
+      end loop;
 
---  static int
---  vmap_count_path (path_map_t *pmap, long loc)
---  {
---      int i, count;
---      long new_loc;
-
---      count = 0;
-
---      FOR_ADJ_ON (loc, new_loc, i)
---      if (pmap[new_loc].terrain == T_PATH)
---              count += 1;
-
---      return (count);
---  }
-
---  /*
---   * See if a location is on the shore.  We return true if a surrounding
---   * cell contains water and is on the board.
---   */
-
---  int
---  rmap_shore (long loc)
---  {
---      long i, j;
-
---      FOR_ADJ_ON (loc, j, i)
---              if (map[j].contents == '.')
---                      return (TRUE);
-
---      return (FALSE);
---  }
-
---  /*
---   * Return true if a location is surrounded by ocean.  Off board locations
---   * which cannot be moved to are treated as ocean.
---   */
-
---  int
---  vmap_at_sea (const view_map_t *vmap, long loc)
---  {
---      long i, j;
-
---      FOR_ADJ_ON (loc, j, i)
---      if (vmap[j].contents == ' ' || vmap[j].contents == '+' || map[j].contents != '.')
---                      return (FALSE);
-
---      return (TRUE);
---  }
+      return True;
+   end Vmap_At_Sea;
 
 end Empire.Mapping;
