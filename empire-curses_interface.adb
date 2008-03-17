@@ -1,3 +1,4 @@
+with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 with Terminal_Interface.Curses;
 with Terminal_Interface.Curses.Text_Io;
@@ -30,14 +31,14 @@ package body Empire.Curses_Interface is
    -- whether the displayed portion is from the user's or the computer's
    -- point of view;
 
-   procedure Map_Init
+   procedure Init_Map
    is
    begin
       Map_Win_Height := Curses.Lines - TOP_ROWS - BOTTOM_ROWS;
       Map_Win_Width := Curses.Columns - SIDE_COLUMNS;
 
       Map_Win := Curses.New_Window(Map_Win_Height, Map_Win_Width, TOP_ROWS, 0);
-   end Map_Init;
+   end Init_Map;
 
    -- This routine is called when the current display has been
    -- trashed and no sector is shown on the screen.
@@ -145,8 +146,8 @@ package body Empire.Curses_Interface is
    procedure Print_Sector (Whose  : in Piece_Owner_T;
                            Sector : in Sector_T)
    is
-      R, First_Row, Last_Row : Row_T;
-      C, First_Col, Last_Col : Column_T;
+      First_Row, Last_Row : Row_T;
+      First_Col, Last_Col : Column_T;
       Display_Rows : Integer;
       Display_Cols : Integer;
    begin
@@ -234,49 +235,10 @@ package body Empire.Curses_Interface is
       Whose_Map := Whose;               --  remember which map we are displaying
       Display_Screen(Whose);
 
-      -- print x-coordinates along bottom of screen
-      Curses.Move_Cursor(Line => curses.Lines - 1, Column => 0);
-      Curses.Clear_To_End_Of_Line;
-
-      C := Ref_Col;
-      while C < Ref_Col + Display_Cols and C < MAP_WIDTH - 1
-      loop
-         if C mod 10 = 0
-         then
-            Curses.Move_Cursor(Line => Curses.Lines - 1, Column => Curses.Column_Position(C - Ref_Col + 1));
-            -- was "%d"
-            Integer_IO.Put(C);
-         end if;
-         C := C + 1;
-      end loop;
-
-      -- print y-coordinates along right of screen
-      R := Ref_Row;
-      while R < Ref_Row + Display_Rows and R < MAP_HEIGHT - 1
-      loop
-         if R mod 2 = 0
-         then
-            Curses.Move_Cursor(Line => Curses.Line_Position(R - Ref_Row + NUMTOPS + 1), Column => Curses.Columns - NUMSIDES);
-            -- was "%2d"
-            Integer_Io.Put(R);
-         else
-            Curses.Move_Cursor(Line => Curses.Line_Position(R - Ref_Row + NUMTOPS + 1), Column => Curses.Columns - NUMSIDES);
-            Curses.Clear_To_End_Of_Line;
-         end if;
-         R := R + 1;
-      end loop;
-
-      -- print round number down side
       declare
          S : String := "Sector " & Integer'Image(Sector) & " Round " & Integer'Image(Date);
       begin
-         R := 1;
-         while R < S'Length and R + NUMTOPS + 1 < Map_Height
-         loop
-            Curses.Move_Cursor(Line => Curses.Line_Position(R + NUMTOPS + 1), Column => Curses.Columns - NUMSIDES + 4);
-            Text_Io.Put(S(R));
-            R := R + 1;
-         end loop;
+         Print_Map_Frame(Ref_Row, Ref_Col, 1, 1, S);
       end;
       Curses.Refresh;
    end Print_Sector;
@@ -397,50 +359,10 @@ package body Empire.Curses_Interface is
       Curses.Box(Map_Win);
       Curses.Refresh(Map_Win);
 
-      -- print x-coordinates along bottom of screen
-      Curses.Move_Cursor(Line => Curses.Lines - 1, Column => 0);
-      Curses.Clear_To_End_Of_Line;
-      C := 0;
-      while C < MAP_WIDTH
-      loop
-         if (C / Col_Inc) mod 10 = 0 and C < MAP_WIDTH
-         then
-            Curses.Move_Cursor(Line => Curses.Lines - 1,
-                               Column => Curses.Column_Count(C / Col_Inc + 1));
-            -- "%d"
-            Integer_Io.Put(C);
-         end if;
-         C := C + Col_Inc;
-      end loop;
-
-      -- print y-coordinates along right of screen
-      R := 0;
-      while R / Row_Inc < Integer(Map_Win_Height)
-      loop
-         if (R / Row_Inc) mod 10 = 0 and R < MAP_HEIGHT
-         then
-            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
-                               Column => Curses.Columns - NUMSIDES);
-            -- was "%2d"
-            Integer_Io.Put(R);
-         else
-            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
-                               Column => Curses.Columns - NUMSIDES);
-            Curses.Clear_To_End_Of_Line;
-         end if;
-         R := R + Row_Inc;
-      end loop;
-
       declare
          S : String := "Zoomed Map Round " & Integer'Image(Date);
       begin
-         R := 1;
-         while R < S'Length and R + NUMTOPS + 1 < Map_Height
-         loop
-            Curses.Move_Cursor(Line => Curses.Line_Position(R + NUMTOPS + 1), Column => Curses.Columns - NUMSIDES + 4);
-            Text_Io.Put(S(R));
-            R := R + 1;
-         end loop;
+         Print_Map_Frame(0, 0, Row_Inc, Col_Inc, S);
       end;
 
       Curses.Refresh;
@@ -474,10 +396,10 @@ package body Empire.Curses_Interface is
    begin
       Cell := ' ';
       R := Row;
-      while R < Row + Row_Inc           --  while within area being compressed to one square
+      while R < Row + Row_Inc and R < MAP_HEIGHT - 1           --  while within area being compressed to one square
       loop
          C := Col;
-         while C < Col + Col_Inc
+         while C < Col + Col_Inc and C < MAP_WIDTH - 1
          loop
             T := Locations.Row_Col_Loc(R, C);
             if Zoom_List(Vmap(T).contents) < Zoom_List(Cell)
@@ -524,52 +446,10 @@ package body Empire.Curses_Interface is
       Curses.Box(Map_Win);
       Curses.Refresh(Map_Win);
 
-      -- XXX XXX XXX this is done in a lot of places, too.  break out into a function
-
-      -- print x-coordinates along bottom of screen
-      Curses.Move_Cursor(Line => Curses.Lines - 1, Column => 0);
-      Curses.Clear_To_End_Of_Line;
-      C := 0;
-      while C < MAP_WIDTH
-      loop
-         if (C / Col_Inc) mod 10 = 0 and C < MAP_WIDTH
-         then
-            Curses.Move_Cursor(Line => Curses.Lines - 1,
-                               Column => Curses.Column_Count(C / Col_Inc + 1));
-            -- "%d"
-            Integer_Io.Put(C);
-         end if;
-         C := C + Col_Inc;
-      end loop;
-
-      -- print y-coordinates along right of screen
-      R := 0;
-      while R / Row_Inc < Integer(Map_Win_Height)
-      loop
-         if (R / Row_Inc) mod 10 = 0 and R < MAP_HEIGHT
-         then
-            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
-                               Column => Curses.Columns - NUMSIDES);
-            -- was "%2d"
-            Integer_Io.Put(R);
-         else
-            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
-                               Column => Curses.Columns - NUMSIDES);
-            Curses.Clear_To_End_Of_Line;
-         end if;
-         R := R + Row_Inc;
-      end loop;
-
       declare
          S : String := "Path Debug Map Round " & Integer'Image(Date);
       begin
-         R := 1;
-         while R < S'Length and R + NUMTOPS + 1 < Map_Height
-         loop
-            Curses.Move_Cursor(Line => Curses.Line_Position(R + NUMTOPS + 1), Column => Curses.Columns - NUMSIDES + 4);
-            Text_Io.Put(S(R));
-            R := R + 1;
-         end loop;
+         Print_Map_Frame(0, 0, Row_Inc, Col_Inc, S);
       end;
 
       Curses.Refresh;
@@ -649,6 +529,62 @@ package body Empire.Curses_Interface is
       end if;
    end Print_Pzoom_Cell;
 
+   -- print map's decorations -- coordinates along the bottom and side, and
+   -- a label down the side
+
+   procedure Print_Map_Frame (First_Row : in Row_T;
+                              First_Col : in Column_T;
+                              Row_Inc   : in Integer;
+                              Col_Inc   : in Integer;
+                              Label     : in String)
+   is
+      R : Integer;
+      C : Integer;
+   begin
+      -- print x-coordinates along bottom of screen
+      Curses.Move_Cursor(Line => Curses.Lines - 1, Column => 0);
+      Curses.Clear_To_End_Of_Line;
+      C := First_Col;
+
+      while C < First_Col + (Integer(Map_Win_Width) * Col_Inc) and C <= MAP_WIDTH - Col_Inc
+      loop
+         if (C / Col_Inc) mod 10 = 0
+         then
+            Curses.Move_Cursor(Line => Curses.Lines - 1,
+                               Column => Curses.Column_Count(C / Col_Inc + 1));
+            Integer_Io.Put(C);
+         end if;
+         C := C + Col_Inc;
+      end loop;
+
+      -- print y-coordinates along right of screen
+      R := First_Row;
+
+      while R < First_Row + (Integer(Map_Win_Height) * Row_Inc) and R < MAP_HEIGHT
+      loop
+         if (R / Row_Inc) mod 10 = 0 and R < MAP_HEIGHT
+         then
+            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
+                               Column => Curses.Columns - NUMSIDES);
+            Integer_Io.Put(R);
+         else
+            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
+                               Column => Curses.Columns - NUMSIDES);
+            Curses.Clear_To_End_Of_Line;
+         end if;
+         R := R + Row_Inc;
+      end loop;
+
+      for R in 1 .. Label'Length
+      loop
+         if R + NUMTOPS + 1 >= Map_Height
+         then
+            exit;
+         end if;
+         Curses.Move_Cursor(Line => Curses.Line_Position(R + NUMTOPS + 1), Column => Curses.Columns - NUMSIDES + 4);
+         Text_Io.Put(Label(R));
+      end loop;
+   end Print_Map_Frame;
    -- Display the score off in the corner of the screen
 
    procedure Display_Score
@@ -729,7 +665,7 @@ package body Empire.Curses_Interface is
       Text_Io.Put(Help_Win, "See empire(6) for more information.");
       Curses.Switch_Character_Attribute(Help_Win, (Reverse_Video => True, others => False), False);
 
-      for I in 1 .. Text'length
+      for I in Text'Range
       loop
          if I <= Text_Lines
          then
@@ -748,7 +684,7 @@ package body Empire.Curses_Interface is
       Text_Io.Put(Help_Win, "  Piece   Yours Enemy Moves Hits Cost");
       Curses.Switch_Character_Attribute(Help_Win, (Reverse_Video => True, others => False), False);
 
-      for J in Piece_Type_T'Range
+      for J in Piece_Attr'Range
       loop
          if Piece_Type_T'Pos(J) < (Num_Objs + 1) / 2
          then
@@ -761,8 +697,8 @@ package body Empire.Curses_Interface is
          Curses.Move_Cursor(Help_Win, Line => Curses.Line_Position(R + Text_Lines + 3), Column => Curses.Column_Position(C));
          declare
             Nickname : String(1 .. 12);
-            Uname : String := Content_Display_T'Image(Piece_Attr(J).U_Cont);
-            Cname : String := Content_Display_T'Image(Piece_Attr(J).C_Cont);
+            Uname : Content_Display_T := Piece_Attr(J).U_Cont;
+            Cname : Content_Display_T := Piece_Attr(J).C_Cont;
             Speed : String(1 .. 6);
             Max_Hits : String(1 .. 5);
             Build_Time : String(1 .. 6);
@@ -771,8 +707,8 @@ package body Empire.Curses_Interface is
             Ada.Strings.Fixed.Move(Integer'Image(Piece_Attr(J).Speed), Speed);
             Ada.Strings.Fixed.Move(Integer'Image(Piece_Attr(J).Max_Hits), Max_Hits);
             Ada.Strings.Fixed.Move(Integer'Image(Piece_Attr(J).Build_Time), Build_Time);
-
-            Text_Io.Put(Help_Win, Nickname & " " & Uname & "     " & Cname & Speed & Max_Hits & Build_Time);
+            -- XXX XXX XXX in display, this doesn't quite line up right.  tweak later
+            Text_Io.Put(Help_Win, Nickname & " " & Content_Display_T'Image(Uname) & "     " & Content_Display_T'Image(Cname) & Speed & Max_Hits & Build_Time);
          end;
       end loop;
 
@@ -884,14 +820,16 @@ package body Empire.Curses_Interface is
    function Get_Chx return Character
    is
       K : Curses.Real_Key_Code;
+      C : Character;
    begin
       Curses.Set_Cbreak_Mode(True);
       K := Curses.Get_Keystroke(Status_Win);
       Curses.Set_Cbreak_Mode(False);
 
       -- XXX XXX XXX is this right?
-      return Character'Val(K);
-
+      C := Character'Val(K);
+      C := Ada.Characters.Handling.To_Upper(C);
+      return C;
    exception
       when Constraint_Error =>
          return Character'first;
@@ -905,70 +843,68 @@ package body Empire.Curses_Interface is
                      High    : in Integer) return Integer
    is
       L : Integer;
+      S : String (1 .. STRING_MAX);
    begin
-
---  int
---  get_int (const char *message, int low, int high)
---  {
 --      char    buf[STRSIZE], *end;
---      long    l;
 
---      while (1)
---      {
---              prompt(message);
---              get_str(buf, sizeof(buf));
+      loop
+         Prompt(Message);
+         Curses.Set_Echo_Mode(True);
+         Curses.Set_Cbreak_Mode(False);
+         -- XXX XXX XXX can this raise constraint_error?
+         -- XXX XXX XXX IIUC, it truncates
+         Curses.Get(Status_Win, S, S'Length);
+         Curses.Set_Cbreak_Mode(True);
+         Curses.Set_Echo_Mode(False);
 
---              l = strtol(buf, &end, 10);
+         begin
+            L := Integer'Value(S);
+            if L >= Low and L <= High
+            then
+               return L;
+            else
+               Error("Please enter an integer in the range " & Integer'Image(Low) & ".." & Integer'Image(High) & ".");
+            end if;
+         exception
+            when Constraint_Error =>
+               Error("Please enter an integer.");
+         end;
 
---              if (*end != '\0')
---              {
---                      error ("Please enter an integer.");
---                      continue;
---              }
+      end loop;
+   end Get_Int;
 
---              if ((l >= low) && (l <= high))
---                      return (l);
---              else
---                      error ("Please enter an integer in the range %d..%d.", low, high);
---      }
---  }
+   -- Input a yes or no response from the user.  We loop until we get
+   -- a valid response.  We return TRUE iff the user replies 'y'.
 
---  /*
---   * Input a yes or no response from the user.  We loop until we get
---   * a valid response.  We return TRUE iff the user replies 'y'.
---   */
+   function Get_Yn (Message : in String) return Boolean
+   is
+      C : Character;
+   begin
+      loop
+         Prompt(Message);
+         C := Get_Chx;
 
---  int
---  get_yn (const char *message)
---  {
---      char c;
+         case C is
+            -- remember, Get_Chx upcases
+            when 'Y' =>
+               return True;
+            when 'N' =>
+               return False;
+            when others =>
+               Error("Please answer Y or N.");
+         end case;
+      end loop;
+   end Get_Yn;
 
---      while (1)
---      {
---              prompt (message);
---              c = get_chx ();
+   -- Clear the screen, and note that no sector is currently displayed
 
---              if (c == 'Y')
---                      return (TRUE);
---              if (c == 'N')
---                      return (FALSE);
-
---              error ("Please answer Y or N.");
---      }
---  }
-
---  /*
---   * Clear the screen.  We must also kill information maintained about the
---   * display.
---   */
-
---  void
---  term_clear (void)
---  {
---      wclear (stdscr);
---      wrefresh(stdscr);
---      kill_display ();
---  }
+   procedure Clear
+   is
+   begin
+      Curses.Clear;
+      Curses.Refresh;
+      Kill_Display;
+   end Clear;
 
    -- Redraw the screen
    -- XXX as above, this has the same name as a curses function, but this is ui driver independent
@@ -978,36 +914,37 @@ package body Empire.Curses_Interface is
       Curses.Refresh;
    end;
 
-   --  /* Clean up the display.  This routine gets called as we leave the game. */
+   -- Clean up the display.  This routine gets called as we leave the game
 
---  void
---  term_end (void)
---  {
---      wmove(stdscr, LINES - 1, 0);
---      wclrtoeol (stdscr);
---      wrefresh(stdscr);
---      endwin ();
---  }
+   procedure End_Ui
+   is
+   begin
+      Curses.Move_Cursor(Line => Curses.Lines - 1, Column => 0);
+      Curses.Clear_To_End_Of_Line;
+      Curses.Refresh;
+      Curses.End_Screen;
+   end End_Ui;
 
---  /* Initialize the terminal. */
+   -- Initialize the terminal
 
---  void
---  term_init (void)
---  {
---      initscr();
---      noecho();
---      crmode();
---      lines = LINES;
---      cols = COLS;
---      if (lines > MAP_HEIGHT + NUMTOPS + 1)
---              lines = MAP_HEIGHT + NUMTOPS + 1;
---      if (cols > MAP_WIDTH + NUMSIDES)
---              cols = MAP_WIDTH + NUMSIDES;
+   procedure Init_Ui
+   is
+   begin
+      Curses.Init_Screen;
+      Curses.Set_Echo_Mode(False);
+      Curses.Set_Cbreak_Mode(False);
 
---      statuswin = newwin(1, cols-12, 0, 0);
---      wattrset(statuswin, A_REVERSE);
---      infowin = newwin(NUMINFO, cols-12, 1, 0);
---  }
+      -- XXX XXX XXX XXX we call lines at all the right places, and try to cope.  this might be better
+      -- XXX XXX XXX XXX to revert to...
+      --      if (lines > MAP_HEIGHT + NUMTOPS + 1)
+      --              lines = MAP_HEIGHT + NUMTOPS + 1;
+      --      if (cols > MAP_WIDTH + NUMSIDES)
+      --              cols = MAP_WIDTH + NUMSIDES;
+
+      Status_Win := Curses.New_Window(1, Curses.Columns - 12, 0, 0);
+      Curses.Switch_Character_Attribute(Status_Win, (Reverse_Video => True, others => False), True);
+      Info_Win := Curses.New_Window(NUMINFO, Curses.Columns - 12, 1, 0);
+   end Init_Ui;
 
    procedure Alert
    is

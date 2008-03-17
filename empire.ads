@@ -108,7 +108,7 @@ package Empire is
    package Content_IO is new Ada.Text_IO.Enumeration_IO(Content_Display_T);
    package Terrain_IO is new Ada.Text_IO.Enumeration_IO(Terrain_Display_T);
 
-   type Direction_T is
+   type Direction_Choice_T is
       (NORTH,
        NORTHEAST,
        EAST,
@@ -118,6 +118,7 @@ package Empire is
        WEST,
        NORTHWEST,
        NODIRECTION);
+   subtype Direction_T is Direction_Choice_T range NORTH .. NORTHWEST;
 
    -- in original, function_t was overloaded, with negative values meaning as indicated
    -- below, and positive values indicatign a location_t destination.
@@ -517,8 +518,7 @@ private
       SOUTH => MAP_WIDTH,
       SOUTHWEST => MAP_WIDTH - 1,
       WEST => -1,
-      NORTHWEST => -MAP_WIDTH - 1,
-      NODIRECTION => 0);
+      NORTHWEST => -MAP_WIDTH - 1);
 
   -- names of movement functions
    Function_Name : constant Function_Name_Array :=

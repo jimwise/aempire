@@ -54,7 +54,7 @@ package body Empire.Game is
          end;
       end loop;
 
-      make_Map;                            --  fills in land and water
+      Make_Map;                            --  fills in land and water
 
       Place_Cities;
       while not Select_Cities              --  try to choose a city for each player
@@ -83,34 +83,65 @@ package body Empire.Game is
 --  at program start up.
 
    procedure Make_Map is
-      From : Integer := 1;
-      To : Integer := 2;
+      From : Integer;
+      To : Integer;
       Tmp : Integer;
       Sum : Integer;
       Loc : Location_T;
       Waterline : Integer;
    begin
-      for I in Map'Range                --  fill map with random `sand'
+      for I in Location_T'Range
       loop
+         --  mark disallowed `edge-of-the-world' cells as such
+         case Locations.Loc_Col(I) is
+            when Column_T'First | Column_T'Last =>
+               -- Ui.Error("Current Location is " & Location_T'Image(I));
+               -- Ui.Error("off_board : column is " & Column_T'Image(Locations.Loc_Col(I)));
+               Map(I).On_Board := False;
+            when others =>
+               -- Ui.Error("Current Location is " & Location_T'Image(I));
+               -- Ui.Error("off_board : row is " & Column_T'Image(Locations.Loc_Row(I)));
+               Map(I).On_Board := True;
+         end case;
+
+         case Locations.Loc_Row(I) is
+            when Row_T'First | Row_T'Last =>
+               Map(I).On_Board := False;
+            when others =>
+               Map(I).On_Board := True;
+         end case;
+
+         --  fill map with random `sand'
          Height(1, I) := Math.Rand_Long(Max_Height);
       end loop;
 
+      From := 1;
+      To := 2;
       for I in 1 .. Smooth
       loop
-         for J in Map'Range
+         for J in Location_T'Range
          loop
-            Sum := Height(From, J);
-            for K in Direction_T'Range
-            loop
-               Loc := Dir_Offset(K);
-               --  smooth edges in a weird fashion
-               if (Loc < 0) or (Loc >= Map_Size)
-               then
-                  Loc := J;
-               end if;
-               Sum := Sum + Height(From, Loc);
-            end loop;
-            Height(To, J) := Sum / 9;
+            if Map(J).On_Board
+            then
+               Sum := Height(From, J);
+               for K in Direction_T'Range
+               loop
+                  begin
+                     Loc := J + Dir_Offset(K);
+                     Sum := Sum + Height(From, Loc);
+                  exception
+                     when Constraint_Error =>
+                        Ui.Error("Current Location is " & Location_T'Image(J));
+                        Ui.Error("Current direction is " & Direction_T'Image(K));
+                        Ui.Error("Row is " & Row_T'Image(Locations.Loc_Row(J)));
+                        Ui.Error("Col is " & Column_T'Image(Locations.Loc_Col(J)));
+                        Ui.Error("About to offset by " & Integer'Image(Dir_Offset(K)));
+                  end;
+               end loop;
+               Height(To, J) := Sum / 9;
+            else
+               Ui.Error("Skiping off-board location " & Location_T'Image(J));
+            end if;
          end loop;
          --  swap to and from
          Tmp := To;
@@ -149,21 +180,6 @@ package body Empire.Game is
 
          Map(I).Objp := null;           --  nothing in cell yet
          Map(I).Cityp := null;
-
-         --  mark disallowed `edge-of-the-world' cells as such
-         case Locations.Loc_Col(I) is
-            when 0|(MAP_WIDTH-1) =>
-               Map(I).On_Board := FALSE;
-            when others =>
-               Map(I).On_Board := TRUE;
-         end case;
-
-         case Locations.Loc_Row(I) is
-            when 0|(MAP_height-1) =>
-               Map(I).On_Board := FALSE;
-            when others =>
-               Map(I).On_Board := TRUE;
-         end case;
       end loop;
    end Make_Map;
 
@@ -543,7 +559,9 @@ package body Empire.Game is
       File: File_Type;
    begin
       Ui.Info("XXX XXX XXX File restore is not yet supported");
-      Open(File, In_File, "empsave.dat");
+      raise Game.No_Saved_Game;
+
+      -- Open(File, In_File, "empsave.dat");
 
       --         rbuf (map);
       --         rbuf (comp_map);
@@ -610,10 +628,10 @@ package body Empire.Game is
       --         read_embark (user_obj[CARRIER], FIGHTER);
       --         read_embark (comp_obj[TRANSPORT], ARMY);
       --         read_embark (comp_obj[CARRIER], FIGHTER);
-      Close(File);
+      -- Close(File);
 
-      Ui.Kill_Display;                  --  need to force a full refresh
-      Ui.Info("Game (NOT) restored from empsave.dat.");
+      -- Ui.Kill_Display;                  --  need to force a full refresh
+      -- Ui.Info("Game (NOT) restored from empsave.dat.");
    end Restore_Game;
 
    -- Embark cargo on a ship.  We loop through the list of ships.

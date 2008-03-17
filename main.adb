@@ -71,9 +71,7 @@ begin
             return;
 
          when others =>
-            -- can only happen if there is a bug in GNAT.Command_Line
-            raise Program_Error;
-
+            exit;
       end case;
    end loop;
 

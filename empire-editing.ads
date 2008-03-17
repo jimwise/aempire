@@ -11,7 +11,7 @@ package Empire.Editing is
 
 private
    -- array mapping direction chars to dir_offset indices (1=>N .. 8=>NW).  0 => not a valid direction char (XXX)
-   type Direction_Offset_Array is array (Character) of Direction_T;
+   type Direction_Offset_Array is array (Character) of Direction_Choice_T;
    -- hopefully optimized away.
    Dir_Chars : constant Direction_Offset_Array :=
      ('W' => NORTH,

@@ -150,7 +150,7 @@ package body Empire.Editing is
 
    procedure E_Move_Direction (Loc : in Location_T) is
       C : Character;
-      D : Direction_T;
+      D : Direction_Choice_T;
       F : Function_T;
       Obj : Piece_Info_P;
    begin
@@ -174,7 +174,7 @@ package body Empire.Editing is
 
    procedure E_City_Move_Direction (Loc : in Location_t; Ptype : Piece_Type_T) is
       E : Character;
-      D : Direction_T;
+      D : Direction_Choice_T;
       F : Function_T;
    begin
       E := Ui.Get_Chx;                  -- get a direction

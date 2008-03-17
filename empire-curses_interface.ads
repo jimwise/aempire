@@ -49,6 +49,11 @@ private
                               Col_Inc : in integer);
    procedure Show_Loc (Which : in Piece_Owner_T;
                        Loc   : in Location_T);
+   procedure Print_Map_Frame (First_Row : in Row_T;
+                              First_Col : in Column_T;
+                              Row_Inc   : in Integer;
+                              Col_Inc   : in Integer;
+                              Label     : in String);
 
    Whose_Map : Owner_T := UNOWNED;      --  user or computer (none yet)
    Ref_Row : Row_T;                     --  current top row displayed
