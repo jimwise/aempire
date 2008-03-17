@@ -107,7 +107,7 @@ package body Empire is
             -- XXX may be better to add an out boolean to Cur_Sector
             if Sec = Sector_T'First
             then
-               Ui.Print_Sector_U(sec);
+               Ui.Print_Sector(USER, Sec);
             end if;
             Editing.Edit(Locations.Sector_Loc(Sec));
 
@@ -155,7 +155,7 @@ package body Empire is
             end if;
 
          when 'Z' =>                    -- print compressed map
-            Ui.Print_Zoom(User_Map);
+            Ui.Print_Zoom(View(USER));
             Ui.Redraw;
 
          when Character'Val(12) =>      -- c-l (redraw screen)

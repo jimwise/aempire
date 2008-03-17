@@ -36,8 +36,8 @@ package body Empire.Game is
       User_Score := 0;
       Comp_Score := 0;
 
-      User_Map := (others => (Contents => ' ', Seen => 0));
-      Comp_Map := (others => (Contents => ' ', Seen => 0));
+      View(USER) := (others => (Contents => ' ', Seen => 0));
+      View(COMP) := (others => (Contents => ' ', Seen => 0));
       User_Obj := (others => null);
       Comp_Obj := (others => null);
 
@@ -49,8 +49,7 @@ package body Empire.Game is
             Objp : Piece_Info_P;
          begin
             Object(I).Hits := 0;
-            Object(I).Owner := UNOWNED;
-            Objp := Object(I)'Access;
+            Objp := Object(I);
             Lists.Link(Free_List, Objp, PIECE_LINK);
          end;
       end loop;
@@ -315,12 +314,12 @@ package body Empire.Game is
       CompP.Owner := COMP;
       CompP.Prod := ARMY;
       CompP.Work := 0;
-      Objects.Scan(Comp_Map, CompP.Loc);
+      Objects.Scan(COMP, CompP.Loc);
 
       UserP.Owner := USER;
       UserP.Work := 0;
-      Objects.Scan(User_Map, UserP.Loc);
-      Objects.Set_Prod(UserP.all);
+      Objects.Scan(USER, UserP.Loc);
+      Objects.Ask_Prod(UserP.all);
 
       return TRUE;
    end Select_Cities;
@@ -639,17 +638,17 @@ package body Empire.Game is
 
             if (Obj.Ship = null) and (Obj.Piece_Type = Ptype)
             then
-               Objects.Embark(Ship.all, Obj.all);
+               Objects.Embark(Ship, Obj);
                Count := Count - 1;
             end if;
-            Obj := Obj.Loc_Link.Next;
+            Obj := Obj.Links(Loc_Link).Next;
          end loop;
          if Count > 0
          then
             raise Corrupt_Saved_Game;
          end if;
 
-         Ship := Ship.Piece_Link.Next;
+         Ship := Ship.Links(Piece_Link).Next;
       end loop;
    end Read_Embark;
 

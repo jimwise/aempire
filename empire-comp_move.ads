@@ -39,25 +39,25 @@ private
    function Need_More (City_Count : in Piece_Value_Array; Prod1 : in Piece_Type_T; Prod2 : in Piece_Type_T) return Piece_Type_T;
    function Overproduced (Cityp : in City_Info_T; City_Count : in Piece_Value_Array) return Boolean;
 
-   procedure Cpiece_Move (Obj : in out Piece_Info_T);
-   procedure Army_Move (Obj : in out Piece_Info_T);
-   procedure Fighter_Move (Obj : in out Piece_Info_T);
-   procedure Ship_Move (Obj : in out Piece_Info_T);
-   procedure Transport_Move (Obj : in out Piece_Info_T);
+   procedure Cpiece_Move (Obj : in out Piece_Info_P);
+   procedure Army_Move (Obj : in out Piece_Info_P);
+   procedure Fighter_Move (Obj : in out Piece_Info_P);
+   procedure Ship_Move (Obj : in out Piece_Info_P);
+   procedure Transport_Move (Obj : in out Piece_Info_P);
 
-   procedure Move1 (Obj : in out Piece_Info_T);
+   procedure Move1 (Obj : in out Piece_Info_P);
    function Move_Away (Vmap : in View_Map; Loc : in Location_T; Terrain : in Acceptable_Content_Array) return Location_T;
-   procedure Move_Objective (Obj : in out Piece_Info_T; Pathmap : in out Path_Map; Loc : in Location_T; Adj_List : in Content_Value_Array);
+   procedure Move_Objective (Obj : in out Piece_Info_P; Pathmap : in out Path_Map; Loc : in Location_T; Adj_List : in Content_Value_Array);
    Could_Not_Load : exception;
-   procedure Load_Army (Obj : in out Piece_Info_T);
+   procedure Load_Army (Obj : in out Piece_Info_P);
    procedure Find_Best_Tt (Best : in out Piece_Info_P; Loc : in Location_T);
 
    function Find_Attack (Loc : in Location_T; Obj_List : in Content_Value_Array; Terrain : Acceptable_Terrain_Array) return Location_T;
    function Land_Locked (Loc : in Location_T) return Boolean;
    function Nearby_Count (Loc : in Location_T) return Integer;
-   function Nearby_Load (Obj : in Piece_Info_T; Loc : in Location_T) return Boolean;
+   function Nearby_Load (Obj : in Piece_Info_P; Loc : in Location_T) return Boolean;
 
-   procedure Make_Army_Load_Map (Obj : in out Piece_Info_T; xmap : in out View_Map; Vmap : in View_Map);
+   procedure Make_Army_Load_Map (Obj : in out Piece_Info_P; xmap : in out View_Map; Vmap : in View_Map);
    procedure Make_Tt_Load_Map (Xmap : in out View_Map; Vmap : in View_Map);
    procedure Make_Unload_Map (Xmap : in out View_Map; Vmap : in View_Map);
    procedure Unmark_Explore_Locs (Xmap : in out View_Map);

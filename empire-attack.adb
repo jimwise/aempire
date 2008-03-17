@@ -19,7 +19,7 @@ package body Empire.Attack is
    -- the dead object.  Tell user who won and how many hits her piece has left,
    -- if any.
 
-   procedure Attack (Att_Obj : in out Piece_Info_T; Loc : in Location_T) is
+   procedure Attack (Att_Obj : in out Piece_Info_P; Loc : in Location_T) is
    begin
       if Map(Loc).Contents = '*'
       then
@@ -29,7 +29,7 @@ package body Empire.Attack is
       end if;
    end Attack;
 
-   procedure Attack_City (Att_Obj : in out Piece_Info_T; Loc : in Location_T) is
+   procedure Attack_City (Att_Obj : in out Piece_Info_P; Loc : in Location_T) is
       Cityp : City_Info_P;
       Att_Owner, City_owner : Owner_T;
    begin
@@ -63,7 +63,7 @@ package body Empire.Attack is
          then
             Ui.Info("City at " & Location_T'Image(Loc) & " has been conquered!");
             Ui.Info("Your army has been dispersed to enforce control.");
-            Objects.Set_Prod(Cityp.all);
+            Objects.Ask_Prod(Cityp.all);
          elsif City_Owner = USER        --  comp attacks, we defend
          then
             Ui.Info("City at " & Location_T'Image(Loc) & " has been lost to the enemy!");
@@ -71,20 +71,13 @@ package body Empire.Attack is
       end if;
 
       -- let city owner see all results
-      case City_Owner is
-         when USER =>
-            Objects.Scan(User_Map, Loc);
-         when COMP =>
-            Objects.Scan(Comp_Map, Loc);
-         when UNOWNED =>
-            null;
-      end case;
+      Objects.Scan(City_Owner, Loc);
    end Attack_City;
 
    -- Attack a piece other than a city.  The piece could be anyone's.
    -- First we have to figure out what is being attacked.
 
-   procedure Attack_Obj (Att_Obj : in out Piece_Info_T; Loc : in Location_T) is
+   procedure Attack_Obj (Att_Obj : in out Piece_Info_P; Loc : in Location_T) is
       Def_Obj : Piece_Info_P;
       Owner : Owner_T;
    begin
@@ -114,26 +107,19 @@ package body Empire.Attack is
 
       if Att_Obj.Hits > 0
       then        --  attacker won
-         Describe(Att_Obj, Def_Obj.all, Loc);
+         Describe(Att_Obj, Def_Obj, Loc);
          Owner := Def_Obj.Owner;
-         Objects.Kill_Obj(Def_Obj.all, Loc);
+         Objects.Kill_Obj(Def_Obj, Loc);
          Survive(Att_Obj, Loc);         --  moves into space
       else                              --  defender won
-         Describe(Def_Obj.all, Att_Obj, Loc);
+         Describe(Def_Obj, Att_Obj, Loc);
          Owner := Att_Obj.Owner;
          Objects.Kill_Obj(Att_Obj, Loc);
-         Survive(Def_Obj.all, Loc);
+         Survive(Def_Obj, Loc);
       end if;
 
       -- show results to first killed
-      case owner is
-         when USER =>
-            Objects.Scan(User_Map, Loc);
-         when COMP =>
-            Objects.Scan(Comp_Map, Loc);
-         when others =>
-            raise Program_Error;        --  there are no neutral units
-      end case;
+      Objects.Scan(Owner, Loc);
    end Attack_Obj;
 
    -- Here we look to see if any cargo was killed in the attack.  If
@@ -141,17 +127,17 @@ package body Empire.Attack is
    -- fall overboard and drown.  We also move the survivor to the given
    -- location.
 
-   procedure Survive (Obj : in out Piece_Info_T; Loc : in Location_T) is
+   procedure Survive (Obj : in out Piece_Info_P; Loc : in Location_T) is
    begin
       while Objects.Obj_Capacity(Obj) < Obj.Count
       loop
-         Objects.Kill_Obj(Obj.Cargo.all, Loc);
+         Objects.Kill_Obj(Obj.Cargo, Loc);
       end loop;
 
       Objects.Move_Obj(Obj, Loc);
    end Survive;
 
-   procedure Describe (Win_Obj : in Piece_Info_T; Lose_Obj : in Piece_Info_T; Loc : Location_T) is
+   procedure Describe (Win_Obj : in Piece_Info_P; Lose_Obj : in Piece_Info_P; Loc : Location_T) is
       Diff : Integer;
    begin
       --  original had case for unit attacking own-side, due to cutesy-ism in user_move...
@@ -160,10 +146,10 @@ package body Empire.Attack is
          --  XXX XXX XXX this should really move above, leaving Describe pure.
          User_Score := User_Score + Piece_Attr(Lose_Obj.Piece_Type).Build_Time;
 
-         Ui.Info("Enemy " & Piece_Attr(Lose_Obj.Piece_Type).Name.all &
+         Ui.Info("Enemy " & Strings.To_String(Piece_Attr(Lose_Obj.Piece_Type).Name) &
                    " at " & Location_T'Image(Loc) &
                    " has been destroyed.");
-         Ui.Info("Your " & Piece_Attr(Win_Obj.Piece_Type).Name.all &
+         Ui.Info("Your " & Strings.To_String(Piece_Attr(Win_Obj.Piece_Type).Name) &
                    " has " & Integer'Image(Win_Obj.Hits) & " hits left.");
 
          Diff := Win_Obj.Count - Objects.Obj_Capacity(Win_Obj);
@@ -181,7 +167,7 @@ package body Empire.Attack is
       else
          --  XXX XXX XXX this should really move above, leaving Describe pure.
          Comp_Score := Comp_Score + Piece_Attr(Lose_Obj.Piece_Type).Build_Time;
-         Ui.Info("Your "& Piece_Attr(Lose_Obj.Piece_Type).Name.all &
+         Ui.Info("Your "& Strings.To_String(Piece_Attr(Lose_Obj.Piece_Type).Name) &
                    " at " & Location_T'Image(Loc) & " was destroyed.");
       end if;
    end Describe;

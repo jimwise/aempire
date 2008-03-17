@@ -1,9 +1,12 @@
+with Ada.Strings.Bounded;
 with Ada.Text_IO;
 package Empire is
    MAP_WIDTH : constant Integer := 100;
    MAP_HEIGHT : constant Integer := 60;
    MAP_SIZE : constant Integer := MAP_WIDTH * MAP_HEIGHT;
    NUM_CITY : constant Integer := 70;
+
+   STRING_MAX : constant Integer := 256;
 
    -- cost to switch a city's production is the _new_ item's cost over RETOOLING_DENOMINATOR
    RETOOLING_DENOMINATOR : constant := 5;
@@ -17,12 +20,13 @@ package Empire is
 
    LIST_SIZE : constant Integer := 5000; -- max number of pieces on board
 
-   NUMTOPS : constant Integer := 4;      -- number of lines at top of screen for messages
-   NUMINFO : constant Integer := NUMTOPS - 1;
-   NUMSIDES : constant Integer := 6;     -- number of lines at side of screen
 
-   type String_P is access constant String;
-   type Help_Array is array (Natural range <>) of String_P;
+   -- XXX XXX XXX XXX need to move to bounded_strings.  will make
+   -- XXX XXX XXX XXX describe_obj (at least) cleaner, for instance.
+   package Strings is new Ada.Strings.Bounded.Generic_Bounded_Length(STRING_MAX);
+   subtype Bstring is Strings.Bounded_String;
+
+   type Help_Array is array (Natural range <>) of Bstring;
 
    SAVE_NAME : constant String := "empsave.dat";
    MOVIE_NAME : constant String := "empmovie.dat";
@@ -42,11 +46,15 @@ package Empire is
    VERSION_STRING : constant String := "ADA EMPIRE, Version 1.4_ALPHA0, February 2006";
 
    type Owner_T is (UNOWNED, USER, COMP);
+   subtype Piece_Owner_T is Owner_T range USER .. COMP;
    type Acceptable_Owner_Array is array (Owner_T) of Boolean;
 
    -- when adding a new piece type, must add here, in piece_attr below,
    -- and at least also in switch in Empire.Mapping.Vmap_Cont_Scan
    -- XXX (undoubtedly others, too)
+   -- XXX XXX note that piece types here need to be in preference order
+   -- XXX XXX for Find_Obj_At_Loc (least -> most).  This can be replaced
+   -- XXX XXX by a constant piece_value_array, making this tunable
    type Piece_Type_T is
       (ARMY,
        FIGHTER,
@@ -78,7 +86,7 @@ package Empire is
       ('.', '+', '*', 'O', 'X', ' ',
        'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd', 'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z',
        '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%');
-   type Terrain_Display_T is ('.', '+', '*', 'O', 'X');
+   subtype Terrain_Display_T is Content_Display_T range '.' .. '*';
 
    type Acceptable_Content_Array is array (Content_Display_T) of Boolean;
    type Acceptable_Terrain_Array is array (Terrain_Display_T) of Boolean;
@@ -155,6 +163,17 @@ package Empire is
       MOVE_NW => NORTHWEST
      );
 
+   Move_Dir_Functions : constant array (Direction_T range NORTH .. NORTHWEST) of Function_T :=
+     (
+      NORTH => MOVE_N,
+      NORTHEAST => MOVE_NE,
+      EAST => MOVE_E,
+      SOUTHEAST => MOVE_SE,
+      SOUTH => MOVE_S,
+      SOUTHWEST => MOVE_SW,
+      WEST => MOVE_W,
+      NORTHWEST => MOVE_NW
+     );
 
    -- if we determine how to represent T_PATH, this could be replaced with a set of constants of
    -- type Acceptable_Terrain_Array
@@ -174,7 +193,7 @@ package Empire is
 
    type Piece_Info_T;
 
-   type Piece_Info_P is access all Piece_Info_T;
+   type Piece_Info_P is access Piece_Info_T;
 
    type Link_T is
       record
@@ -183,13 +202,12 @@ package Empire is
       end record;
 
    type Link_Type_T is (PIECE_LINK, LOC_LINK, CARGO_LINK);
+   type Link_Array is array (Link_Type_T'Range) of Link_T;
 
    type Piece_Info_T is
       record
-         Piece_Link : Link_T;           -- linked list of pieces of this type
-         Loc_Link : Link_T;             -- linked list of pieces at a location
-         Cargo_Link : Link_T;           -- linked list of cargo pieces
-         Owner : Owner_t;               -- owner of piece
+         Links : Link_Array;    --  linked lists of pieces of this type, at this loc, and in this transport/carrier
+         Owner : Piece_Owner_T;         -- owner of piece
          Piece_Type : Piece_Type_T;     -- type of piece
          Loc : Location_T;              -- location of piece
          Func : Function_T;             -- programmed type of movement
@@ -209,13 +227,15 @@ package Empire is
 
    type Piece_Attr_T is
       record
-         Sname : Content_Display_T;     -- eg 'C'
+         U_Cont : Content_Display_T;     -- user version, eg 'A'
+         C_Cont : Content_Display_T;     -- computer version, eg 'a'
+         Sel_Char : Character;           -- shortcut char for menus
          Class : Piece_Class_T;         -- general type of piece
-         Name : String_P;               -- eg "aircraft carrier"
-         Nickname : String_P;           -- eg "carrier"
-         Article : String_P;            -- eg "an aircraft carrier"
-         Plural : String_P;             -- eg "aircraft carriers" (XXX not used)
-         Terrain : Acceptable_Terrain_Array;    -- terrain piece can pass over
+         Name : Bstring;                -- eg "aircraft carrier" XXX XXX wasteful -- should we have a "short_string" type?
+         Nickname : Bstring;            -- eg "carrier"
+         Article : Bstring;             -- eg "an aircraft carrier"
+         Plural : Bstring;              -- eg "aircraft carriers" (XXX not used)
+         Terrain : Acceptable_Content_Array; -- terrain piece can pass over
          Build_Time : Integer;          -- time needed to build unit
          Strength : Integer;            -- attack strength
          Max_Hits : integer;            -- number of hits when completely repaired
@@ -303,8 +323,11 @@ package Empire is
    type Continent_Map is array (Location_T) of Boolean;
 
    Map : Real_map;                      -- the way the world really looks
-   Comp_Map : View_Map;                 -- computer's view of the world
-   User_Map : View_Map;                 -- user's view of the world
+   View : array (Piece_Owner_T'Range) of View_Map; --  COMP and USER views of the world
+
+   -- NOTA BENE the above replaced:
+   -- Comp_Map : View_Map;                 -- computer's view of the world
+   -- User_Map : View_Map;                 -- user's view of the world
 
    City : array (1..NUM_CITY) of aliased City_Info_T; -- city information
 
@@ -315,7 +338,7 @@ package Empire is
    Free_List : Piece_Info_P;            -- list of free items in object list
    User_Obj : array (Piece_Type_T) of Piece_Info_P; -- user object lists
    Comp_Obj : array (Piece_Type_T) of Piece_Info_P; -- computer object lists
-   Object : array (1..LIST_SIZE) of aliased Piece_Info_T; -- global object list
+   Object : array (1..LIST_SIZE) of Piece_Info_P := (others => new Piece_Info_T); -- global object list
 
    -- miscellaneous global variables
 
@@ -341,8 +364,8 @@ package Empire is
    -- global display-related variables
 
    Color : Boolean := TRUE;             -- use color if available
-   Lines : Integer;                     -- lines on screen
-   Cols : Integer;                      -- columns on screen
+   -- Lines : Integer;                     -- lines on screen
+   -- Cols : Integer;                      -- columns on screen
 
    -- exceptions
    User_Quit : exception;
@@ -353,7 +376,7 @@ package Empire is
    type City_Char_Array is array (Owner_T) of Content_Display_T;
    type Piece_Attr_Array is array (Piece_Type_T range ARMY .. SATELLITE) of Piece_Attr_T;
    type Dir_Offset_Array is array (Direction_T) of Integer;
-   type Function_Name_Array is array (Function_T) of String_P;
+   type Function_Name_Array is array (Function_T) of Bstring;
    type Move_Order_Array is array (Natural range <>) of Piece_Type_T;
 
    Piece_Attr : constant Piece_Attr_array;
@@ -403,21 +426,20 @@ private
    -- values for Piece_Attr.*.Terrain.  XXX We could dispatch based on
    -- Class now, but don't yet
 
-   -- XXX verify that this is okay -- that owned cities belong here (or cities at all)
-   GROUND_TERRAIN : constant Acceptable_Terrain_Array := ('+'|'*'|'O'|'X' => TRUE, others => FALSE);
-   AIRCRAFT_TERRAIN : constant Acceptable_Terrain_Array := (others => TRUE);
-   -- XXX verify that this is okay -- that owned cities belong here
-   SHIP_TERRAIN : constant Acceptable_Terrain_Array := ('.'|'*'|'X'|'O' => TRUE, others => FALSE);
-   SPACECRAFT_TERRAIN : constant Acceptable_Terrain_Array := AIRCRAFT_TERRAIN;
+   GROUND_TERRAIN : constant Acceptable_Content_Array := ('+' => TRUE, others => FALSE);
+   AIRCRAFT_TERRAIN : constant Acceptable_Content_Array := ('.'|'+' => TRUE, others => FALSE);
+   SHIP_TERRAIN : constant Acceptable_Content_Array := ('.' => TRUE, others => FALSE);
+   SPACECRAFT_TERRAIN : constant Acceptable_Content_Array := AIRCRAFT_TERRAIN;
 
    Piece_Attr : constant Piece_Attr_Array :=
      (ARMY =>
-        (Sname => 'A',                 -- character for printing piece
+        (U_Cont => 'A', C_Cont => 'a',  -- character for printing piece
+         Sel_Char => 'B',
          Class => GROUND,
-         Name => new String'("army"),   -- name of piece
-         Nickname => new String'("army"), -- nickname
-         Article => new String'("an army"), -- name with preceding article
-         Plural => new String'("armies"), -- plural
+         Name => Strings.To_Bounded_String("army"),   -- name of piece
+         Nickname => Strings.To_Bounded_String("army"), -- nickname
+         Article => Strings.To_Bounded_String("an army"), -- name with preceding article
+         Plural => Strings.To_Bounded_String("armies"), -- plural
          Terrain => GROUND_TERRAIN,     -- terrain
          Build_Time => 5,               -- units to build
          Strength => 1,                 -- streng
@@ -431,57 +453,57 @@ private
       -- turns back.
 
       FIGHTER =>
-        (Sname => 'F', Class => AIRCRAFT, Name => new String'("fighter"), Nickname => new String'("fighter"),
-         Article => new String'("a fighter"), Plural => new String'("fighters"),
+        (U_Cont => 'F', C_Cont => 'f', Sel_Char => 'F', Class => AIRCRAFT, Name => Strings.To_Bounded_String("fighter"), Nickname => Strings.To_Bounded_String("fighter"),
+         Article => Strings.To_Bounded_String("a fighter"), Plural => Strings.To_Bounded_String("fighters"),
          Terrain => AIRCRAFT_TERRAIN,
          Build_Time => 10, Strength => 1, Max_Hits => 1,
          Speed => 8, Capacity => 0, Piece_Range => 32),
 
       PATROL =>
-        (Sname => 'P', Class => SHIP, Name => new String'("patrol boat"), Nickname => new String'("patrol"),
-         Article => new String'("a patrol boat"), Plural => new String'("patrol boats"),
+        (U_Cont => 'P', C_Cont => 'p', Sel_Char => 'P', Class => SHIP, Name => Strings.To_Bounded_String("patrol boat"), Nickname => Strings.To_Bounded_String("patrol"),
+         Article => Strings.To_Bounded_String("a patrol boat"), Plural => Strings.To_Bounded_String("patrol boats"),
          Terrain => SHIP_TERRAIN,
          Build_Time => 15, Strength => 1, Max_Hits => 1,
          Speed => 4, Capacity => 0, Piece_Range => INFINITY),
 
       DESTROYER =>
-        (Sname => 'D', Class => SHIP, Name => new String'("destroyer"), Nickname => new String'("destroyer"),
-         Article => new String'("a destroyer"), Plural => new String'("destroyers"),
+        (U_Cont => 'D', C_Cont => 'd', Sel_Char => 'D', Class => SHIP, Name => Strings.To_Bounded_String("destroyer"), Nickname => Strings.To_Bounded_String("destroyer"),
+         Article => Strings.To_Bounded_String("a destroyer"), Plural => Strings.To_Bounded_String("destroyers"),
          Terrain => SHIP_TERRAIN,
          Build_Time => 20, Strength => 1, Max_Hits => 3,
          Speed => 4, Capacity => 0, Piece_Range => INFINITY),
 
       SUBMARINE =>
-        (Sname => 'S', Class => SHIP, Name => new String'("submarine"), Nickname => new String'("submarine"),
-         Article => new String'("a submarine"), Plural => new String'("submarines"),
+        (U_Cont => 'S', C_Cont => 's', Sel_Char => 'S', Class => SHIP, Name => Strings.To_Bounded_String("submarine"), Nickname => Strings.To_Bounded_String("submarine"),
+         Article => Strings.To_Bounded_String("a submarine"), Plural => Strings.To_Bounded_String("submarines"),
          Terrain => SHIP_TERRAIN,
          Build_Time => 20, Strength => 3, Max_Hits => 2,
          Speed => 2, Capacity => 0, Piece_Range => INFINITY),
 
       TRANSPORT =>
-        (Sname => 'T', Class => SHIP, Name => new String'("troop transport"), Nickname => new String'("transport"),
-         Article => new String'("a troop transport"), Plural => new String'("troop transports"),
+        (U_Cont => 'T', C_Cont => 't', Sel_Char => 'T', Class => SHIP, Name => Strings.To_Bounded_String("troop transport"), Nickname => Strings.To_Bounded_String("transport"),
+         Article => Strings.To_Bounded_String("a troop transport"), Plural => Strings.To_Bounded_String("troop transports"),
          Terrain => SHIP_TERRAIN,
          Build_Time => 30, Strength => 1, Max_Hits => 1,
          Speed => 2, Capacity => 6, Piece_Range => INFINITY),
 
       CARRIER =>
-        (Sname => 'C', Class => SHIP, Name => new String'("aircraft carrier"), Nickname => new String'("carrier"),
-         Article => new String'("an aircraft carrier"), Plural => new String'("aircraft carriers"),
+        (U_Cont => 'C', C_Cont => 'c', Sel_Char => 'C', Class => SHIP, Name => Strings.To_Bounded_String("aircraft carrier"), Nickname => Strings.To_Bounded_String("carrier"),
+         Article => Strings.To_Bounded_String("an aircraft carrier"), Plural => Strings.To_Bounded_String("aircraft carriers"),
          Terrain => SHIP_TERRAIN,
          Build_Time => 30, Strength => 1, Max_Hits => 8,
          Speed => 2, Capacity => 8, Piece_Range => INFINITY),
 
       BATTLESHIP =>
-        (Sname => 'B', Class => SHIP, Name => new String'("battleship"), Nickname => new String'("battleship"),
-         Article => new String'("a battleship"), Plural => new String'("battleships"),
+        (U_Cont => 'B', C_Cont => 'b', Sel_Char => 'B', Class => SHIP, Name => Strings.To_Bounded_String("battleship"), Nickname => Strings.To_Bounded_String("battleship"),
+         Article => Strings.To_Bounded_String("a battleship"), Plural => Strings.To_Bounded_String("battleships"),
          Terrain => SHIP_TERRAIN,
          Build_Time => 40, Strength => 2, Max_Hits => 10,
          Speed => 2, Capacity => 0, Piece_Range => INFINITY),
 
       SATELLITE =>
-        (Sname => 'Z', Class => SPACECRAFT, Name => new String'("satellite"), Nickname => new String'("satellite"),
-         Article => new String'("a satellite"), Plural => new String'("satellites"),
+        (U_Cont => 'Z', C_Cont => 'z', Sel_Char => 'Z', Class => SPACECRAFT, Name => Strings.To_Bounded_String("satellite"), Nickname => Strings.To_Bounded_String("satellite"),
+         Article => Strings.To_Bounded_String("a satellite"), Plural => Strings.To_Bounded_String("satellites"),
          Terrain => SPACECRAFT_TERRAIN,
          Build_Time => 50, Strength => 0, Max_Hits => 1,
          Speed => 10, Capacity => 0, Piece_Range => 500));
@@ -500,26 +522,26 @@ private
 
   -- names of movement functions
    Function_Name : constant Function_Name_Array :=
-     (NOFUNC => new String'("none"),
-      RANDOM => new String'("random"),
-      SENTRY => new String'("sentry"),
-      FILL => new String'("fill"),
-      LAND => new String'("land"),
-      EXPLORE => new String'("explore"),
-      ARMYATTACK => new String'("attack"),
-      REPAIR => new String'("repair"),
-      WFTRANSPORT => new String'("transport"),
-      MOVE_N => new String'("W"),
-      MOVE_NE => new String'("E"),
-      MOVE_E => new String'("D"),
-      MOVE_SE => new String'("C"),
-      MOVE_S => new String'("X"),
-      MOVE_SW => new String'("Z"),
-      MOVE_W => new String'("A"),
-      MOVE_NW => new String'("Q"),
-      MOVE_TO_DEST => new String'("destination"),
-      COMP_LOADING => new String'("computer-internal-loading"), -- only used in debug output of Empire.Comp_Move
-      COMP_UNLOADING => new String'("computer-internal-unloading")); -- likewise
+     (NOFUNC => Strings.To_Bounded_String("none"),
+      RANDOM => Strings.To_Bounded_String("random"),
+      SENTRY => Strings.To_Bounded_String("sentry"),
+      FILL => Strings.To_Bounded_String("fill"),
+      LAND => Strings.To_Bounded_String("land"),
+      EXPLORE => Strings.To_Bounded_String("explore"),
+      ARMYATTACK => Strings.To_Bounded_String("attack"),
+      REPAIR => Strings.To_Bounded_String("repair"),
+      WFTRANSPORT => Strings.To_Bounded_String("transport"),
+      MOVE_N => Strings.To_Bounded_String("W"),
+      MOVE_NE => Strings.To_Bounded_String("E"),
+      MOVE_E => Strings.To_Bounded_String("D"),
+      MOVE_SE => Strings.To_Bounded_String("C"),
+      MOVE_S => Strings.To_Bounded_String("X"),
+      MOVE_SW => Strings.To_Bounded_String("Z"),
+      MOVE_W => Strings.To_Bounded_String("A"),
+      MOVE_NW => Strings.To_Bounded_String("Q"),
+      MOVE_TO_DEST => Strings.To_Bounded_String("destination"),
+      COMP_LOADING => Strings.To_Bounded_String("computer-internal-loading"), -- only used in debug output of Empire.Comp_Move
+      COMP_UNLOADING => Strings.To_Bounded_String("computer-internal-unloading")); -- likewise
 
    -- the order in which pieces should be moved
    -- alternative (easy enough) would be to put piece_type_t in move order.
@@ -622,72 +644,72 @@ private
 
    -- Various help texts.
    Help_Cmd : constant Help_Array :=
-     (new String'("COMMAND MODE"),
-      new String'("a - enter Automove mode"),
-      new String'("c - give City to computer"),
-      new String'("d - print game Date (round)"),
-      new String'("e - Examine enemy map"),
-      new String'("f - print map to File"),
-      new String'("g - Give move to computer"),
-      new String'("h - display this Help text"),
-      new String'("j - enter edit mode"),
-      new String'("m - Move"),
-      new String'("n - give N moves to computer"),
-      new String'("p - Print a sector"),
-      new String'("q - Quit game"),
-      new String'("r - Restore game"),
-      new String'("s - Save game"),
-      new String'("t - save movie in " & MOVIE_NAME),
-      new String'("w - Watch movie"),
-      new String'("z - display Zoomed out map"),
-      new String'("<ctrl-L> - redraw screen"));
+     (Strings.To_Bounded_String("COMMAND MODE"),
+      Strings.To_Bounded_String("a - enter Automove mode"),
+      Strings.To_Bounded_String("c - give City to computer"),
+      Strings.To_Bounded_String("d - print game Date (round)"),
+      Strings.To_Bounded_String("e - Examine enemy map"),
+      Strings.To_Bounded_String("f - print map to File"),
+      Strings.To_Bounded_String("g - Give move to computer"),
+      Strings.To_Bounded_String("h - display this Help text"),
+      Strings.To_Bounded_String("j - enter edit mode"),
+      Strings.To_Bounded_String("m - Move"),
+      Strings.To_Bounded_String("n - give N moves to computer"),
+      Strings.To_Bounded_String("p - Print a sector"),
+      Strings.To_Bounded_String("q - Quit game"),
+      Strings.To_Bounded_String("r - Restore game"),
+      Strings.To_Bounded_String("s - Save game"),
+      Strings.To_Bounded_String("t - save movie in " & MOVIE_NAME),
+      Strings.To_Bounded_String("w - Watch movie"),
+      Strings.To_Bounded_String("z - display Zoomed out map"),
+      Strings.To_Bounded_String("<ctrl-L> - redraw screen"));
 
    Help_User : constant Help_Array :=
-     (new String'("USER MODE"),
-      new String'("QWE"),
-      new String'("A D - movement directions"),
-      new String'("ZXC"),
-      new String'("<space>:           skip"),
-      new String'("b - change city production"),
-      new String'("f - set func to Fill"),
-      new String'("g - set func to explore"),
-      new String'("h - display this Help text"),
-      new String'("i <dir> - set func to dir"),
-      new String'("j - enter edit mode"),
-      new String'("k - set func to awake"),
-      new String'("l - set func to Land"),
-      new String'("o - get Out of automove mode"),
-      new String'("p - redraw screen"),
-      new String'("r - set func to Random"),
-      new String'("s - set func to Sentry"),
-      new String'("u - set func to repair"),
-      new String'("v <piece> <func> - set city func"),
-      new String'("y - set func to attack"),
-      new String'("<ctrl-L> - redraw screen"),
-      new String'("= - describe piece"));
+     (Strings.To_Bounded_String("USER MODE"),
+      Strings.To_Bounded_String("QWE"),
+      Strings.To_Bounded_String("A D - movement directions"),
+      Strings.To_Bounded_String("ZXC"),
+      Strings.To_Bounded_String("<space>:           skip"),
+      Strings.To_Bounded_String("b - change city production"),
+      Strings.To_Bounded_String("f - set func to Fill"),
+      Strings.To_Bounded_String("g - set func to explore"),
+      Strings.To_Bounded_String("h - display this Help text"),
+      Strings.To_Bounded_String("i <dir> - set func to dir"),
+      Strings.To_Bounded_String("j - enter edit mode"),
+      Strings.To_Bounded_String("k - set func to awake"),
+      Strings.To_Bounded_String("l - set func to Land"),
+      Strings.To_Bounded_String("o - get Out of automove mode"),
+      Strings.To_Bounded_String("p - redraw screen"),
+      Strings.To_Bounded_String("r - set func to Random"),
+      Strings.To_Bounded_String("s - set func to Sentry"),
+      Strings.To_Bounded_String("u - set func to repair"),
+      Strings.To_Bounded_String("v <piece> <func> - set city func"),
+      Strings.To_Bounded_String("y - set func to attack"),
+      Strings.To_Bounded_String("<ctrl-L> - redraw screen"),
+      Strings.To_Bounded_String("= - describe piece"));
 
    Help_Edit : constant Help_Array :=
-     (new String'("EDIT MODE"),
-      new String'("QWE"),
-      new String'("A D - movement directions"),
-      new String'("ZXC"),
-      new String'("b - change city production"),
-      new String'("f - set func to Fill"),
-      new String'("g - set func to explore"),
-      new String'("h - display this Help text"),
-      new String'("i <dir> - set func to dir"),
-      new String'("k - set func to awake"),
-      new String'("l - set func to Land"),
-      new String'("m - Mark piece"),
-      new String'("n - set dest for marked piece"),
-      new String'("o - get Out of automove mode"),
-      new String'("p - redraw screen"),
-      new String'("r - set func to Random"),
-      new String'("s - set func to Sentry"),
-      new String'("u - set func to repair"),
-      new String'("v <piece> <func> - set city func"),
-      new String'("y - set func to attack"),
-      new String'("<ctrl-L> - redraw screen"),
-      new String'("= - describe piece"));
+     (Strings.To_Bounded_String("EDIT MODE"),
+      Strings.To_Bounded_String("QWE"),
+      Strings.To_Bounded_String("A D - movement directions"),
+      Strings.To_Bounded_String("ZXC"),
+      Strings.To_Bounded_String("b - change city production"),
+      Strings.To_Bounded_String("f - set func to Fill"),
+      Strings.To_Bounded_String("g - set func to explore"),
+      Strings.To_Bounded_String("h - display this Help text"),
+      Strings.To_Bounded_String("i <dir> - set func to dir"),
+      Strings.To_Bounded_String("k - set func to awake"),
+      Strings.To_Bounded_String("l - set func to Land"),
+      Strings.To_Bounded_String("m - Mark piece"),
+      Strings.To_Bounded_String("n - set dest for marked piece"),
+      Strings.To_Bounded_String("o - get Out of automove mode"),
+      Strings.To_Bounded_String("p - redraw screen"),
+      Strings.To_Bounded_String("r - set func to Random"),
+      Strings.To_Bounded_String("s - set func to Sentry"),
+      Strings.To_Bounded_String("u - set func to repair"),
+      Strings.To_Bounded_String("v <piece> <func> - set city func"),
+      Strings.To_Bounded_String("y - set func to attack"),
+      Strings.To_Bounded_String("<ctrl-L> - redraw screen"),
+      Strings.To_Bounded_String("= - describe piece"));
 
 end Empire;

@@ -4,7 +4,7 @@
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  *
- * $Id: display.c,v 1.3 2008/03/02 23:46:26 jwise Exp $
+ * $Id: display.c,v 1.4 2008/03/17 02:28:13 jwise Exp $
  */
 
 /*
@@ -644,3 +644,21 @@ help (const char **text, int nlines)
 	if (whose_map == USER)
 		print_sector_u(save_sector);
 }
+
+
+--  /* Get the name of a type of object. */
+-- (was in object.c)
+--  int
+--  get_piece_name (void)
+--  {
+--      char c;
+--      piece_type_t i;
+
+--      c = get_chx (); /* get the answer */
+
+--      for (i = FIRST_OBJECT; i < NUM_OBJECTS; i++)
+--      if (piece_attr[i].sname == c) {
+--              return i;
+--      }
+--      return NOPIECE;
+--  }

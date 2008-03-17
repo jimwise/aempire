@@ -26,14 +26,14 @@ package body Empire.Comp_Move is
          Obj := Comp_Obj(I);
          while Obj /= null
          loop
-            Objects.Scan(Comp_Map, Obj.Loc);
+            Objects.Scan(COMP, Obj.Loc);
          end loop;
       end loop;
 
       -- for each move we get...
       Ui.Prompt("Thinking...");
 
-      Emap := Comp_Map;
+      Emap := View(COMP);
       Mapping.Vmap_Prune_Explore_Locs(Emap);
 
       Do_Cities;                        -- handle city production
@@ -63,6 +63,10 @@ package body Empire.Comp_Move is
 -- producer.  Fourth, we attempt to maintain a good ratio between the
 -- number of producers we have of each type of piece.  Fifth, we never
 -- build carriers, as we don't have a good strategy for moving these.
+--
+-- XXX user_move can now use carriers to refuel planes, once we add
+-- XXX same code here, we just need a strategy to position and guard
+-- XXX carriers
 
    procedure  Do_Cities is
       Is_Land_Locked : Boolean;
@@ -71,7 +75,7 @@ package body Empire.Comp_Move is
       loop
          if City(I).Owner = Comp
          then
-            Objects.Scan(Comp_Map, City(I).Loc);
+            Objects.Scan(COMP, City(I).Loc);
 
             if City(I).Prod = NOPIECE
             then
@@ -125,12 +129,12 @@ package body Empire.Comp_Move is
       -- Make sure we have army producers for current continent
 
       -- map out city's continent
-      Mapping.Vmap_Cont(Cont_Map, Comp_Map, Cityp.Loc, '.');
+      Mapping.Vmap_Cont(Cont_Map, View(COMP), Cityp.Loc, '.');
 
       -- count items of interest on the continent
-      Counts := Mapping.Vmap_Cont_Scan (Cont_Map, Comp_Map);
+      Counts := Mapping.Vmap_Cont_Scan (Cont_Map, View(COMP));
 
-      for I in Comp_Map'Range
+      for I in View(COMP)'Range
       loop
          if Cont_Map(I)                 -- for each cell of continent
          then
@@ -387,8 +391,8 @@ package body Empire.Comp_Move is
          Obj := Comp_Obj(Move_Order(I));
          while Obj /= null
          loop
-            Next_Obj := Obj.Piece_Link.Next; -- set now, in case obj is destroyed
-            Cpiece_Move(Obj.all);           -- actually move the piece
+            Next_Obj := Obj.Links(Piece_Link).Next; -- set now, in case obj is destroyed
+            Cpiece_Move(Obj);           -- actually move the piece
             Obj := Next_Obj;
          end loop;
       end loop;
@@ -398,7 +402,7 @@ package body Empire.Comp_Move is
 -- the loop, we find a direction to move that will take us closer to an
 -- objective.
 
-   procedure Cpiece_Move (Obj : in out Piece_Info_T) is
+   procedure Cpiece_Move (Obj : in out Piece_Info_P) is
       Changed_Loc : Boolean;
       Saved_Loc : Location_T;
    begin
@@ -415,7 +419,7 @@ package body Empire.Comp_Move is
       if Piece_Attr(Obj.Piece_Type).Piece_Range /= INFINITY
       then
          -- if we have a range limit, initialize our range
-         if Comp_Map(Obj.Loc).Contents = 'X'  -- if we start in a city
+         if View(COMP)(Obj.Loc).Contents = 'X'  -- if we start in a city
          then
             Obj.Piece_range := Piece_Attr(Obj.Piece_Type).Piece_Range;
          end if;
@@ -434,7 +438,7 @@ package body Empire.Comp_Move is
          if (Piece_Attr(Obj.Piece_Type).Piece_Range /= INFINITY) and
            Obj.Hits > 0                 -- if we're range-limited
          then
-            if Comp_Map(Obj.Loc).Contents = 'X'
+            if View(COMP)(Obj.Loc).Contents = 'X'
             then
               -- remember, we've already move1'ed above.  so if we ended in
               -- a city, just end
@@ -457,7 +461,7 @@ package body Empire.Comp_Move is
         not Changed_loc and             -- we didn't move
         Piece_Attr(Obj.Piece_Type).Class = SHIP and
         Obj.Hits < Piece_Attr(Obj.Piece_Type).Max_Hits and
-        Comp_Map(Obj.Loc).Contents = 'X'
+        View(COMP)(Obj.Loc).Contents = 'X'
       then
          Obj.Hits := Obj.Hits + 1;
       end if;
@@ -465,7 +469,7 @@ package body Empire.Comp_Move is
 
 -- /* Move a piece one square. */
 
-   procedure Move1 (Obj : in out Piece_Info_T) is
+   procedure Move1 (Obj : in out Piece_Info_P) is
    begin
       case Obj.Piece_Type is
          when ARMY =>
@@ -508,7 +512,7 @@ package body Empire.Comp_Move is
 -- 7)  Once we have a destination, find the best move toward that
 --     destination.  (If there is no destination, sit around and wait.)
 
-   procedure Army_Move (Obj : in out Piece_Info_T) is
+   procedure Army_Move (Obj : in out Piece_Info_P) is
       New_Loc : Location_T;
       New_Loc2 : Location_T;
       Pmap : Path_Map;                  -- file-global in original
@@ -523,7 +527,7 @@ package body Empire.Comp_Move is
 
       Obj.Func := COMP_UNLOADING;               -- army doesn't want a tt
 
-      if Mapping.Vmap_At_Sea(Comp_Map, Obj.Loc) -- army can't move?
+      if Mapping.Vmap_At_Sea(View(COMP), Obj.Loc) -- army can't move?
       then
          Load_Army(Obj);                -- make sure we're on the best ship present
          Obj.Moved := Piece_Attr(ARMY).Speed;
@@ -543,10 +547,10 @@ package body Empire.Comp_Move is
       if New_Loc /= Obj.Loc             -- something to attack?
       then
          Attack.Attack(Obj, New_Loc);
-         if Comp_Map(New_Loc).Contents = '.' and Obj.Hits > 0 -- moved to ocean and survived
+         if View(COMP)(New_Loc).Contents = '.' and Obj.Hits > 0 -- moved to ocean and survived
          then
             Objects.Kill_Obj(Obj, New_Loc);     -- sacrificed to defend land
-            Objects.Scan(User_Map, New_Loc);    -- rescan for user, since army is gone
+            Objects.Scan(USER, New_Loc);    -- rescan for user, since army is gone
          end if;
 
          return;
@@ -560,19 +564,19 @@ package body Empire.Comp_Move is
             return;                     -- armies stay on a loading ship
          end if;
 
-         Make_Unload_Map(Amap, Comp_Map);
-         Mapping.Vmap_Find_Wlobj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Unload);
+         Make_Unload_Map(Amap, View(COMP));
+         Mapping.Vmap_Find_SeaLand_Obj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Unload);
          Move_Objective(Obj, Pmap, New_Loc, (' ' => 1, others => 0));
          return;
       end if;
 
       -- otherwise (not on a ship)
-      Mapping.Vmap_Find_Ground_Obj(New_Loc, Pmap, Comp_Map, Obj.Loc, Army_Fight);
+      Mapping.Vmap_Find_Ground_Obj(New_Loc, Pmap, View(COMP), Obj.Loc, Army_Fight);
 
       if New_Loc /= Obj.Loc
       then
          -- something interesting on land?
-         case Comp_Map(New_Loc).Contents is
+         case View(COMP)(New_Loc).Contents is
             -- by setting cross_cost, we argue against going elsewhere on the map
             when 'A'|'O' =>
                Cross_Cost := 60;        -- highest cost if enemy present
@@ -591,7 +595,7 @@ package body Empire.Comp_Move is
       -- see if there is something interesting to go to by water
       if Cross_Cost > 0                 -- possible to be false only due to normalization after case above
       then
-         Make_Army_Load_Map(Obj, Amap, Comp_Map);
+         Make_Army_Load_Map(Obj, Amap, View(COMP));
          Mapping.Vmap_Find_Landsea_Obj(New_Loc2, Pmap2, Amap, Obj.Loc, Army_Load, Cross_Cost);
          if New_Loc2 /= Obj.loc         -- found something?
          then
@@ -630,7 +634,7 @@ package body Empire.Comp_Move is
 -- Make a load map.  We copy the view map and mark each loading
 -- transport and transport-producing city with a '$'.
 
-   procedure Make_Army_Load_Map (Obj : in out Piece_Info_T; Xmap : in out View_Map; Vmap : in View_Map) is
+   procedure Make_Army_Load_Map (Obj : in out Piece_Info_P; Xmap : in out View_Map; Vmap : in View_Map) is
       P : Piece_Info_P;
    begin
       Xmap := Vmap;
@@ -643,7 +647,7 @@ package body Empire.Comp_Move is
             Xmap(P.Loc).Contents := '$';
          end if;
 
-         P := P.Piece_Link.Next;
+         P := P.Links(Piece_Link).Next;
       end loop;
 
       for I in City'Range
@@ -669,7 +673,7 @@ package body Empire.Comp_Move is
 
 -- Return true if an army is considered near a location for loading
 
-   function Nearby_Load (Obj : in Piece_Info_T; Loc : in Location_T) return Boolean is
+   function Nearby_Load (Obj : in Piece_Info_P; Loc : in Location_T) return Boolean is
    begin
       return (Obj.Func = COMP_LOADING) and (Math.Dist(Obj.Loc, Loc) <= LOAD_RADIUS);
    end Nearby_Load;
@@ -684,12 +688,12 @@ package body Empire.Comp_Move is
       Obj := Comp_Obj(ARMY);
       while Obj /= null
       loop
-         if Nearby_Load(Obj.all, Loc)
+         if Nearby_Load(Obj, Loc)
          then
             Count := Count + 1;
          end if;
 
-         Obj := Obj.Piece_Link.Next;
+         Obj := Obj.Links(Piece_Link).Next;
       end loop;
 
       return Count;
@@ -831,7 +835,7 @@ package body Empire.Comp_Move is
       P := Map(Loc).Objp;
       while P /= null
       loop
-         if (P.Piece_Type = TRANSPORT) and (Objects.Obj_Capacity(P.all) > P.Count)
+         if (P.Piece_Type = TRANSPORT) and (Objects.Obj_Capacity(P) > P.Count)
          then
             if (Best = null) or else (P.Count >= Best.Count)
             then
@@ -844,7 +848,7 @@ package body Empire.Comp_Move is
 
 -- Load an army onto the most full non-full ship
 
-   procedure Load_Army (Obj : in out Piece_Info_T) is
+   procedure Load_Army (Obj : in out Piece_Info_P) is
       X_Loc : Location_T;
       P : Piece_Info_P := Obj.Ship;
    begin
@@ -880,7 +884,7 @@ package body Empire.Comp_Move is
       if P /= Obj.Ship
       then
          Objects.Disembark(Obj);
-         Objects.Embark(P.all, Obj);
+         Objects.Embark(P, Obj);
       end if;
 
    end Load_Army;
@@ -919,13 +923,9 @@ package body Empire.Comp_Move is
       loop
          New_Loc := Loc + Dir_Offset(I);
 
-         -- XXX XXX XXX why do we look at map, not Comp_map?!!!!
-         -- XXX XXX XXX (not a cheat, since we only look at adjacent, but surely better
-         -- XXX XXX XXX not to do this!)
-         -- (and if changing this, see XXX above (!))
          if Map(New_Loc).On_Board and Terrain(Map(New_Loc).Contents)
          then
-            P := Obj_List(Comp_Map(New_Loc).Contents);
+            P := Obj_List(View(COMP)(New_Loc).Contents);
             if (P /= 0) and (P > Best_Val)
             then
                Best_Val := P;
@@ -947,7 +947,7 @@ package body Empire.Comp_Move is
 -- An empty transport is willing to attack adjacent enemy transports.
 -- Transports become 'loading' when empty, and 'unloading' when full.
 
-   procedure Transport_Move (Obj : in out Piece_Info_T) is
+   procedure Transport_Move (Obj : in out Piece_Info_P) is
       New_Loc : Location_T;
       Amap: View_Map;                   -- file-global in original
       Pmap : Path_Map;               -- file-global in original
@@ -972,12 +972,12 @@ package body Empire.Comp_Move is
 
       if Obj.Func = COMP_LOADING
       then
-         Make_Tt_Load_Map(Amap, Comp_Map);
+         Make_Tt_Load_Map(Amap, View(COMP));
          Mapping.Vmap_Find_Sealand_Obj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Load);
 
          if New_Loc = Obj.loc           -- nothing to load?
          then
-            Amap := Comp_Map;
+            Amap := View(COMP);
             Unmark_Explore_Locs(Amap);
             if Print_Vmap = 'S'
             then
@@ -988,7 +988,7 @@ package body Empire.Comp_Move is
 
          Move_Objective(Obj, Pmap, New_Loc, ('a' => 2, ' ' => 1, others => 0));
       else
-         Make_Unload_Map(Amap, Comp_Map);
+         Make_Unload_Map(Amap, View(COMP));
          Mapping.Vmap_Find_Sealand_Obj(New_Loc, Pmap, Amap, Obj.Loc, Tt_Unload);
          Move_Objective(Obj, Pmap, New_Loc, (' ' => 1, others => 0));
       end if;
@@ -1004,9 +1004,10 @@ package body Empire.Comp_Move is
 --
 -- 3)  Otherwise, look for an objective.
 
-   procedure Fighter_Move (Obj : in out Piece_Info_T) is
+   procedure Fighter_Move (Obj : in out Piece_Info_P) is
       New_Loc : Location_T;
       Pmap : Path_Map;
+      City_Found : Boolean;
       City_Cost : Integer;
    begin
       New_Loc := Find_Attack(Obj.Loc, Fighter_Attack, ('.'|'+' => TRUE, others => FALSE));
@@ -1016,13 +1017,14 @@ package body Empire.Comp_Move is
          return;
       end if;
 
-      -- return to base if low on fuel XXX: should check for carriers
-      Objects.Find_Nearest_City(Obj.Loc, COMP, New_Loc, City_Cost);
-      if Obj.Piece_range <= City_Cost + 2
+      -- return to base if low on fuel
+      -- XXX XXX XXX should check for carriers -- compare user_move, which now does.
+      Objects.Find_Nearest_City(Obj.Loc, COMP, City_Found, New_Loc, City_Cost);
+      if City_Found and Obj.Piece_range <= City_Cost + 2
       then
          if New_Loc /= Obj.Loc
          then
-            Mapping.Vmap_Find_Dest(New_Loc, Pmap, Comp_Map, Obj.Loc, New_Loc, COMP, T_AIR);
+            Mapping.Vmap_Find_Dest(New_Loc, Pmap, View(COMP), Obj.Loc, New_Loc, COMP, T_AIR);
          end if;
       else
            New_Loc := Obj.Loc;
@@ -1030,7 +1032,7 @@ package body Empire.Comp_Move is
 
       if New_Loc = Obj.Loc              -- no nearby city?
       then
-         Mapping.Vmap_Find_Aircraft_Obj(New_Loc, Pmap, Comp_Map, Obj.Loc, Fighter_Fight);
+         Mapping.Vmap_Find_Aircraft_Obj(New_Loc, Pmap, View(COMP), Obj.Loc, Fighter_Fight);
       end if;
 
       Move_Objective(Obj, Pmap, New_Loc, (' ' => 1, others => 0));
@@ -1044,7 +1046,7 @@ package body Empire.Comp_Move is
 -- XXX carriers should probably have their own routine -- they shouldn't be attacking
 -- XXX things, and they should be making themselves more useful
 
-   procedure Ship_Move (Obj : in out Piece_Info_T) is
+   procedure Ship_Move (Obj : in out Piece_Info_P) is
       New_Loc : Location_T;
       Adj_List : Content_Value_Array;
       Amap : View_Map;                  -- file-global in original
@@ -1054,13 +1056,13 @@ package body Empire.Comp_Move is
       if Obj.Hits < Piece_Attr(Obj.Piece_Type).Max_Hits
       then
          -- if in port, stay there
-         if Comp_Map(Obj.Loc).Contents = 'X'
+         if View(COMP)(Obj.Loc).Contents = 'X'
          then
             Obj.Moved := Piece_Attr(Obj.Piece_Type).Speed;
             return;
          end if;
          -- otherwise, go there
-         Mapping.Vmap_Find_Ship_Obj(New_Loc, Pmap, Comp_Map, Obj.Loc, Ship_Repair);
+         Mapping.Vmap_Find_Ship_Obj(New_Loc, Pmap, View(COMP), Obj.Loc, Ship_Repair);
          Adj_List := ('.' => 1, others => 0);
       else
          New_Loc := Find_Attack(Obj.Loc, Ship_Attack, ('.' => TRUE, others => FALSE));
@@ -1070,7 +1072,7 @@ package body Empire.Comp_Move is
             return;
          end if;
          -- look for an objective
-         Amap := Comp_Map;
+         Amap := View(COMP);
          Unmark_Explore_Locs(Amap);
          if Print_Vmap = 'S'
          then
@@ -1086,7 +1088,8 @@ package body Empire.Comp_Move is
 
 -- Move to an objective
 
-   procedure Move_Objective (Obj : in out Piece_Info_T; Pathmap : in out Path_Map; Loc : in Location_T; Adj_List : in Content_Value_Array) is
+   procedure Move_Objective (Obj : in out Piece_Info_P; Pathmap : in out Path_Map; Loc : in Location_T; Adj_List : in Content_Value_Array) is
+      PTerrain : Acceptable_Content_Array;
       Terrain : Acceptable_Terrain_Array;
       Attack_List : Content_Value_Array;
       D : Integer;
@@ -1110,7 +1113,7 @@ package body Empire.Comp_Move is
          then
             -- XXX spaces right?
             Ui.Info("No destination found for" & Piece_Type_T'Image(Obj.Piece_Type) & " at " & Location_T'Image(Obj.Loc) &
-                    "; func=" & Function_Name(Obj.Func).all);
+                    "; func=" & Strings.To_String(Function_Name(Obj.Func)));
          end if;
 
          return;
@@ -1121,42 +1124,40 @@ package body Empire.Comp_Move is
 
       D := Math.Dist(Old_Loc, Old_Dest);
 
-      if (Comp_Map(New_Loc).Contents = ' ') and (D = 2) -- are we exploring?
+      if (View(COMP)(New_Loc).Contents = ' ') and (D = 2) -- are we exploring?
       then
          Mapping.Vmap_Mark_Adjacent(Pmap, Obj.Loc);
          Reuse := FALSE;
       else
-         Mapping.Vmap_Mark_Path(Pmap, Comp_Map, New_Loc); -- find routes to destination
+         Mapping.Vmap_Mark_Path(Pmap, View(COMP), New_Loc); -- find routes to destination
       end if;
 
-
-      -- path terrain and move terrain may differ
       case Piece_Attr(Obj.Piece_Type).Class is
          when GROUND =>
-            Terrain := ('+' => TRUE, others => FALSE);
+            PTerrain := ('+' => TRUE, others => FALSE);
          when AIRCRAFT =>
-            Terrain := ('+'|'.'|'X' => TRUE, others => FALSE);
+            PTerrain := ('+'|'.'|'X' => TRUE, others => FALSE);
          when SHIP =>
-            Terrain := ('.'|'X' => TRUE, others => FALSE);
+            PTerrain := ('.'|'X' => TRUE, others => FALSE);
          when SPACECRAFT =>
             -- can't happen -- we don't do controlled movement for SAT
             raise Program_Error;
       end case;
 
-      Mapping.Vmap_Find_Dir(New_Loc, Pmap, Comp_Map, Obj.Loc, Terrain, Adj_List);
+      Mapping.Vmap_Find_Dir(New_Loc, Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
 
       if New_Loc = Obj.Loc and          -- path is blocked?
         (Piece_Attr(Obj.Piece_Type).Class /= GROUND) and (Obj.Ship /= null) -- don't unblock armies on a ship
       then
          Mapping.Vmap_Mark_Near_Path(Pmap, Obj.Loc);
          Reuse := FALSE;
-         Mapping.Vmap_Find_Dir(New_Loc, Pmap, Comp_Map, Obj.Loc, Terrain, Adj_List);
+         Mapping.Vmap_Find_Dir(New_Loc, Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
       end if;
 
       -- encourage army to leave city
       if (New_Loc = Obj.Loc) and (Map(Obj.Loc).Cityp /= null) and (Piece_Attr(Obj.Piece_Type).Class = GROUND)
       then
-         New_Loc := Move_Away(Comp_Map, Obj.Loc, ('+' => TRUE, others => FALSE));
+         New_Loc := Move_Away(View(COMP), Obj.Loc, ('+' => TRUE, others => FALSE));
          Reuse := FALSE;
       end if;
 
@@ -1171,7 +1172,7 @@ package body Empire.Comp_Move is
             then
                -- XXX spaces right?
                Ui.Info("Cannot move " & Piece_Type_T'Image(Obj.Piece_Type) & " at " & Location_T'Image(Obj.Loc) &
-                       " toward objective at " & Location_T'Image(New_Loc) & "; func=" & Function_Name(Obj.Func).all);
+                       " toward objective at " & Location_T'Image(New_Loc) & "; func=" & Strings.To_String(Function_Name(Obj.Func)));
             end if;
          end if;
       else
@@ -1193,11 +1194,12 @@ package body Empire.Comp_Move is
       if Reuse and (Obj.Moved < Objects.Obj_Moves(Obj)) and (Obj.Loc /= Old_Dest)
       then
          -- check for immediate attack
+         -- XXX XXX XXX split into an if for transport, and a case on piece_attr(obj.piece_type).class
          case Obj.Piece_Type is
 
             when FIGHTER =>
                -- watch fuel
-               if (Comp_Map(Old_Dest).Contents /= 'X') and
+               if (View(COMP)(Old_Dest).Contents /= 'X') and
                  (Obj.Piece_Range <= Piece_Attr(FIGHTER).Piece_Range / 2)
                then
                   return;               -- don't risk chaining - start over so fuel is recalculated
@@ -1208,7 +1210,7 @@ package body Empire.Comp_Move is
             when ARMY =>
                Attack_List := Army_Attack;
                -- IMPORTANT (XXX):  in the original code, these had 'X' instead of '*', which
-               -- could _never_ match (since Find_Attack uses Map, not Comp_Map) (!).  This means
+               -- could _never_ match (since Find_Attack uses Map, not View(COMP)) (!).  This means
                -- that in the original code, each of these acted as if the city was _not_ included.
                -- THIS IS A BEHAVIOR CHANGE!  (and skill of Ai should be tested accordingly!)
                if Obj.Ship /= null
@@ -1231,9 +1233,13 @@ package body Empire.Comp_Move is
                raise Program_Error;
 
             when others => -- XXX assumes others are ships.  safe for anything comp will intentionally build
+                           -- XXX until reworking, check that assumption:
+               if Piece_Attr(Obj.Piece_Type).Class /= SHIP
+               then
+                   raise Program_Error;
+               end if;
                Attack_List := Ship_Attack;
                Terrain := ('.' => TRUE, others => FALSE);
-
          end case;
 
          if Find_Attack(Obj.Loc, Attack_List, Terrain) /= Obj.Loc
@@ -1292,14 +1298,14 @@ end Move_Objective;
       while P /= null
       loop
          Nuser_Army := Nuser_Army + 1;
-         P := P.Piece_Link.Next;
+         P := P.Links(Piece_Link).Next;
       end loop;
 
       P := Comp_Obj(ARMY);
       while P /= null
       loop
          Ncomp_Army := Ncomp_Army + 1;
-         P := P.Piece_Link.Next;
+         P := P.Links(Piece_Link).Next;
       end loop;
 
       if (Ncomp_City < Nuser_City / 3) and (Ncomp_Army < Nuser_Army / 3)

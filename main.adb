@@ -92,16 +92,17 @@ begin
 
 exception
 
+   -- XXX should be stderr?
    when GNAT.Command_Line.Invalid_Switch =>
-      Text_IO.Put_Line(Ada.Command_Line.Command_Name & ": " & GNAT.Command_Line.Full_Switch & ": invalid switch");
+      Text_IO.Put_Line(Ada.Command_Line.Command_Name & ": usage: " & GNAT.Command_Line.Full_Switch & ": invalid switch");
       raise Invalid_Command_Line;
 
    when GNAT.Command_Line.Invalid_Parameter =>
-      Text_IO.Put_Line (Ada.Command_Line.Command_Name & ": " & GNAT.Command_Line.Full_Switch & ": argument required");
+      Text_IO.Put_Line (Ada.Command_Line.Command_Name & ": usage: " & GNAT.Command_Line.Full_Switch & ": argument required");
       raise Invalid_Command_Line;
 
    when Invalid_Command_Line =>
-      Text_IO.Put_Line(Ada.Command_Line.Command_Name & ": " &
+      Text_IO.Put_Line(Ada.Command_Line.Command_Name & ": usage: " &
                        Ada.Command_Line.Command_Name & " " & USAGE);
       Ada.Command_Line.Set_Exit_Status(Ada.Command_Line.Failure);
 

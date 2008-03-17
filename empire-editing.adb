@@ -13,7 +13,7 @@ package body Empire.Editing is
    begin
 
       loop                              -- until user exits editing mode
-         Ui.Display_Loc_U (Edit_Cursor); -- position cursor
+         Ui.Display_Loc(USER, Edit_Cursor); -- position cursor
          E_Cursor(Edit_Cursor, Cmd);    -- handle cursor movement
 
          case Cmd is
@@ -72,7 +72,7 @@ package body Empire.Editing is
          then
             exit;
          else
-            Ui.Move_Cursor(Edit_Cursor, Dir_Offset(Dir_Chars(Cmd)));
+            Ui.Move_Cursor(Edit_Cursor, Dir_Chars(Cmd));
          end if;
       end loop;
    end E_Cursor;
@@ -223,7 +223,7 @@ package body Empire.Editing is
          return;
       end if;
 
-      Ptype := Objects.Get_Piece_Name;
+      Ptype := Ui.Get_Piece_Name;
 
       if Ptype = NOPIECE
       then
@@ -316,14 +316,14 @@ package body Empire.Editing is
       Cityp := Objects.Find_City_At_Loc(Loc, Whose);
       if Cityp /= null
       then
-         Ui.Describe_City(Loc, Cityp.all);
+         Objects.Describe_City(Cityp.all);
          return;
       end if;
 
       Objp := Objects.Find_Obj_At_Loc(Loc, Types => (others => TRUE), Owners => Whose);
       if Objp /= null
       then
-         Ui.Describe_Obj(Loc, Objp.all);
+         Objects.Describe_Obj(Objp);
          return;
       end if;
 
@@ -341,7 +341,7 @@ package body Empire.Editing is
       then
          Ui.Huh;
       else
-         Objects.Set_Prod(Cityp.all);
+         Objects.Ask_Prod(Cityp.all);
       end if;
    end E_Prod;
 

@@ -1,6 +1,7 @@
 Project Empire is
 
-	for Object_Dir use ".";
+	for Source_Dirs use (".", "/usr/local/lib/ada/**");
+	for Object_Dir use "./obj";
 
 	for Main use ("main");
 
@@ -10,7 +11,8 @@ Project Empire is
      
 	package Compiler is
 		for Default_Switches ("Ada")
-		    use ("-fstack-check", "-gnata", "-gnato", "-gnatE");
+		    -- use ("-fstack-check", "-gnata", "-gnato", "-gnatE");
+		    use ("-gnata", "-gnato", "-gnatE");
 	end Compiler;
 
 end Empire;

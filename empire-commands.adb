@@ -63,7 +63,7 @@ package body Empire.Commands is
      Sec : Sector_T;
   begin
      Sec := Ui.Get_Int("Sector number? ", Sector_T'First, Sector_T'Last);
-     Ui.Print_Sector_C (Sec);
+     Ui.Print_Sector(COMP, Sec);
   end Examine;
 
   -- Give an unowned city (if any) to the computer.  We make
@@ -94,7 +94,7 @@ package body Empire.Commands is
      City(City_Index).Owner := COMP;
      City(City_Index).Prod := NOPIECE;
      City(City_Index).Work := 0;
-     Objects.Scan (Comp_Map, City(City_Index).Loc);
+     Objects.Scan (COMP, City(City_Index).Loc);
 
   end Give;
 
@@ -115,7 +115,7 @@ package body Empire.Commands is
      Sec : Sector_T;
   begin
      Sec := Ui.Get_Int("Sector number? ", Sector_T'First, Sector_T'Last);
-     Ui.Print_Sector_U(Sec);
+     Ui.Print_Sector(USER, Sec);
   end Sector;
 
 -- Print the map to a file.
@@ -136,7 +136,7 @@ package body Empire.Commands is
         loop
            -- for each row (see above)
            -- XXX we should do this line-at-a-time, as the C does.
-           Content_IO.Put(F, User_Map(Locations.Row_Col_Loc(J, I)).Contents);
+           Content_IO.Put(F, View(User)(Locations.Row_Col_Loc(J, I)).Contents);
         end loop;
         Ada.Text_IO.Put_Line(F, "");
      end loop;
@@ -152,7 +152,7 @@ package body Empire.Commands is
   begin
      loop
         Ai.Comp_Move;
-        Ui.Print_Zoom(Comp_Map);
+        Ui.Print_Zoom(View(COMP));
         Game.Save_Game;
      end loop;
   end Movie;
