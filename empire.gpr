@@ -1,18 +1,22 @@
 Project Empire is
 
-	for Source_Dirs use (".", "/usr/local/lib/ada/**");
-	for Object_Dir use "./obj";
+        for Source_Dirs use (".", "/usr/local/lib/ada/**");
+        for Object_Dir use "./obj";
 
-	for Main use ("main");
+        for Main use ("main");
 
-	package Builder is
-		for Default_Switches ("Ada") use ("-g");
-	end Builder;
-     
-	package Compiler is
-		for Default_Switches ("Ada")
-		    -- use ("-fstack-check", "-gnata", "-gnato", "-gnatE");
-		    use ("-gnata", "-gnato", "-gnatE");
-	end Compiler;
+        package Builder is
+                for Default_Switches ("Ada") use ("-g",  "-I/local/versions/ncurses-5.7/lib/ada/adainclude", "-L/local/versions/ncurses-5.7/lib/ada/adalib");
+        end Builder;
+
+        package Compiler is
+                for Default_Switches ("Ada")
+                    -- use ("-fstack-check", "-gnata", "-gnato", "-gnatE");
+                    use ("-gnata", "-gnato", "-gnatE", "-I/local/versions/ncurses-5.7/lib/ada/adainclude", "-L/local/versions/ncurses-5.7/lib/ada/adalib");
+        end Compiler;
+
+        package Linker is
+                for Default_Switches ("Ada") use ("-g",  "-R/local/versions/ncurses-5.7/lib/ada/adalib", "-L/local/versions/ncurses-5.7/lib/ada/adalib", "-R/local/versions/ncurses-5.7/lib", "-L/local/versions/ncurses-5.7/lib");
+        end Linker;
 
 end Empire;
