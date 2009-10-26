@@ -233,6 +233,8 @@ package body Empire.Curses_Interface is
       end if;
 
       Whose_Map := Whose;               --  remember which map we are displaying
+      Ref_Row := 1;
+      Ref_Col := 1;
       Display_Screen(Whose);
 
       declare
@@ -253,11 +255,13 @@ package body Empire.Curses_Interface is
       C : Column_T;
       T : Location_T;
    begin
+      Error("Display_Screen: ");
+
       R := Ref_Row;
       while R < Ref_Row + Display_Rows and R < MAP_HEIGHT - 1
       loop
          C := Ref_Col;
-         while C < Ref_Col + Display_Cols and C < MAP_WIDTH - 1
+         while C < Ref_Col + Display_Cols - 1 and C < MAP_WIDTH - 1
          loop
             T := Locations.Row_Col_Loc(R, C);
             Curses.Move_Cursor(Map_Win,

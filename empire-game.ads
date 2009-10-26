@@ -34,8 +34,8 @@ private
    MAX_CONT : constant := 10;
 
    -- these arrays are actually too big -- unless all cities end up on one continent (!)
-   subtype City_Index_T is Integer range 1 .. NUM_CITY;
-   subtype Cont_Index_T is Integer range 1 .. MAX_CONT;
+   subtype City_Index_T is Integer range 0 .. NUM_CITY - 1;
+   subtype Cont_Index_T is Integer range 0 .. MAX_CONT - 1;
    type Cont_City_Array is array (City_Index_T) of City_Info_P;
 
    type Cont_T is
@@ -53,10 +53,10 @@ private
       end record;
 
    Marked : array (Location_T) of Boolean; --  cells we've examined
-   ncont : Natural;
+   Ncont : Natural;
    Cont_Tab : array (Cont_Index_T) of Cont_T; --  good continents
    Rank_Tab : array (Cont_Index_T)  of Cont_Index_T; --  sorted indices into cont_tab, in rank order
-   Pair_Tab : array (1 .. MAX_CONT**2) of Pair_T; --  ranked pairs of continents
+   Pair_Tab : array (0 .. (MAX_CONT**2 - 1)) of Pair_T; --  ranked pairs of continents
 
    -- XXX XXX this cries out for a record type to return from mark_cont and pass around
    Ncity : Integer := 0;

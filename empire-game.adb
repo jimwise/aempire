@@ -131,16 +131,18 @@ package body Empire.Game is
                      Sum := Sum + Height(From, Loc);
                   exception
                      when Constraint_Error =>
-                        Ui.Error("Current Location is " & Location_T'Image(J));
-                        Ui.Error("Current direction is " & Direction_T'Image(K));
-                        Ui.Error("Row is " & Row_T'Image(Locations.Loc_Row(J)));
-                        Ui.Error("Col is " & Column_T'Image(Locations.Loc_Col(J)));
-                        Ui.Error("About to offset by " & Integer'Image(Dir_Offset(K)));
+                        --  Ui.Error("Current Location is " & Location_T'Image(J));
+                        --  Ui.Error("Current direction is " & Direction_T'Image(K));
+                        --  Ui.Error("Row is " & Row_T'Image(Locations.Loc_Row(J)));
+                        --  Ui.Error("Col is " & Column_T'Image(Locations.Loc_Col(J)));
+                        --  Ui.Error("About to offset by " & Integer'Image(Dir_Offset(K)));
+                        null;
                   end;
                end loop;
                Height(To, J) := Sum / 9;
             else
-               Ui.Error("Skiping off-board location " & Location_T'Image(J));
+               --  Ui.Error("Skiping off-board location " & Location_T'Image(J));
+               null;
             end if;
          end loop;
          --  swap to and from
@@ -343,19 +345,14 @@ package body Empire.Game is
 -- Find all continents with 2 cities or more, one of which must be a port.
 -- city.  While at it,  rank the continents.
 
-
    procedure Find_Cont is
       Mapi : Location_T;
    begin
-      for I in Map'Range
-      loop
-         Marked(I) := True;             --  nothing marked yet
-      end loop;
-
+      Marked := (others => False);
       Ncont := 0;
       Mapi := 0;
 
-      while Ncont < Max_Cont
+      while Ncont < MAX_CONT
       loop
          declare
             B : Boolean;
@@ -375,22 +372,23 @@ package body Empire.Game is
    procedure Find_Next (Mapi : in out Location_T; Found : out Boolean) is
       Val : Integer;
    begin
+      Found := False;
       loop
+         -- first, make sure to break out if we're past the end of the board
+         if  Locations.Loc_Row(Mapi) = (Map_Height - 1)
+         then
+            exit;
+         end if;
+
          if (not Map(Mapi).On_Board) or Marked(Mapi) or (Map(Mapi).Contents = '.')
          then
-            if Mapi = Location_T'Last
-            then
-               Found := False;
-               return;
-            end if;
             Mapi := Mapi + 1;
          elsif Good_Cont(Mapi)
          then
-            Rank_Tab(Ncont) := Ncont;    --  insert cont in rank table
+            Rank_Tab(Ncont) := Ncont;   --  insert cont into rank table
             Val := Cont_Tab(Ncont).Value;
 
-            -- bubble sort
-            for I in reverse 1 .. Ncont
+            for I in reverse 1 .. Ncont - 1
             loop
                if Val > Cont_Tab(Rank_Tab(I-1)).Value
                then
@@ -400,11 +398,42 @@ package body Empire.Game is
                   exit;
                end if;
             end loop;
-            Ncont := Ncont + 1;
-            Found := True;
-            return;
+            Ncont := Ncont + 1; --  count continents
+            Found := True;      --  found at least one
+            exit;
          end if;
       end loop;
+
+      --     if (not Map(Mapi).On_Board) or Marked(Mapi) or (Map(Mapi).Contents = '.')
+      --     then
+      --        if Mapi = Location_T'Last
+      --        then
+      --           Found := False;
+      --           return;
+      --        end if;
+      --        Mapi := Mapi + 1;
+      --     elsif Good_Cont(Mapi)
+      --     then
+      --        Rank_Tab(Ncont) := Ncont;    --  insert cont in rank table
+      --        Val := Cont_Tab(Ncont).Value;
+
+      --        -- bubble sort
+      --        for I in reverse 1 .. Ncont
+      --        loop
+      --           if Val > Cont_Tab(Rank_Tab(I-1)).Value
+      --           then
+      --              Rank_Tab(I) := Rank_Tab(I-1);
+      --              Rank_Tab(I-1) := Ncont;
+      --           else
+      --              exit;
+      --           end if;
+      --        end loop;
+
+      --        Ncont := Ncont + 1;
+      --        Found := True;
+      --        return;
+      --     end if;
+      --  end loop;
    end Find_Next;
 
 -- Map out the current continent.  We mark every piece of land on the continent,
@@ -423,7 +452,7 @@ package body Empire.Game is
 
       if (Nshore < 1) or (Ncity < 2)
       then
-         return (False);
+         return False;
       end if;
 
       -- The first two cities, one of which must be a shore city,
@@ -443,7 +472,7 @@ package body Empire.Game is
 
       Cont_Tab(Ncont).Value := Val;
       Cont_Tab(Ncont).Ncity := Ncity;
-      return (True);
+      return True;
    end Good_Cont;
 
 -- Mark a continent.  This recursive algorithm marks the current square
@@ -452,7 +481,15 @@ package body Empire.Game is
 -- cities for the continent.  We then examine each surrounding cell.
 
    procedure Mark_Cont (Mapi : in Location_T) is
+      C : City_Info_P;
+      D : Cont_T;
    begin
+      Ui.Prompt("Entered Mark_Cont.  Mapi = " & Integer'Image(Mapi) &
+                  " Ncity = " & Integer'Image(Ncity) &
+                  " / " & Integer'Image(NUM_CITY) &
+                  " Ncont = " & Integer'Image(Ncont) &
+                  " / " & Integer'Image(MAX_CONT) );
+
       if Marked(Mapi) or (Map(Mapi).Contents = '.') or (not Map(Mapi).On_Board)
       then
          return;                        --  don't recurse if we've hit the water
@@ -463,7 +500,9 @@ package body Empire.Game is
 
       if Map(Mapi).Contents = '*'
       then                              --  a city
-         Cont_Tab(Ncont).Cityp(Ncity) := Map(Mapi).Cityp;
+         C := Map(Mapi).Cityp;
+         D := Cont_Tab(Ncont);
+         Cont_Tab(Ncont).Cityp(Ncity) := C;
          Ncity := Ncity + 1;
          if Empire.Mapping.Rmap_Shore(Mapi)
          then
@@ -486,9 +525,9 @@ package body Empire.Game is
    procedure Make_Pair is
       Npair, val : Integer := 0;
    begin
-      for I in 1 .. Ncont
+      for I in 0 .. Ncont - 1
       loop
-         for J in 1 .. Ncont
+         for J in 0 .. Ncont - 1
          loop
             Val := Cont_Tab(I).Value - Cont_Tab(J).Value;
             Pair_Tab(Npair).Value := Val;
