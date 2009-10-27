@@ -68,8 +68,6 @@ package body Empire.User_Move is
       Sec := Sec_Start;
       -- loop through sectors, moving every piece in the sector
       loop
-         Ui.Sector_Change;              --  allow screen to be redrawn
-
          for N in Move_Order'Range
          loop
             -- note that this means that move_order is obeyed only within each sector

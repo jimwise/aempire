@@ -31,7 +31,6 @@ package Empire.Curses_Interface is
    procedure Print_Pzoom (S : in String; Pmap : in Path_Map; Vmap : in View_Map);
    procedure Print_Sector (Whose : in Piece_Owner_T; Sector : in Sector_T);
    procedure Print_Zoom (Vmap : in View_Map);
-   procedure Sector_Change;
 
 private
    procedure Display_Screen (Which : in Piece_Owner_T);
@@ -60,7 +59,6 @@ private
    Ref_Col : Column_T;                  --  current left-most column displayed
    Save_Sector : Sector_T;              --  current displayed sector
    Save_Cursor : Location_T;            --  ??? -- current displayed cursor position
-   Change_Ok : Boolean := True;         --  may new sector be displayed?
 
    NUMTOPS : constant := 4;      -- number of lines at top of screen for messages
    NUMINFO : constant := NUMTOPS - 1;

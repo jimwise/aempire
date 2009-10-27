@@ -86,7 +86,6 @@ package body Empire.Editing is
       Sector := Ui.Get_Int("New Sector? ", Sector_T'First, Sector_T'Last);
 
       Edit_Cursor := Locations.Sector_Loc(Sector); -- center cursor within sector
-      Ui.Sector_Change;                 -- allow change of sector
    end E_Goto_Sector;
 
 -- Set function for the piece at a location
