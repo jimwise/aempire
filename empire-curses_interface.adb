@@ -49,15 +49,6 @@ package body Empire.Curses_Interface is
       Whose_Map := UNOWNED;
    end Kill_Display;
 
-   -- This routine is called when a new sector may be displayed on the
-   -- screen even if the location to be displayed is already on the screen.
-
-   procedure Sector_Change
-   is
-   begin
-      Change_Ok := True;
-   end Sector_Change;
-
    -- Return the currently displayed user sector, if any.  If a user
    -- sector is not displayed, return -1.
 
@@ -90,7 +81,7 @@ package body Empire.Curses_Interface is
                           Loc   : in Location_T)
    is
    begin
-      if Change_Ok or Whose /= Whose_Map or not On_Screen(Loc)
+      if Whose /= Whose_Map or not On_Screen(Loc)
       then
          Print_Sector(Whose, Locations.Loc_Sector(Loc));
       end if;
@@ -152,7 +143,6 @@ package body Empire.Curses_Interface is
       Display_Cols : Integer;
    begin
       Save_Sector := Sector;            --  remember last sector displayed
-      Change_Ok := False;               --  we are displaying a new sector
 
       Display_Rows := Integer(Map_Win_Height) - 2;
       Display_Cols := Integer(Map_Win_Width) - 2;
