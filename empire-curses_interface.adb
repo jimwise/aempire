@@ -83,7 +83,7 @@ package body Empire.Curses_Interface is
    begin
       if Whose /= Whose_Map or not On_Screen(Loc)
       then
-         Print_Sector(Whose, Locations.Loc_Sector(Loc));
+         print_Sector(Whose, Locations.Loc_Sector(Loc));
       end if;
 
       Show_Loc(Whose, Loc);
@@ -110,8 +110,14 @@ package body Empire.Curses_Interface is
    begin
       R := Locations.Loc_Row(Loc) - Ref_Row + 1;
       C := Locations.Loc_Col(Loc) - Ref_Col + 1;
-      Curses.Move_Cursor(Map_Win, Curses.Line_Position(R), Curses.Column_Position(C));
-      Content_Io.Put(Map_Win, View(Which)(Loc).Contents);
+      -- Curses.Move_Cursor(Map_Win, Curses.Line_Position(R), Curses.Column_Position(C));
+      -- Content_Io.Put(Map_Win, View(Which)(Loc).Contents);
+      -- Text_Io.Put(Map_Win, Ctab(View(Which)(Loc).Contents));
+      Curses.Add(Win => Map_Win,
+                 Line => Curses.Line_Position(R),
+                 Column => Curses.Column_Position(C),
+                 Ch => Ctab(View(Which)(Loc).Contents));
+
       Save_Cursor := Loc;               --  remember cursor location;
       -- move cursor over location we just showed
       Curses.Move_Cursor(Map_Win, Curses.Line_Position(R), Curses.Column_Position(C));
@@ -245,19 +251,22 @@ package body Empire.Curses_Interface is
       C : Column_T;
       T : Location_T;
    begin
-      Error("Display_Screen: ");
-
       R := Ref_Row;
-      while R < Ref_Row + Display_Rows and R < MAP_HEIGHT - 1
+      while R < Ref_Row + Display_Rows - 1 and R < Row_T'Last
       loop
          C := Ref_Col;
-         while C < Ref_Col + Display_Cols - 1 and C < MAP_WIDTH - 1
+         while C < Ref_Col + Display_Cols - 1 and C < Column_T'Last
          loop
             T := Locations.Row_Col_Loc(R, C);
-            Curses.Move_Cursor(Map_Win,
-                               Line => Curses.Line_Position(R - Ref_Row + 1),
-                               Column => Curses.Column_Position(C - Ref_Col + 1));
-            Content_IO.Put(Map_Win, View(Which)(T).Contents);
+            --  Curses.Move_Cursor(Map_Win,
+            --                     Line => Curses.Line_Position(R - Ref_Row + 1),
+            --                     Column => Curses.Column_Position(C - Ref_Col + 1));
+            --  -- Content_Io.Put(Map_Win, View(Which)(T).Contents);
+            --  Text_Io.Put(Map_Win, Ctab(View(Which)(T).Contents));
+            Curses.Add(Win => Map_Win,
+                       Line => Curses.Line_Position(R - Ref_Row + 1),
+                       Column => Curses.Column_Position(C - Ref_Col + 1),
+                       Ch => Ctab(View(Which)(T).Contents));
             C := C + 1;
          end loop;
          R := R + 1;
@@ -316,10 +325,8 @@ package body Empire.Curses_Interface is
       New_R := Locations.Loc_Row(Loc);
       New_C := Locations.Loc_Col(Loc);
 
-      if New_R < Ref_Row or
-        New_R > Ref_Row + Integer(Map_Win_Height) - 3 or
-        New_C < Ref_Col or
-        New_C > Ref_Col + Integer(Map_Win_Width) - 3
+      if ( New_R < Ref_Row or else New_R > Ref_Row + Integer(Map_Win_Height) - 3 ) or
+        ( New_C < Ref_Col or else New_C > Ref_Col + Integer(Map_Win_Width) - 3 )
       then
          return False;
       end if;
@@ -405,10 +412,15 @@ package body Empire.Curses_Interface is
          R := R + 1;
       end loop;
 
-      Curses.Move_Cursor(Map_Win,
-                         Line => Curses.Line_Position(Row / Row_Inc + 1),
-                         Column => Curses.Column_Position(Col / Col_Inc + 1));
-      Content_Io.Put(Map_Win, Cell);
+      --  Curses.Move_Cursor(Map_Win,
+      --                     Line => Curses.Line_Position(Row / Row_Inc + 1),
+      --                     Column => Curses.Column_Position(Col / Col_Inc + 1));
+      --  Content_Io.Put(Map_Win, Cell);
+      Curses.Add(Win => Map_Win,
+                 Line => Curses.Line_Position(Row / Row_Inc + 1),
+                 Column => Curses.Column_Position(Col / Col_Inc + 1),
+                 Ch => Ctab(Cell));
+
    end Print_Zoom_Cell;
 
    -- Print a condensed version of a pathmap (for debugging)
@@ -516,10 +528,14 @@ package body Empire.Curses_Interface is
       then
          Print_Zoom_Cell(Vmap, Row, Col, Row_Inc, Col_Inc);
       else
-         Curses.Move_Cursor(Map_Win,
-                            Line => Curses.Line_Position(Row / Row_Inc + 1),
-                            Column => Curses.Column_Position(Col / Col_Inc + 1));
-         Path_Io.Put(Map_Win, Cell);
+         --  Curses.Move_Cursor(Map_Win,
+         --                     Line => Curses.Line_Position(Row / Row_Inc + 1),
+         --                     Column => Curses.Column_Position(Col / Col_Inc + 1));
+         --  Path_Io.Put(Map_Win, Cell);
+         Curses.Add(Win => Map_Win,
+                    Line => Curses.Line_Position(Row / Row_Inc + 1),
+                    Column => Curses.Column_Position(Col / Col_Inc + 1),
+                    Ch => Ptab(Cell));
       end if;
    end Print_Pzoom_Cell;
 
@@ -540,27 +556,36 @@ package body Empire.Curses_Interface is
       Curses.Clear_To_End_Of_Line;
       C := First_Col;
 
-      while C < First_Col + (Integer(Map_Win_Width) * Col_Inc) and C <= MAP_WIDTH - Col_Inc
+      while C < First_Col + ((Integer(Map_Win_Width) - 1) * Col_Inc) and
+        C <= MAP_WIDTH - Col_Inc
       loop
+         Prompt("C = " & Integer'Image(C));
          if (C / Col_Inc) mod 10 = 0
          then
-            Curses.Move_Cursor(Line => Curses.Lines - 1,
-                               Column => Curses.Column_Count(C / Col_Inc + 1));
-            Integer_Io.Put(C);
+            --  Curses.Move_Cursor(Line => Curses.Lines - 1,
+            --                     Column => Curses.Column_Count(C / Col_Inc + 1));
+            --  Integer_Io.Put(Curses.Standard_Window, C);
+            Curses.Add(Line => Curses.Lines - 1,
+                       Column => Curses.Column_Count(C / Col_Inc + 1),
+                                            Str => Integer'Image(C));
          end if;
          C := C + Col_Inc;
       end loop;
 
       -- print y-coordinates along right of screen
       R := First_Row;
-
-      while R < First_Row + (Integer(Map_Win_Height) * Row_Inc) and R < MAP_HEIGHT
+      while R < First_Row + ((Integer(Map_Win_Height) - 1) * Row_Inc) and
+        R <= MAP_HEIGHT - Row_Inc
       loop
          if (R / Row_Inc) mod 10 = 0 and R < MAP_HEIGHT
          then
-            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
-                               Column => Curses.Columns - NUMSIDES);
-            Integer_Io.Put(R);
+            --  Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
+            --                     Column => Curses.Columns - NUMSIDES);
+            --  Integer_Io.Put(Curses.Standard_Window, R, NUMSIDES - 1);
+            Curses.Add(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
+                       Column => Curses.Columns - NUMSIDES,
+                       Str => Integer'Image(R), Len => NUMSIDES - 1);
+            Curses.Refresh;
          else
             Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
                                Column => Curses.Columns - NUMSIDES);

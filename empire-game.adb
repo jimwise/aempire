@@ -484,11 +484,11 @@ package body Empire.Game is
       C : City_Info_P;
       D : Cont_T;
    begin
-      Ui.Prompt("Entered Mark_Cont.  Mapi = " & Integer'Image(Mapi) &
-                  " Ncity = " & Integer'Image(Ncity) &
-                  " / " & Integer'Image(NUM_CITY) &
-                  " Ncont = " & Integer'Image(Ncont) &
-                  " / " & Integer'Image(MAX_CONT) );
+      --  Ui.Prompt("Entered Mark_Cont.  Mapi = " & Integer'Image(Mapi) &
+      --              " Ncity = " & Integer'Image(Ncity) &
+      --              " / " & Integer'Image(NUM_CITY) &
+      --              " Ncont = " & Integer'Image(Ncont) &
+      --              " / " & Integer'Image(MAX_CONT) );
 
       if Marked(Mapi) or (Map(Mapi).Contents = '.') or (not Map(Mapi).On_Board)
       then

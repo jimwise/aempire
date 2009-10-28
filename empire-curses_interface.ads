@@ -55,8 +55,9 @@ private
                               Label     : in String);
 
    Whose_Map : Owner_T := UNOWNED;      --  user or computer (none yet)
-   Ref_Row : Row_T;                     --  current top row displayed
-   Ref_Col : Column_T;                  --  current left-most column displayed
+   -- we start the game with these set to 'Last, as no sector is displayed
+   Ref_Row : Row_T := Row_T'Last;       --  current top row displayed
+   Ref_Col : Column_T := Column_T'Last;    --  current left-most column displayed
    Save_Sector : Sector_T;              --  current displayed sector
    Save_Cursor : Location_T;            --  ??? -- current displayed cursor position
 
@@ -89,5 +90,29 @@ private
      ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
       'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-     '-', '!', '%', ' ', '&');
+      '-', '!', '%', ' ', '&');
+
+  type Content_Display_Table is array (Content_Display_T) of Character;
+  type Path_Display_Table is array (Path_Display_T) of Character;
+
+  Ctab : Content_Display_Table :=
+     ('X' => 'X', 'O' => 'O', '*' => '*',
+      't' => 't', 'c' => 'c', 'b' => 'b',
+      's' => 's', 'd' => 'd', 'p' => 'p',
+      'f' => 'f', 'a' => 'a',
+      'T' => 'T', 'C' => 'C', 'B' => 'B',
+      'S' => 'S', 'D' => 'D', 'P' => 'P',
+      'F' => 'F', 'A' => 'A',
+      'z' => 'z', 'Z' => 'Z',
+      '+' => '+', '.' => '.', ' ' => '_', --  XXX XXX change '_' to ' ' after testing
+      others => '?');
+
+  Ptab : Path_Display_Table :=
+    ('0' => '0', '1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6',
+     '7' => '7', '8' => '8', '9' => '9', 'a' => 'a', 'b' => 'b', 'c' => 'c', 'd' => 'd',
+     'e' => 'e', 'f' => 'f', 'g' => 'g', 'h' => 'h', 'i' => 'i', 'j' => 'j', 'k' => 'k',
+     'l' => 'l', 'm' => 'm', 'n' => 'n', 'o' => 'o', 'p' => 'p', 'q' => 'q', 'r' => 'r',
+     's' => 's', 't' => 't', 'u' => 'u', 'v' => 'v', 'w' => 'w', 'x' => 'x', 'y' => 'y',
+     'z' => 'z', '-' => '-', '!' => '!', '%' => '%', ' ' => ' ', '&' => '&');
+
 end Empire.Curses_Interface;
