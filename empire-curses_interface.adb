@@ -759,7 +759,7 @@ package body Empire.Curses_Interface is
    begin
       C := Get_Chx;
 
-      for I in Piece_Type_T'Range
+      for I in Piece_Attr'Range
       loop
          if C = Piece_Attr(I).Sel_Char
          then
