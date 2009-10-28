@@ -435,7 +435,7 @@ private
    Piece_Attr : constant Piece_Attr_Array :=
      (ARMY =>
         (U_Cont => 'A', C_Cont => 'a',  -- character for printing piece
-         Sel_Char => 'B',
+         Sel_Char => 'A',
          Class => GROUND,
          Name => Strings.To_Bounded_String("army"),   -- name of piece
          Nickname => Strings.To_Bounded_String("army"), -- nickname
