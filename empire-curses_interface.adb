@@ -1,9 +1,6 @@
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
-with Terminal_Interface.Curses;
-with Terminal_Interface.Curses.Text_Io;
-with Terminal_Interface.Curses.Text_Io.Integer_IO;
-with Terminal_Interface.Curses.Text_Io.Enumeration_IO;
+with Terminal_Interface.Curses.Text_IO;
 with Empire.Locations;
 
 package body Empire.Curses_Interface is
@@ -14,13 +11,7 @@ package body Empire.Curses_Interface is
    -- XXX XXX really be split into a driver-independent and a curses part.
 
    package Curses renames Terminal_Interface.Curses; --  lets it be clearer which funcs are from curses, without using full hierarchy
-
-   package Content_IO is new Terminal_Interface.Curses.Text_IO.Enumeration_IO(Content_Display_T);
-   package Terrain_IO is new Terminal_Interface.Curses.Text_IO.Enumeration_IO(Terrain_Display_T);
-   package Path_IO is new Terminal_Interface.Curses.Text_IO.Enumeration_IO(Path_Display_T);
-   package Integer_IO is new Terminal_Interface.Curses.Text_IO.Integer_IO(Integer);
-   package Text_IO renames Terminal_Interface.Curses.Text_IO;
-
+   package Text_Io renames Terminal_Interface.Curses.Text_IO;
 
    -- This file contains routines for displaying sectors and
    -- moving the cursor about in a sector.  We need to remember the following
@@ -38,6 +29,9 @@ package body Empire.Curses_Interface is
       Map_Win_Width := Curses.Columns - SIDE_COLUMNS;
 
       Map_Win := Curses.New_Window(Map_Win_Height, Map_Win_Width, TOP_ROWS, 0);
+   exception
+         when Curses.Curses_Exception =>
+            raise Curses.Curses_Exception;
    end Init_Map;
 
    -- This routine is called when the current display has been
@@ -110,9 +104,6 @@ package body Empire.Curses_Interface is
    begin
       R := Locations.Loc_Row(Loc) - Ref_Row + 1;
       C := Locations.Loc_Col(Loc) - Ref_Col + 1;
-      -- Curses.Move_Cursor(Map_Win, Curses.Line_Position(R), Curses.Column_Position(C));
-      -- Content_Io.Put(Map_Win, View(Which)(Loc).Contents);
-      -- Text_Io.Put(Map_Win, Ctab(View(Which)(Loc).Contents));
       Curses.Add(Win => Map_Win,
                  Line => Curses.Line_Position(R),
                  Column => Curses.Column_Position(C),
@@ -122,6 +113,9 @@ package body Empire.Curses_Interface is
       -- move cursor over location we just showed
       Curses.Move_Cursor(Map_Win, Curses.Line_Position(R), Curses.Column_Position(C));
       Curses.Refresh(Map_Win);
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Show_Loc;
 
    -- Print a sector of the user's on the screen.  If it is already displayed,
@@ -143,8 +137,9 @@ package body Empire.Curses_Interface is
    procedure Print_Sector (Whose  : in Piece_Owner_T;
                            Sector : in Sector_T)
    is
-      First_Row, Last_Row : Row_T;
-      First_Col, Last_Col : Column_T;
+      First_Row : Row_T;
+      First_Col : Column_T;
+      Last_Row, Last_Col : Integer;
       Display_Rows : Integer;
       Display_Cols : Integer;
    begin
@@ -172,7 +167,7 @@ package body Empire.Curses_Interface is
 
       -- figure out first row and col to print; subtract half the extra lines from the first line
       declare
-         Extra_Rows, Extra_Cols : Integer;
+         Extra_Rows, Extra_Cols : Natural;
       begin
          Extra_Rows := Display_Rows - ROWS_PER_SECTOR;
          Extra_Cols := Display_Cols - COLS_PER_SECTOR;
@@ -192,48 +187,23 @@ package body Empire.Curses_Interface is
          end if;
       end;
 
-      -- try not to go past bottom of usable map (outer rim cannot be used)
-      declare
-         Wasted_Rows, Wasted_Cols : Integer;
-      begin
-         Wasted_Rows := (Ref_Row + Display_Rows) - (MAP_HEIGHT - 1);
-         Wasted_Cols := (Ref_Col + Display_Cols) - (MAP_WIDTH - 1);
+      -- XXX original had some  logic to try not to waste space at the bottom/right of the screen
+      -- XXX but it didn't work _quite_ right, and is less useful as we now have more, smaller sectors
+      -- XXX world...
 
-         if Wasted_Rows > 0
-         then
-            if Ref_Row > Wasted_Rows
-            then
-               Ref_Row := Ref_Row - Wasted_Rows;
-            else
-               Ref_Row:= 1;
-            end if;
-         end if;
-
-         if Wasted_Cols > 0
-         then
-            if Ref_Col > Wasted_Cols
-            then
-               Ref_Col := Ref_Col - Wasted_Rows;
-            else
-               Ref_Col := 1;
-            end if;
-         end if;
-      end;
-
-      --  XXX work through, and make sure this can't be made unnecessary above
       if Ref_Row < 1
       then
          Ref_Row := 1;
       end if;
-      if Ref_Row > MAP_HEIGHT - 1
+      if Ref_Row = MAP_HEIGHT - 1
       then
-         Ref_Row := MAP_HEIGHT - 1;
+         Ref_Row := MAP_HEIGHT - 2;
       end if;
       if Ref_Col < 1
       then
         Ref_Col := 1;
       end if;
-      if Ref_Col > MAP_WIDTH - 1
+      if Ref_Col = MAP_WIDTH - 1
       then
         Ref_Col := MAP_WIDTH - 1;
       end if;
@@ -246,16 +216,17 @@ package body Empire.Curses_Interface is
       Display_Turn;
       Display_Score;
       Curses.Refresh;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Print_Sector;
 
    -- Display the portion of the map that appears on the screen
 
    procedure Display_Screen (Which : in Piece_Owner_T)
    is
-      Display_Rows : Integer := Integer(Map_Win_Height) - 2;
-      Display_Cols : Integer := Integer(Map_Win_Width) - 2;
-      R : Row_T;
-      C : Column_T;
+      Display_Rows : constant Integer := Integer(Map_Win_Height) - 2;
+      Display_Cols : constant Integer := Integer(Map_Win_Width) - 2;
       T : Location_T;
    begin
       R := Ref_Row;
@@ -264,22 +235,20 @@ package body Empire.Curses_Interface is
          C := Ref_Col;
          while C < Ref_Col + Display_Cols - 1 and C < Column_T'Last
          loop
+            exit when C = MAP_WIDTH - 1;
             T := Locations.Row_Col_Loc(R, C);
-            --  Curses.Move_Cursor(Map_Win,
-            --                     Line => Curses.Line_Position(R - Ref_Row + 1),
-            --                     Column => Curses.Column_Position(C - Ref_Col + 1));
-            --  -- Content_Io.Put(Map_Win, View(Which)(T).Contents);
-            --  Text_Io.Put(Map_Win, Ctab(View(Which)(T).Contents));
             Curses.Add(Win => Map_Win,
                        Line => Curses.Line_Position(R - Ref_Row + 1),
                        Column => Curses.Column_Position(C - Ref_Col + 1),
                        Ch => Ctab(View(Which)(T).Contents));
             C := C + 1;
          end loop;
-         R := R + 1;
       end loop;
       Curses.Box(Map_Win);
       Curses.Refresh(Map_Win);
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Display_Screen;
 
    -- Move the cursor in a specified direction.  We return TRUE if the
@@ -320,6 +289,9 @@ package body Empire.Curses_Interface is
                   Line => Curses.Line_Position(R - Ref_Row + 1),
                   Column => Curses.Column_Position(C - Ref_Col + 1));
       Curses.Refresh(Map_Win);
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Move_Cursor;
 
    -- See if a location is displayed on the screen
@@ -339,6 +311,9 @@ package body Empire.Curses_Interface is
       end if;
 
       return True;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end On_Screen;
 
    -- Print a condensed version of the map
@@ -375,17 +350,16 @@ package body Empire.Curses_Interface is
       Curses.Refresh;
 
       Prompt("Press any key to continue...");
-      declare                           --  can't discard function output
-         C : Character;
-      begin
-         C := Get_Chx;
-      end;
+      Wait_Chx;
       Prompt("");
 
       if Whose_Map = USER
       then
          Print_Sector(USER, Save_Sector);
       end if;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Print_Zoom;
 
    -- Print a single cell in condensed format
@@ -396,32 +370,24 @@ package body Empire.Curses_Interface is
                               Row_Inc : in Integer;
                               Col_Inc : in integer)
    is
-      R : Row_T;
-      C : Column_T;
       T : Location_T;
       Cell : Content_Display_T;
    begin
       Cell := ' ';
-      R := Row;
-      while R < Row + Row_Inc and R < MAP_HEIGHT - 1           --  while within area being compressed to one square
+      for R in Row .. Row + Row_Inc - 1           --  loop over area being compressed to one square
       loop
-         C := Col;
-         while C < Col + Col_Inc and C < MAP_WIDTH - 1
+         exit when R = MAP_HEIGHT - 1;
+         for C in Col .. Col + Col_Inc - 1
          loop
+            exit when C = MAP_WIDTH - 1;
             T := Locations.Row_Col_Loc(R, C);
-            if Zoom_List(Vmap(T).contents) < Zoom_List(Cell)
+            if Zoom_List(Vmap(T).Contents) < Zoom_List(Cell)
             then
                Cell := Vmap(T).Contents;
             end if;
-            C := C + 1;
          end loop;
-         R := R + 1;
       end loop;
 
-      --  Curses.Move_Cursor(Map_Win,
-      --                     Line => Curses.Line_Position(Row / Row_Inc + 1),
-      --                     Column => Curses.Column_Position(Col / Col_Inc + 1));
-      --  Content_Io.Put(Map_Win, Cell);
       Curses.Add(Win => Map_Win,
                  Line => Curses.Line_Position(Row / Row_Inc + 1),
                  Column => Curses.Column_Position(Col / Col_Inc + 1),
@@ -434,8 +400,6 @@ package body Empire.Curses_Interface is
                           Pmap : in Path_Map;
                           Vmap : in View_Map)
    is
-      R : Row_T;
-      C : Column_T;
       Row_Inc, Col_Inc : Integer;
    begin
       Row_Inc := (MAP_HEIGHT + Integer(Map_Win_Height) - 2) / (Integer(Map_Win_Height) - 2);
@@ -443,16 +407,12 @@ package body Empire.Curses_Interface is
 
       Curses.Clear(Map_Win);
 
-      R := 0;
-      while R < MAP_HEIGHT
+      for R in 1 .. Map_Height - 1
       loop
-         C := 0;
-         while C < MAP_WIDTH
+         for C in 1 .. Map_Width - 1
          loop
             Print_Pzoom_Cell(Pmap, Vmap, R, C, Row_Inc, Col_Inc);
-            C := C + Col_Inc;
          end loop;
-         R := R + Row_Inc;
       end loop;
 
       Curses.Box(Map_Win);
@@ -466,17 +426,16 @@ package body Empire.Curses_Interface is
       Curses.Refresh;
 
       Prompt(S);
-      declare                           --  can't discard function output
-         C : Character;
-      begin
-         C := Get_Chx;
-      end;
+      Wait_Chx;
       Prompt("");
 
       if Whose_Map = USER
       then
          Print_Sector(USER, Save_Sector);
       end if;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Print_Pzoom;
 
    -- Print a single cell of a pathmap in condensed format.
@@ -502,6 +461,7 @@ package body Empire.Curses_Interface is
          for C in Col .. Col + Col_Inc - 1
          loop
             Sum := Sum + Pmap(Locations.Row_Col_Loc(R, C)).Cost;
+            Debug_Error("sum is now " & Integer'Image(Sum) & ", d is now " & Integer'Image(D));
             D := D + 1;
          end loop;
       end loop;
@@ -533,15 +493,14 @@ package body Empire.Curses_Interface is
       then
          Print_Zoom_Cell(Vmap, Row, Col, Row_Inc, Col_Inc);
       else
-         --  Curses.Move_Cursor(Map_Win,
-         --                     Line => Curses.Line_Position(Row / Row_Inc + 1),
-         --                     Column => Curses.Column_Position(Col / Col_Inc + 1));
-         --  Path_Io.Put(Map_Win, Cell);
          Curses.Add(Win => Map_Win,
                     Line => Curses.Line_Position(Row / Row_Inc + 1),
                     Column => Curses.Column_Position(Col / Col_Inc + 1),
                     Ch => Ptab(Cell));
       end if;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Print_Pzoom_Cell;
 
    -- print map's decorations -- coordinates along the bottom and side, and
@@ -562,18 +521,13 @@ package body Empire.Curses_Interface is
 
       while C < First_Col + ((Integer(Map_Win_Width) - 1) * Col_Inc) and
         C <= MAP_WIDTH - Col_Inc
-      loop
-         if (C / Col_Inc) mod 10 = 0
-         then
-            --  Curses.Move_Cursor(Line => Curses.Lines - 1,
-            --                     Column => Curses.Column_Count(C / Col_Inc + 1));
-            --  Integer_Io.Put(Curses.Standard_Window, C);
-            Curses.Add(Line => Curses.Lines - 1,
-                       Column => Curses.Column_Count(C / Col_Inc + 1),
-                                            Str => Integer'Image(C));
+        Curses.Add(Line => Curses.Lines - 1,
+                   Column => Curses.Column_Count(C / Col_Inc + 1),
+                   Str => Integer'Image(C));
          end if;
          C := C + Col_Inc;
       end loop;
+      end if;
 
       -- print y-coordinates along right of screen
       R := First_Row;
@@ -581,20 +535,13 @@ package body Empire.Curses_Interface is
         R <= MAP_HEIGHT - Row_Inc
       loop
          if (R / Row_Inc) mod 10 = 0 and R < MAP_HEIGHT
-         then
-            --  Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
-            --                     Column => Curses.Columns - NUMSIDES);
-            --  Integer_Io.Put(Curses.Standard_Window, R, NUMSIDES - 1);
             Curses.Add(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
                        Column => Curses.Columns - NUMSIDES,
                        Str => Integer'Image(R), Len => NUMSIDES - 1);
             Curses.Refresh;
          else
-            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
-                               Column => Curses.Columns - NUMSIDES);
             Curses.Clear_To_End_Of_Line;
          end if;
-         R := R + Row_Inc;
       end loop;
    end Print_Map_Frame;
    -- Display the score off in the corner of the screen
@@ -608,11 +555,6 @@ package body Empire.Curses_Interface is
 
       Curses.Add(Line => 0, Column => Curses.Columns - 12, Str => " User  Comp");
       Curses.Add(Line => 1, Column => Curses.Columns - 12, Str => U & C);
-      --  Curses.Move_Cursor(Line => 0, Column => Curses.Columns - 12);
-      --  Text_Io.Put(" User  Comp");
-      --  Curses.Move_Cursor(Line => 1, Column => Curses.Columns - 12);
-      --  -- "%5d %5d", user_score, comp_score
-      --  Text_Io.Put(U & C);
       Curses.Refresh;
    end Display_Score;
 
@@ -641,7 +583,6 @@ package body Empire.Curses_Interface is
       --      int row_inc, col_inc;
       --      int r, c, i, j;
       --      char cell;
-
    begin
       Info("XXX XXX XXX Move playback is not yet supported");
 
@@ -667,14 +608,12 @@ package body Empire.Curses_Interface is
 
 --  /* Print a screen of help information. */
 
---  #define MIN(a,b) ((a)<(b) ? (a) : (b))
-
    procedure Help (Text : in Help_Array)
    is
       R, C : Integer;
       Text_Lines, Obj_Lines, Start_Col, Start_Row, Help_Height, Help_Width : Integer;
       Help_Win : Curses.Window;
-      Num_Objs : Integer := Piece_Type_T'Pos(Piece_Type_T'Last) + 1;
+      Num_Objs : constant Integer := Piece_Type_T'Pos(Piece_Type_T'Last) + 1;
    begin
       Text_Lines := (Text'Length + 1) / 2;
       Obj_Lines := (Num_Objs + 1) / 2;
@@ -729,8 +668,8 @@ package body Empire.Curses_Interface is
          Curses.Move_Cursor(Help_Win, Line => Curses.Line_Position(R + Text_Lines + 3), Column => Curses.Column_Position(C));
          declare
             Nickname : String(1 .. 12);
-            Uname : Content_Display_T := Piece_Attr(J).U_Cont;
-            Cname : Content_Display_T := Piece_Attr(J).C_Cont;
+            Uname : constant Content_Display_T := Piece_Attr(J).U_Cont;
+            Cname : constant Content_Display_T := Piece_Attr(J).C_Cont;
             Speed : String(1 .. 6);
             Max_Hits : String(1 .. 5);
             Build_Time : String(1 .. 6);
@@ -748,11 +687,7 @@ package body Empire.Curses_Interface is
       Curses.Refresh(Help_Win);
 
       Prompt("Press any key to continue");
-      declare
-         C : Character;
-      begin
-         C := Get_Chx;
-      end;
+      Wait_Chx;
       Prompt("");
 
       Curses.Clear(Help_Win);
@@ -764,9 +699,12 @@ package body Empire.Curses_Interface is
       then
          Print_Sector(USER, Save_Sector);
       end if;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Help;
 
-   function Get_Piece_Name return Piece_Type_T
+   function Get_Piece_Name return Piece_Choice_T
    is
       C : Character;
    begin
@@ -809,7 +747,10 @@ package body Empire.Curses_Interface is
       Curses.Clear_To_End_Of_Line(Status_Win);
       Text_Io.Put(Status_Win, S);
       Curses.Refresh(Status_Win);
-   end;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
+   end Prompt;
 
    procedure Info (S : in String)
    is
@@ -820,7 +761,23 @@ package body Empire.Curses_Interface is
       Text_Io.Put(Info_Win, S);
       Curses.Refresh(Info_Win);
       Curses.Allow_Scrolling(Info_Win, False);
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Info;
+
+   procedure Debug_Info (S : in String)
+   is
+   begin
+      if Debug
+      then
+         Info(Integer'Image(Debug_Count) & ": " & S);
+      end if;
+      Debug_Count := Debug_Count + 1;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
+   end Debug_Info;
 
    -- Print an error message on the second message line
 
@@ -837,7 +794,20 @@ package body Empire.Curses_Interface is
       Curses.Scroll(Status_Win, -1);
       Curses.Refresh(Status_Win);
       Curses.Allow_Scrolling(Status_Win, False);
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Error;
+
+   procedure Debug_Error (S : in String)
+   is
+   begin
+      if Debug
+      then
+         Error(Integer'Image(Debug_Count) & ": " & S);
+      end if;
+      Debug_Count := Debug_Count + 1;
+   end Debug_Error;
 
    -- Print out a generic error message
 
@@ -865,7 +835,18 @@ package body Empire.Curses_Interface is
    exception
       when Constraint_Error =>
          return Character'first;
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Get_Chx;
+
+   procedure Wait_Chx
+   is
+      K : Curses.Real_Key_Code;
+   begin
+      Curses.Set_Cbreak_Mode(True);
+      K := Curses.Get_Keystroke(Status_Win);
+      Curses.Set_Cbreak_Mode(False);
+   end Wait_Chx;
 
    -- Input an integer from the user.
    -- low and high set bounds
@@ -901,8 +882,10 @@ package body Empire.Curses_Interface is
             when Constraint_Error =>
                Error("Please enter an integer.");
          end;
-
       end loop;
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Get_Int;
 
    -- Input a yes or no response from the user.  We loop until we get
@@ -976,12 +959,18 @@ package body Empire.Curses_Interface is
       Status_Win := Curses.New_Window(1, Curses.Columns - 12, 0, 0);
       Curses.Switch_Character_Attribute(Status_Win, (Reverse_Video => True, others => False), True);
       Info_Win := Curses.New_Window(NUMINFO, Curses.Columns - 12, 1, 0);
+   exception
+      when Curses.Curses_Exception =>
+         raise Curses.Curses_Exception;
    end Init_Ui;
 
    procedure Alert
    is
    begin
       Curses.Beep;
+   exception
+         when Curses.Curses_Exception =>
+            raise Curses.Curses_Exception;
    end Alert;
 
 end Empire.Curses_Interface;
