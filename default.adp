@@ -1,10 +1,10 @@
-gnatmake_opt=-k -x -Pempire
+gnatmake_opt=-x -Pempire -k
 main=empire
 main_unit=main
 build_dir=./obj/
-check_cmd=${cross_prefix}gnatmake -u -c -gnatc ${gnatmake_opt} ${full_current} -cargs ${comp_opt}
+check_cmd=${cross_prefix}gnat compile ${comp_opt} -gnatc -gnaty ${full_current}
 make_cmd=${cross_prefix}gnatmake -o ${main} ${main_unit} ${gnatmake_opt} -cargs ${comp_opt} -bargs ${bind_opt} -largs ${link_opt}
-comp_cmd=${cross_prefix}gnatmake -u -c ${gnatmake_opt} ${full_current} -cargs ${comp_opt}
+comp_cmd=${cross_prefix}gnatmake -u -c ${gnatmake_opt} -cargs ${comp_opt}
 run_cmd=./${main}
 src_dir=./
 obj_dir=./obj/
