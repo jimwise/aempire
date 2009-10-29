@@ -14,7 +14,7 @@ package body Empire.User_Move is
    procedure User_Move is
      Sec, Sec_Start : Location_T;
      Obj, Next_Obj : Piece_Info_P;
-     Prod : Piece_Type_T;
+     Prod : Piece_Choice_T;
    begin
       -- First we loop through objects to update the user's view
       -- of the world and perform any other necessary processing.
@@ -23,7 +23,7 @@ package body Empire.User_Move is
       -- also scan through all cities before possibly asking the
       -- user what to produce in each city (XXX but we don't -- Jim).
 
-      for N in User_Obj'Range
+      for N in Piece_Type_T'Range
       loop
          Obj := User_Obj(N);
          while Obj /= null
@@ -37,7 +37,7 @@ package body Empire.User_Move is
       -- produce new hardware
       for I in City'Range
       loop
-         if City(I).Owner = User
+         if City(I).Owner = USER
          then
             Objects.Scan(USER, City(I).Loc);
             Prod := City(I).Prod;
@@ -46,10 +46,11 @@ package body Empire.User_Move is
                Objects.Ask_Prod(City(I));       --  ask user what to produce
             elsif City(I).Work >= Piece_Attr(Prod).Build_Time
             then
-               Ui.Info("City at " & Integer'Image(City(I).Loc) & " has compeleted " & Strings.To_String(Piece_Attr(Prod).Article));
+               Ui.Info("City at " & Location_T'Image(City(I).Loc) & " has compeleted " & Strings.To_String(Piece_Attr(Prod).Article));
                Objects.Produce(City(I));
             else
-              City(I).Work := City(I).Work + 1;
+               Ui.Debug_Info("city at " & Location_T'Image(City(I).Loc) & " has completed " & Integer'Image(City(I).Work) & " work units.");
+               City(I).Work := City(I).Work + 1;
             end if;
          end if;
       end loop;
@@ -70,6 +71,7 @@ package body Empire.User_Move is
       loop
          for N in Move_Order'Range
          loop
+            Ui.Debug_Info("about to move all pieces of type " & Piece_Type_T'Image(Move_Order(N)));
             -- note that this means that move_order is obeyed only within each sector
             -- it would make a better simulation, but a worst UI, to reverse the nesting of the loops
             -- bonus question:  can this be gamed (say to move a slow unit at the edge of a sector early?)
@@ -79,7 +81,7 @@ package body Empire.User_Move is
             while Obj /= null
             loop
                Next_Obj := Obj.Links(Piece_Link).Next; --  cache next object, as this object may die in the mean time
-               if Obj.Moved /= 0
+               if Obj.Moved = 0
                  then
                     if Locations.Loc_Sector(Obj.Loc) = Sec
                     then
@@ -117,7 +119,7 @@ package body Empire.User_Move is
    -- Then we attempt to handle any preprogrammed function for the piece.  If
    -- the piece has not moved after this, we ask the user what to do.
 
-   procedure Piece_Move (Obj : in out Piece_Info_P) is
+   procedure Piece_Move (Obj : in Piece_Info_P) is
       Changed_Loc : Boolean := false;
       Need_Input : Boolean := false;
       Awoke : Boolean := False;
@@ -212,6 +214,7 @@ package body Empire.User_Move is
 
       -- if a boat is in port, damaged, and never moved, fix some damage
       if Obj.Hits > 0 and            --  still alive?  XXX again, can we get here otherwise?
+        not Changed_Loc and
         Piece_Attr(Obj.Piece_Type).Class = SHIP and
         Obj.Hits < Piece_Attr(Obj.Piece_Type).Max_Hits and
         View(USER)(Obj.Loc).Contents = 'O'
@@ -224,7 +227,7 @@ package body Empire.User_Move is
    -- the piece can move.  If there are none, we do nothing, otherwise we
    -- move the piece to a random adjacent square.
 
-   procedure Move_Random (Obj : in out Piece_Info_P) is
+   procedure Move_Random (Obj : in Piece_Info_P) is
       Loc_List : array (0..7) of Location_T;
       NLoc : Integer := 0;
       Loc : Location_T;
@@ -251,7 +254,7 @@ package body Empire.User_Move is
    -- which the piece can reach and have to piece move toward the
    -- territory.
 
-   procedure Move_Explore(Obj : in out Piece_Info_P) is
+   procedure Move_Explore(Obj : in Piece_Info_P) is
       PMap : Path_Map;
       Loc : Location_T;
       Terrain : Acceptable_Content_Array;
@@ -287,7 +290,7 @@ package body Empire.User_Move is
       if Loc /= Obj.Loc
       then
          Objects.Move_Obj(Obj, Loc);
-         end if;
+      end if;
    end Move_Explore;
 
    -- Move an army onto a transport when it arrives.  We scan around the
@@ -295,7 +298,7 @@ package body Empire.User_Move is
    -- army to the transport and waken the army.  Otherwise, we wait until
    -- next turn.
 
-   procedure Move_Transport (Obj : in out Piece_Info_P) is
+   procedure Move_Transport (Obj : in Piece_Info_P) is
       Loc : Location_T;
       Found : Boolean;
       Cost : Integer;
@@ -330,7 +333,7 @@ package body Empire.User_Move is
 
    -- Move an army toward an attackable city or enemy army
 
-   procedure Move_Armyattack (Obj : in out Piece_Info_P) is
+   procedure Move_Armyattack (Obj : in Piece_Info_P) is
       PMap : Path_Map;
       Loc : Location_T;
    begin
@@ -359,7 +362,7 @@ package body Empire.User_Move is
 
    -- Move a ship toward port.  If the ship is healthy, wake it up.
 
-   procedure Move_Repair (Obj : in out Piece_Info_P) is
+   procedure Move_Repair (Obj : in Piece_Info_P) is
       Pmap : Path_Map;
       Loc : Location_T;
    begin
@@ -402,7 +405,7 @@ package body Empire.User_Move is
    -- object is not full, we set the move count to its maximum value.
    -- Otherwise we awaken the object.
 
-   procedure Move_Fill (Obj : in out Piece_Info_P) is
+   procedure Move_Fill (Obj : in Piece_Info_P) is
    begin
       if Obj.Count = Objects.Obj_Capacity(Obj)
       then
@@ -417,7 +420,7 @@ package body Empire.User_Move is
       -- for the closest one.  We then move toward that item's location.
       -- The nearest landing field must be within the object's range.
 
-   procedure Move_Land (Obj : in out Piece_Info_P) is
+   procedure Move_Land (Obj : in Piece_Info_P) is
       Best_Dist, New_Dist : Integer;
       Best_Loc, Carrier_loc : Location_T;
       City_Found, Carrier_Found : Boolean;
@@ -454,7 +457,7 @@ package body Empire.User_Move is
    -- XXX we should wake it up. (original code's comment claimed to do so,
    -- XXX but no such code was present)
 
-   procedure Move_Dir (Obj : in out Piece_Info_P) is
+   procedure Move_Dir (Obj : in Piece_Info_P) is
       Loc : Location_T;
       Dir : Direction_T;
    begin
@@ -472,7 +475,7 @@ package body Empire.User_Move is
    -- to our destination, and if there is nothing in the way.  If so, we
    -- move in the first direction we find.
 
-   procedure Move_Path (Obj : in out Piece_Info_P) is
+   procedure Move_Path (Obj : in Piece_Info_P) is
    begin
       if Obj.Func /= MOVE_TO_DEST
       then
@@ -492,7 +495,7 @@ package body Empire.User_Move is
    -- Then we mark the paths to the destination.  Then we choose a
    -- move.
 
-   procedure Move_To_Dest (Obj : in out Piece_Info_P; Dest : in Location_T) is
+   procedure Move_To_Dest (Obj : in Piece_Info_P; Dest : in Location_T) is
       PMap : Path_Map;
       Fterrain : Terrain_T;
       Mterrain : Acceptable_Content_Array;
@@ -537,7 +540,7 @@ package body Empire.User_Move is
 
    -- Ask the user to move his own darn piece
 
-   procedure Ask_User(Obj : in out Piece_Info_P) is
+   procedure Ask_User(Obj : in Piece_Info_P) is
       C : Character;
    begin
       loop
@@ -644,7 +647,7 @@ package body Empire.User_Move is
    -- object if necessary (because the user only changed the city
    -- function, and did not tell us what to do with the object).
 
-   procedure Reset_Func(Obj : in out Piece_Info_P) is
+   procedure Reset_Func(Obj : in Piece_Info_P) is
       Cityp : City_Info_P;
       B : Boolean;
    begin
@@ -659,7 +662,7 @@ package body Empire.User_Move is
 
    procedure User_Obj_Func
      (
-      Obj : in out Piece_Info_P;
+      Obj : in Piece_Info_P;
       Func : in Function_T;
       Ptypes : in Acceptable_Piece_Array := (SATELLITE => FALSE, others => TRUE);
       Dest_If_Move_To_Dest : Location_T := 0
@@ -682,7 +685,7 @@ package body Empire.User_Move is
    -- is an army and the army is in a city, move the army to
    -- the city.
 
-   procedure User_Skip(Obj : in out Piece_Info_P) is
+   procedure User_Skip(Obj : in Piece_Info_P) is
    begin
       if Obj.Piece_Type = ARMY and View(USER)(Obj.Loc).Contents = 'O'
       then
@@ -693,7 +696,7 @@ package body Empire.User_Move is
    end User_Skip;
 
    -- Set an object's function to move in a certain direction.
-   procedure User_Set_Dir (Obj : in out Piece_Info_P) is
+   procedure User_Set_Dir (Obj : in Piece_Info_P) is
       C : Character;
    begin
       C := Ui.Get_Chx;
@@ -726,7 +729,7 @@ package body Empire.User_Move is
    -- XXX XXX XXX a path.  they should be merged.
 
    procedure User_Set_City_Func (Loc : in Location_T) is
-      Ptype : Piece_Type_T;
+      Ptype : Piece_Choice_T;
       E : Character;
       Cityp : City_Info_P;
    begin
@@ -796,7 +799,7 @@ package body Empire.User_Move is
    -- Move a piece in the direction specified by the user.
    -- This routine handles attacking objects.
 
-   procedure User_Dir (Obj : in out Piece_Info_P; Dir : Direction_T) is
+   procedure User_Dir (Obj : in Piece_Info_P; Dir : Direction_T) is
       Loc : Location_T;
    begin
       Loc := Obj.Loc + Dir_Offset(Dir);
@@ -828,7 +831,7 @@ package body Empire.User_Move is
    -- unreasonable terrain.  We check for errors, question the user if
    -- necessary, and attack if necessary.
 
-   procedure User_Dir_Ground (Obj : in out Piece_Info_P; Loc : in Location_T) is
+   procedure User_Dir_Ground (Obj : in Piece_Info_P; Loc : in Location_T) is
    begin
       -- remember, if we get here, this is NOT an uncontested move -- so see
       -- what the problem is, and if it's an enemy, have at it.
@@ -863,7 +866,7 @@ package body Empire.User_Move is
    --  three cases:  attacking a city, attacking ourself, attacking the enemy.
    -- this had the same cutesy-ism as above in the original
 
-   procedure User_Dir_Aircraft (Obj : in out Piece_Info_P; Loc : Location_T) is
+   procedure User_Dir_Aircraft (Obj : in Piece_Info_P; Loc : Location_T) is
    begin
       if Map(Loc).Contents = '*'
       then
@@ -882,7 +885,7 @@ package body Empire.User_Move is
    -- a city, attacking self, attacking enemy.
    -- needless by now to say, this had the same cutesy-ism as the other two
 
-   procedure User_Dir_Ship (Obj : in out Piece_Info_P; Loc : in Location_T) is
+   procedure User_Dir_Ship (Obj : in Piece_Info_P; Loc : in Location_T) is
    begin
       if Map(Loc).Contents = '*'
       then
@@ -905,7 +908,7 @@ package body Empire.User_Move is
    -- Here a user wants to move an army to a city.  If the city contains
    -- a non-full transport, we make the move.  Yes, there was more cutesy-ism.
 
-   procedure Move_Army_To_City (Obj : in out Piece_Info_P; Loc : Location_T) is
+   procedure Move_Army_To_City (Obj : in Piece_Info_P; Loc : Location_T) is
       Tt : Piece_Info_P;
    begin
       Tt := Objects.Find_Obj_At_Loc(Loc, (TRANSPORT => True, others => False),
@@ -940,11 +943,12 @@ package body Empire.User_Move is
    -- completely awoken here if their function is a destination.  But we
    -- will return TRUE if we want the user to have control.
 
-   procedure Awake (Obj : in out Piece_Info_P; Awoken : out Boolean) is
+   procedure Awake (Obj : in Piece_Info_P; Awoken : out Boolean) is
       C : Content_Display_T;
    begin
       if Piece_Attr(Obj.Piece_Type).Class = GROUND and Mapping.Vmap_At_Sea(View(USER), Obj.Loc)
       then
+         -- XXX XXX XXX it would be cleaner to do this elsewhere -- moved status is not otherwise updated here...
          Obj.Moved := Objects.Obj_Moves(Obj);
          Awoken := False;
          return;
@@ -1003,6 +1007,7 @@ package body Empire.User_Move is
          then
             if Obj.Func /= MOVE_TO_DEST
             then
+               Ui.Debug_Error("awakening unit at " & Location_T'Image(Obj.Loc) & " due to adjacent unit or city");
                User_Obj_Func(Obj, NOFUNC);
                Awoken := True;
                return;
