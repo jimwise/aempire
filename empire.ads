@@ -1,12 +1,14 @@
 with Ada.Strings.Bounded;
 with Ada.Text_IO;
 package Empire is
-   MAP_WIDTH : constant Integer := 100;
-   MAP_HEIGHT : constant Integer := 60;
-   MAP_SIZE : constant Integer := MAP_WIDTH * MAP_HEIGHT;
-   NUM_CITY : constant Integer := 70;
+   -- these include a `frame' of one cell all around the playable area.
+   -- XXX maybe this should change, but it allows easy assumption that we can go
+   -- XXX any direction from any playable cell, _then_ check if still on board.
+   MAP_WIDTH : constant := 200;
+   MAP_HEIGHT : constant := 100;
+   MAP_SIZE : constant := MAP_WIDTH * MAP_HEIGHT;
 
-   STRING_MAX : constant Integer := 256;
+   NUM_CITY : constant := 70;
 
    -- cost to switch a city's production is the _new_ item's cost over RETOOLING_DENOMINATOR
    RETOOLING_DENOMINATOR : constant := 5;
@@ -23,6 +25,7 @@ package Empire is
 
    -- XXX XXX XXX XXX need to move to bounded_strings.  will make
    -- XXX XXX XXX XXX describe_obj (at least) cleaner, for instance.
+   STRING_MAX : constant := 256;
    package Strings is new Ada.Strings.Bounded.Generic_Bounded_Length(STRING_MAX);
    subtype Bstring is Strings.Bounded_String;
 
@@ -34,14 +37,20 @@ package Empire is
 
    -- useful constants for accessing sectors
 
-   SECTOR_ROWS : constant Integer := 5;  -- number of vertical sectors
-   SECTOR_COLS : constant Integer := 2;  -- number of horizontal sectors
-   NUM_SECTORS : constant Integer := SECTOR_ROWS * SECTOR_COLS; -- total sectors
-   ROWS_PER_SECTOR : constant Integer := (MAP_HEIGHT + SECTOR_ROWS - 1) / SECTOR_ROWS;
-   COLS_PER_SECTOR : constant Integer := (MAP_WIDTH + SECTOR_COLS - 1) / SECTOR_COLS;
+   ROWS_PER_SECTOR : constant := 20; --  should divide evenly into MAP_HEIGHT, and be likely to fit on screen
+   -- was      (MAP_HEIGHT + SECTOR_ROWS - 1) / SECTOR_ROWS;
+   COLS_PER_SECTOR : constant := 50;    --  should divide evenly into MAP_WIDTH, and be likely to fit on screen
+   -- was       (MAP_WIDTH + SECTOR_COLS - 1) / SECTOR_COLS;
+   SECTOR_ROWS : constant := MAP_HEIGHT / ROWS_PER_SECTOR;  -- number of vertical sectors
+   SECTOR_COLS : constant := MAP_WIDTH / COLS_PER_SECTOR;  -- number of horizontal sectors
+   NUM_SECTORS : constant := SECTOR_ROWS * SECTOR_COLS; -- total sectors
+
    subtype Sector_T is Integer range 0 .. NUM_SECTORS - 1;
 
-   INFINITY : constant Integer := Integer'Last;
+   -- XXX XXX XXX this is really broken.  INFINITY, as used here, has to be small enough that we can add a fair number of them together within the range
+   -- XXX XXX XXX of an Integer, yet large enough that we wouldn't expect to see it.  Grrr....
+   -- INFINITY : constant Integer := Integer'Last;
+   INFINITY : constant := 1_000_000;
 
    VERSION_STRING : constant String := "ADA EMPIRE, Version 1.4_ALPHA0, February 2006";
 
@@ -55,7 +64,7 @@ package Empire is
    -- XXX XXX note that piece types here need to be in preference order
    -- XXX XXX for Find_Obj_At_Loc (least -> most).  This can be replaced
    -- XXX XXX by a constant piece_value_array, making this tunable
-   type Piece_Type_T is
+   type Piece_Choice_T is
       (ARMY,
        FIGHTER,
        PATROL,
@@ -66,6 +75,7 @@ package Empire is
        BATTLESHIP,
        SATELLITE,
        NOPIECE);
+  subtype Piece_Type_T is Piece_Choice_T range ARMY .. SATELLITE;
 
   type Piece_Value_Array is array (Piece_Type_T) of Integer;
   type Acceptable_Piece_Array is array (Piece_Type_T) of Boolean;
@@ -82,11 +92,18 @@ package Empire is
    --  'x' represents transport-producing city
    --  '0' .. '9' represent explorable territory
 
+  -- XXX XXX XXX
    type Content_Display_T is
       ('.', '+', '*', 'O', 'X', ' ',
        'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd', 'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z',
        '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%');
    subtype Terrain_Display_T is Content_Display_T range '.' .. '*';
+
+   Display_Chars : constant array (Content_Display_T'Range) of Character :=
+     ('.', '+', '*', 'O', 'X', ' ',
+       'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd', 'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z',
+       '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%');
+
 
    type Acceptable_Content_Array is array (Content_Display_T) of Boolean;
    type Acceptable_Terrain_Array is array (Terrain_Display_T) of Boolean;
@@ -254,7 +271,7 @@ package Empire is
          Func : Function_Array;         -- function for each object (XXX size?)
          Dest : Dest_Array;             -- destination if func is MOVE_TO_DEST
          work : Integer;                -- units of work performed
-         Prod : Piece_Type_T;           -- item being produced
+         Prod : Piece_Choice_T;           -- item being produced
       end record;
 
    type City_Info_P is access all City_Info_T;
@@ -549,6 +566,8 @@ private
    -- as the c code does.
    --
    -- NOTA BENE:  for user, move order is obeyed WITHIN EACH SECTOR
+   --
+   -- XXX XXX XXX IT IS CURRENTLY ENTIRELY THE DEVELOPER'S RESPONSIBILITY TO MAKE SURE EVERY PIECE IS HERE!!!
    Move_Order : constant Move_Order_Array :=
      (SATELLITE, TRANSPORT, CARRIER, BATTLESHIP, PATROL, SUBMARINE, DESTROYER, ARMY, FIGHTER);
 
@@ -711,5 +730,4 @@ private
       Strings.To_Bounded_String("y - set func to attack"),
       Strings.To_Bounded_String("<ctrl-L> - redraw screen"),
       Strings.To_Bounded_String("= - describe piece"));
-
 end Empire;
