@@ -413,6 +413,8 @@ package body Empire.Mapping is
       Terrain : in     Terrain_T)
    is
    begin
+      -- XXX XXX XXX this isn't right -- it worked in the original, where we had a low value of `INFINITY', with the
+      -- XXX XXX XXX result that we could sum INFINITY without overflowing int soon.
       Pmap := (others => (Cost => INFINITY, Inc_Cost => INFINITY, Terrain => T_UNKNOWN));
 
       -- put first location in perimeter
@@ -453,11 +455,11 @@ package body Empire.Mapping is
    -- landp == pointer to new land perimeter
 
    procedure Expand_Perimeter
-     (Pmap      : in out Path_Map;      --  path map to update
+     (Pmap      : in out Path_Map;
       Vmap      : in     View_Map;
-      Move_Info : in     Move_Info_T;   --  objectives and weights
-      Perim     : in out Perimeter_T;   --  perimeter to expand
-      Ttype     :        Terrain_T;     --  type of terrain to expand -- XXX XXX XXX should be acceptable_terrain_array!
+      Move_Info : in     Move_Info_T;
+      Perim     : in     Perimeter_T;
+      Ttype     :        Terrain_T;
       Cur_Cost  :        Integer;
       Inc_Wcost :        Integer;
       Inc_Lcost :        Integer;
@@ -599,15 +601,13 @@ package body Empire.Mapping is
       case Map(To_Loc).Contents is
          when '.' => return T_WATER;
          when '+' => return T_LAND;
-            when '*' =>
-               if Map(To_Loc).Cityp.Owner = Move_Info.Owner
-               then
-                  return T_WATER;       --  well, a ship can enter it, and an army can't...
-               else
-                  return T_UNKNOWN;     --  cannot cross
-               end if;
-         when others =>
-            raise Program_Error;
+         when '*' =>
+            if Map(To_Loc).Cityp.Owner = Move_Info.Owner
+            then
+               return T_WATER;       --  well, a ship can enter it, and an army can't...
+            else
+               return T_UNKNOWN;     --  cannot cross
+            end if;
       end case;
    end Terrain_Type;
 
@@ -796,7 +796,7 @@ package body Empire.Mapping is
          elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and Pmap(Loc).Cost > Pmap(Loc).Inc_Cost
          then
             Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
-         elsif (Loc < MAP_WIDTH or Loc >- MAP_SIZE - MAP_WIDTH) and Pmap(Loc).Inc_Cost > Pmap(Loc).Cost
+         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and Pmap(Loc).Inc_Cost > Pmap(Loc).Cost
          then
             Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
          else --  copy perimeter cell as-is
@@ -960,7 +960,7 @@ package body Empire.Mapping is
       for D in Direction_T'Range
       loop
          New_Dest := Dest + Dir_Offset(D);
-         if Pmap(New_Dest).Cost = (Pmap(Dest).Cost - Pmap(Dest).Inc_Cost)
+         if Map(New_Dest).On_Board and Pmap(New_Dest).Cost = (Pmap(Dest).Cost - Pmap(Dest).Inc_Cost)
          then
             Vmap_Mark_Path(Pmap, Vmap, New_Dest);
          end if;

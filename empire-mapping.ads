@@ -86,7 +86,7 @@ private
      (Pmap      : in out Path_Map;
       Vmap      : in     View_Map;
       Move_Info : in     Move_Info_T;
-      Perim     : in out Perimeter_T;
+      Perim     : in     Perimeter_T;
       Ttype     :        Terrain_T;
       Cur_Cost  :        Integer;
       Inc_Wcost :        Integer;
