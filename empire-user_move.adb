@@ -106,11 +106,6 @@ package body Empire.User_Move is
          end if;
          exit when Sec = Sec_Start;  --  we've come full circle
       end loop;
-
-      if Save_Movie
-      then
-         Game.Save_Movie_Screen;
-      end if;
    end User_Move;
 
 
