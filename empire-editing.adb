@@ -68,7 +68,7 @@ package body Empire.Editing is
    begin
       loop
          Cmd := Ui.Get_Chx;
-         if Dir_Chars(Cmd) /= NODIRECTION
+         if Dir_Chars(Cmd) = NODIRECTION
          then
             exit;
          else
@@ -210,7 +210,7 @@ package body Empire.Editing is
    -- XXX XXX XXX this is identical to User_Set_City_Func -- except that it
    -- XXX XXX XXX supports a path.  the two should be merged
    procedure E_City_Func (Loc : in Location_T; Path : out Path_T) is
-      Ptype : Piece_Type_T;
+      Ptype : Piece_Choice_T;
       E : Character;
       Cityp : City_Info_P;
    begin
@@ -267,7 +267,7 @@ package body Empire.Editing is
 
 -- Beginning of move to location
 
-   procedure E_Start_Path (Path: in out Path_T; Loc : in Location_T; Ptype : in Piece_Type_T) is
+   procedure E_Start_Path (Path: in out Path_T; Loc : in Location_T; Ptype : in Piece_Choice_T) is
    begin
       if (Objects.Find_Obj_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE)) = null) and
           (Objects.Find_City_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE)) = null)

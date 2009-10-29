@@ -43,7 +43,7 @@ private
       record
          Started : Boolean := FALSE;
          Start : Location_T;
-         Ptype : Piece_Type_T;          -- XXX type path is for if this is a city path, NOPIECE for a piece path
+         Ptype : Piece_Choice_T;          -- XXX type path is for if this is a city path, NOPIECE for a piece path
       end record;
 
    procedure E_Cursor (Edit_Cursor : in out Location_T; Cmd : out Character);
@@ -51,7 +51,7 @@ private
    procedure E_City_Func (Loc : in Location_T; Path : out Path_T);
    procedure E_End_Path (Path : in out Path_T; Loc : in Location_T);
    procedure E_Info (Loc : in Location_T);
-   procedure E_Start_Path (Path: in out Path_T; Loc : in Location_T; Ptype : in Piece_Type_t);
+   procedure E_Start_Path (Path: in out Path_T; Loc : in Location_T; Ptype : in Piece_Choice_t);
    procedure E_Goto_Sector (Edit_Cursor : in out Location_T);
    procedure E_Move_Direction (Loc : in Location_T);
    procedure E_Prod (Loc : in Location_T);
