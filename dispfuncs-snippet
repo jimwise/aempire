@@ -1,9 +1,0 @@
-   procedure Print_Sector_U (Sec : in Sector_T) is
-   begin
-      Print_Sector(USER, User_Map, Sec);
-   end Print_Sector_U;
-
-   procedure Print_Sector_C (Sec : in Sector_T) is
-   begin
-      Print_Sector(COMP, Comp_Map, Sec);
-   end Print_Sector_C;
