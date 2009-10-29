@@ -13,7 +13,6 @@ with Empire.Locations;
 with Empire.Mapping;
 with Empire.Math;
 with Empire.Objects;
-with Empire.Ui;
 
 package body Empire.Game is
 
@@ -26,10 +25,6 @@ package body Empire.Game is
       Ui.Kill_Display;                     -- nothing on screen
       Automove := FALSE;
       Resigned := FALSE;
-      Debug := FALSE;
-      Print_Debug := FALSE;
-      Print_Vmap := '0';
-      Trace_Pmap := FALSE;
       Save_Movie := FALSE;
       Win := UNOWNED;
       Date := 0;                            -- no date yet
@@ -92,23 +87,20 @@ package body Empire.Game is
    begin
       for I in Location_T'Range
       loop
+         Map(I).On_Board := True;       --  start with the assumption that we're on board
          --  mark disallowed `edge-of-the-world' cells as such
          case Locations.Loc_Col(I) is
             when Column_T'First | Column_T'Last =>
-               -- Ui.Error("Current Location is " & Location_T'Image(I));
-               -- Ui.Error("off_board : column is " & Column_T'Image(Locations.Loc_Col(I)));
                Map(I).On_Board := False;
             when others =>
-               -- Ui.Error("Current Location is " & Location_T'Image(I));
-               -- Ui.Error("off_board : row is " & Column_T'Image(Locations.Loc_Row(I)));
-               Map(I).On_Board := True;
+               null;
          end case;
 
          case Locations.Loc_Row(I) is
             when Row_T'First | Row_T'Last =>
                Map(I).On_Board := False;
             when others =>
-               Map(I).On_Board := True;
+               null;
          end case;
 
          --  fill map with random `sand'
@@ -183,6 +175,7 @@ package body Empire.Game is
          Map(I).Objp := null;           --  nothing in cell yet
          Map(I).Cityp := null;
       end loop;
+      Ui.Debug_Info("Generated map");
    end Make_Map;
 
 --  Randomly place cities on the land.  There is a minimum distance that
@@ -223,6 +216,7 @@ package body Empire.Game is
          -- remove any land too close to plot we selected from land eligible to be a city
          Remove_Land(Loc, Num_Land);
       end loop;
+      Ui.Debug_Info("Placed cities");
    end Place_Cities;
 
 --  When we run out of available land, we recreate our land list.  We
@@ -305,6 +299,7 @@ package body Empire.Game is
       Find_Cont;                        --  find and rank the continents
       if (NCont = 0)
       then
+         Ui.Debug_Info("no usable continents found");
          return FALSE;                  --  no good continents
       end if;
 
@@ -339,6 +334,7 @@ package body Empire.Game is
       Objects.Scan(USER, UserP.Loc);
       Objects.Ask_Prod(UserP.all);
 
+      Ui.Debug_Info("usable city pair found");
       return TRUE;
    end Select_Cities;
 
@@ -347,6 +343,7 @@ package body Empire.Game is
 
    procedure Find_Cont is
       Mapi : Location_T;
+      Found : Boolean;
    begin
       Marked := (others => False);
       Ncont := 0;
@@ -354,15 +351,8 @@ package body Empire.Game is
 
       while Ncont < MAX_CONT
       loop
-         declare
-            B : Boolean;
-         begin
-            Find_Next(Mapi, B);
-            if not B                       --  all found
-            then
-               exit;
-            end if;
-         end;
+         Find_Next(Mapi, Found);
+         exit when not Found;           --  all found
       end loop;
    end Find_Cont;
 
@@ -481,8 +471,6 @@ package body Empire.Game is
 -- cities for the continent.  We then examine each surrounding cell.
 
    procedure Mark_Cont (Mapi : in Location_T) is
-      C : City_Info_P;
-      D : Cont_T;
    begin
       --  Ui.Prompt("Entered Mark_Cont.  Mapi = " & Integer'Image(Mapi) &
       --              " Ncity = " & Integer'Image(Ncity) &
@@ -495,24 +483,22 @@ package body Empire.Game is
          return;                        --  don't recurse if we've hit the water
       end if;
 
-      Marked(Mapi) := True;             --  mark this cell seen
-      Nland := Nland + 1;                          --  count land on continent
+      Marked(Loc) := True;             --  mark this cell seen
+      Nland := Nland + 1;              --  count land on continent
 
-      if Map(Mapi).Contents = '*'
+      if Map(Loc).Contents = '*'
       then                              --  a city
-         C := Map(Mapi).Cityp;
-         D := Cont_Tab(Ncont);
-         Cont_Tab(Ncont).Cityp(Ncity) := C;
+         Cont_Tab(Ncont).Cityp(Ncity) := Map(Mapi).Cityp;
          Ncity := Ncity + 1;
-         if Empire.Mapping.Rmap_Shore(Mapi)
+         if Empire.Mapping.Rmap_Shore(Loc)
          then
             Nshore := Nshore + 1;
          end if;
       end if;
 
-      for I in Direction_T'Range
+      for I in Direction_T'Range        --  remember, we already checked if we're on_board
       loop
-         Mark_Cont(Mapi + Dir_Offset(I));
+         Mark_Cont(Loc + Dir_Offset(I));
       end loop;
    end Mark_Cont;
 
@@ -595,7 +581,7 @@ package body Empire.Game is
    -- #define rval(val) if (!xread (f, (void *)&val, sizeof(val))) return (FALSE);
 
    procedure Restore_Game is
-      File: File_Type;
+      -- File: File_Type;
    begin
       Ui.Info("XXX XXX XXX File restore is not yet supported");
       raise Game.No_Saved_Game;
@@ -843,5 +829,98 @@ package body Empire.Game is
 --         prompt("Round %3d", (round + 1) / 2);
 -- }
    end Stat_Display;
+
+   -- Check to see if the game is over.  We count the number of cities
+-- owned by each side.  If either side has no cities and no armies, then
+-- the game is over.  If the computer has less than one third as many cities
+-- and armies as the user, then the computer will offer to resign.
+--
+-- The computer will only offer to resign once per session, and the game continues
+-- normally if the player refuses the computers offer.
+
+   procedure Check_Endgame is
+      Nuser_City : Integer := 0;
+      Ncomp_City : Integer := 0;
+      Nuser_Army : Integer := 0;
+      Ncomp_Army : Integer := 0;
+      P : Piece_Info_P;
+   begin
+
+      if Win /= UNOWNED
+      then
+         return;     -- we already know game is over
+      end if;
+
+      for I in City'Range
+      loop
+         case City(I).Owner is
+            when USER =>
+               Nuser_City := Nuser_City + 1;
+            when COMP =>
+               Ncomp_City := Ncomp_City + 1;
+            when UNOWNED =>
+               null;
+         end case;
+      end loop;
+
+      P := User_Obj(ARMY);
+      while P /= null
+      loop
+         Nuser_Army := Nuser_Army + 1;
+         P := P.Links(Piece_Link).Next;
+      end loop;
+
+      P := Comp_Obj(ARMY);
+      while P /= null
+      loop
+         Ncomp_Army := Ncomp_Army + 1;
+         P := P.Links(Piece_Link).Next;
+      end loop;
+
+      if (Ncomp_City < Nuser_City / 3) and (Ncomp_Army < Nuser_Army / 3)
+      then
+         if not To_The_Death
+         then
+            if Ui.Get_Yn("The enemy acknowledges defeat.  Do you accept?")
+            then
+               Ui.Info("The enemy inadvertantly revealed the code they use for");
+               Ui.Info("receiving battle information. You can display what");
+               Ui.Info("they've learned with the 'Examine' command.");
+
+               Resigned := TRUE;
+               Win := USER;
+               Automove := FALSE;
+            else
+               To_The_Death := TRUE;
+            end if;
+         end if;
+      elsif (Ncomp_City = 0) and (Ncomp_Army = 0)
+      then
+         -- given the above condition, this can only happen if the computer is defeated while
+         -- the user is also very weak.
+
+         Ui.Info("The enemy is incapable of defeating you.");
+         Ui.Info("There may be, however, remnants of the enemy fleet");
+         Ui.Info("to be routed out and destroyed.");
+
+         Win := USER;
+         Automove := FALSE;
+      elsif (Nuser_City = 0) and (Nuser_Army = 0)
+      then
+         Ui.Info("You have been rendered incapable of defeating");
+         Ui.Info("the rampaging enemy. The empire is lost. If you");
+         Ui.Info("have any ships left, you may hold out at sea.");
+
+         Win := COMP;
+         Automove := FALSE;
+      elsif (Nuser_City < Ncomp_City / 3) and (Nuser_Army < Ncomp_Army / 3)
+      then
+         -- XXX Not in the original, but may be helpful.  Let's see how it plays out.
+         Ui.Info("Intelligence reports suggest that the enemy are becoming");
+         Ui.Info("much more powerful than your empire.  Your advisers");
+         Ui.Info("recommend immediate steps to address this military gap.");
+      end if;
+
+   end Check_Endgame;
 
 end Empire.Game;
