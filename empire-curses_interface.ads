@@ -5,13 +5,17 @@ package Empire.Curses_Interface is
 
    procedure Alert;
    procedure Error (S : in String);
+   procedure Debug_Error (S : in String);
    function Get_Chx return Character;
+   procedure Wait_Chx;                   --  wait for any keypress
    function Get_Int (Message : in String; Low : in Integer; High : in Integer) return Integer;
    function Get_Yn (Message : in String) return Boolean;
-   function Get_Piece_Name return Piece_Type_T;
+   -- XXX see note on imp
+   function Get_Piece_Name return Piece_Choice_T;
 
    procedure Huh;
    procedure Info (S : in String);
+   procedure Debug_Info (S : in String);
    procedure Prompt (S : in String);
    procedure Redraw;
    procedure Init_Ui;
@@ -92,10 +96,12 @@ private
       'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
       '-', '!', '%', ' ', '&');
 
+  Debug_Count : Integer := 0;
+
   type Content_Display_Table is array (Content_Display_T) of Character;
   type Path_Display_Table is array (Path_Display_T) of Character;
 
-  Ctab : Content_Display_Table :=
+  Ctab : constant Content_Display_Table :=
      ('X' => 'X', 'O' => 'O', '*' => '*',
       't' => 't', 'c' => 'c', 'b' => 'b',
       's' => 's', 'd' => 'd', 'p' => 'p',
@@ -107,7 +113,7 @@ private
       '+' => '+', '.' => '.', ' ' => '_', --  XXX XXX change '_' to ' ' after testing
       others => '?');
 
-  Ptab : Path_Display_Table :=
+  Ptab : constant Path_Display_Table :=
     ('0' => '0', '1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6',
      '7' => '7', '8' => '8', '9' => '9', 'a' => 'a', 'b' => 'b', 'c' => 'c', 'd' => 'd',
      'e' => 'e', 'f' => 'f', 'g' => 'g', 'h' => 'h', 'i' => 'i', 'j' => 'j', 'k' => 'k',
