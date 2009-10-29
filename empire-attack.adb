@@ -19,7 +19,7 @@ package body Empire.Attack is
    -- the dead object.  Tell user who won and how many hits her piece has left,
    -- if any.
 
-   procedure Attack (Att_Obj : in out Piece_Info_P; Loc : in Location_T) is
+   procedure Attack (Att_Obj : in Piece_Info_P; Loc : in Location_T) is
    begin
       if Map(Loc).Contents = '*'
       then
@@ -29,7 +29,7 @@ package body Empire.Attack is
       end if;
    end Attack;
 
-   procedure Attack_City (Att_Obj : in out Piece_Info_P; Loc : in Location_T) is
+   procedure Attack_City (Att_Obj : in Piece_Info_P; Loc : in Location_T) is
       Cityp : City_Info_P;
       Att_Owner, City_owner : Owner_T;
    begin
@@ -71,13 +71,16 @@ package body Empire.Attack is
       end if;
 
       -- let city owner see all results
-      Objects.Scan(City_Owner, Loc);
+      if City_Owner /= UNOWNED
+      then
+         Objects.Scan(City_Owner, Loc);
+      end if;
    end Attack_City;
 
    -- Attack a piece other than a city.  The piece could be anyone's.
    -- First we have to figure out what is being attacked.
 
-   procedure Attack_Obj (Att_Obj : in out Piece_Info_P; Loc : in Location_T) is
+   procedure Attack_Obj (Att_Obj : in Piece_Info_P; Loc : in Location_T) is
       Def_Obj : Piece_Info_P;
       Owner : Owner_T;
    begin
@@ -127,7 +130,7 @@ package body Empire.Attack is
    -- fall overboard and drown.  We also move the survivor to the given
    -- location.
 
-   procedure Survive (Obj : in out Piece_Info_P; Loc : in Location_T) is
+   procedure Survive (Obj : in Piece_Info_P; Loc : in Location_T) is
    begin
       while Objects.Obj_Capacity(Obj) < Obj.Count
       loop
