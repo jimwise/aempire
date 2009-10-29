@@ -1269,20 +1269,20 @@ package body Empire.Comp_Move is
    -- land or water, resulting in simpler calls and simpler functions
 
    function Vmap_Water (Vmap : in View_Map; Loc : in Location_T) return Continent_Map is
-      Water_Chars : constant Acceptable_Terrain_Array := ('.'|'*' => True, others => False);
+      Water_Chars : constant Acceptable_Content_Array := ('.'|'*' => True, others => False);
    begin
       return Vmap_Flood_Fill(Vmap, Loc, Water_Chars);
    end Vmap_Water;
 
    function Vmap_Land (Vmap : in View_Map; Loc : in Location_T) return Continent_Map is
-      Land_Chars : constant Acceptable_Terrain_Array := ('+'|'*' => True, others => False);
+      Land_Chars : constant Acceptable_Content_Array := ('+'|'*' => True, others => False);
    begin
       return Vmap_Flood_Fill(Vmap, Loc, Land_Chars);
    end Vmap_Land;
 
-   function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Terrain_Array) return Continent_Map is
+   function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Content_Array) return Continent_Map is
       Cont_Map : Continent_Map := (others => False);
-      Seen: Location_Vectors.Vector;            --  XXX XXX XXX should switch to a set
+      Seen : array (Location_T) of Boolean := (others => False); --  cells we've examined
       Workset : Location_Vectors.Vector;
       Cur, New_Loc : Location_T;
    begin
@@ -1308,13 +1308,15 @@ package body Empire.Comp_Move is
             New_Loc := Cur + Dir_Offset(D);
          --     if unexplored (per vmap) or desired_terrain (per vmap) or desired terrain (per map)
          --   we check desired terrain in two places, so that we can use the pruned Emap if desired
-            if Map(New_Loc).On_Board and then (Seen.Find(New_Loc) /= No_Element)
+            if Map(New_Loc).On_Board and not Seen(New_Loc)
             then
-               if Vmap(New_Loc).Contents = ' ' or else Good_Terrain(Vmap(Cur).Contents) or else Good_Terrain(Map(Cur).Contents)
+               if Vmap(New_Loc).Contents = ' ' or else
+                 Good_Terrain(Vmap(New_loc).Contents) or else
+                 Good_Terrain(Map(New_Loc).Contents)
                then
                   Cont_Map(New_Loc) := True;
                   Workset.Prepend(New_Loc);
-                  Seen.Prepend(New_Loc);
+                  Seen(New_Loc) := True;
                end if;
             end if;
          end loop;

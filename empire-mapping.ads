@@ -2,6 +2,17 @@ package Empire.Mapping is
    function Rmap_Shore (Loc : in Location_T) return Boolean;
    function Vmap_At_Sea (Vmap : in View_Map; Loc : in Location_T) return Boolean;
 
+   procedure Vmap_Mark_Adjacent
+     (Pmap : in out Path_Map;
+      Loc  : in     Location_T);
+   procedure Vmap_Mark_Near_Path
+     (Pmap : in out Path_Map;
+      Loc  : in     Location_T);
+   procedure Vmap_Mark_Path
+     (Pmap : in out Path_Map;
+      Vmap : in     View_Map;
+      Dest : in     Location_T);
+
    procedure Vmap_Find_Aircraft_Obj
      (Objective :    out Location_T;
       Pmap      :    out Path_Map;
@@ -36,17 +47,6 @@ package Empire.Mapping is
       Loc       : in     Location_T;
       Terrain   : in     Acceptable_Content_Array;
       Adj_Char  : in     Content_Value_Array);
-
-   procedure Vmap_Mark_Adjacent
-     (Pmap : in out Path_Map;
-      Loc  : in     Location_T);
-   procedure Vmap_Mark_Near_Path
-     (Pmap : in out Path_Map;
-      Loc  : in     Location_T);
-   procedure Vmap_Mark_Path
-     (Pmap : in out Path_Map;
-      Vmap : in     View_Map;
-      Dest : in     Location_T);
 
    -- complex pathfinding for comp_move
    procedure Vmap_Find_Landsea_Obj

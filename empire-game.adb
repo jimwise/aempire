@@ -470,14 +470,10 @@ package body Empire.Game is
 -- to see if it is a shore city, and we install it in the list of
 -- cities for the continent.  We then examine each surrounding cell.
 
+   -- XXX see vmap_land and vmap_cont_scan in comp_move for another approach.
+
    procedure Mark_Cont (Loc : in Location_T) is
    begin
-      --  Ui.Prompt("Entered Mark_Cont.  Loc = " & Integer'Image(Loc) &
-      --              " Ncity = " & Integer'Image(Ncity) &
-      --              " / " & Integer'Image(NUM_CITY) &
-      --              " Ncont = " & Integer'Image(Ncont) &
-      --              " / " & Integer'Image(MAX_CONT) );
-
       if Marked(Loc) or (Map(Loc).Contents = '.') or (not Map(Loc).On_Board)
       then
          return;                        --  don't recurse if we've hit the water

@@ -71,7 +71,7 @@ private
 
    function Vmap_Water (Vmap : in View_Map; Loc : in Location_T) return Continent_Map;
    function Vmap_Land (Vmap : in View_Map; Loc : in Location_T) return Continent_Map;
-   function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Terrain_Array) return Continent_Map;
+   function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Content_Array) return Continent_Map;
 
    procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map);
 
