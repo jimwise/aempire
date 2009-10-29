@@ -39,7 +39,7 @@ begin
             Flag_Small_W := Integer'Value (GNAT.Command_Line.Parameter);
             if Flag_Small_W < 10 or Flag_Small_W > 90 then
                Text_IO.Put_Line (Ada.Command_Line.Command_Name &
-                                   ": -W argument must be in the range 0..90");
+                                   ": -W argument must be in the range 10..90");
                raise Invalid_Command_Line;
             end if;
 
