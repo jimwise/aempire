@@ -1,7 +1,6 @@
 package Empire.Mapping is
    function Rmap_Shore (Loc : in Location_T) return Boolean;
    function Vmap_At_Sea (Vmap : in View_Map; Loc : in Location_T) return Boolean;
-   procedure Vmap_Cont (Cont_Map : in out Continent_Map; Vmap : in View_Map; Loc : Location_T; Bad_Terrain : Terrain_Display_T);
    function Vmap_Cont_Scan (Cont_Map : in Continent_Map; Vmap : in View_Map) return Scan_Counts_T;
 
    procedure Vmap_Find_Aircraft_Obj
@@ -64,11 +63,6 @@ package Empire.Mapping is
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T);
-   procedure Vmap_Mark_Up_Cont
-     (Cont_Map    :    out Continent_Map;
-      Vmap        : in     View_Map;
-      Loc         : in     Location_T;
-      Bad_Terrain :        Terrain_Display_T);
    procedure Vmap_Prune_Explore_Locs
      (Vmap : in out View_Map);
 

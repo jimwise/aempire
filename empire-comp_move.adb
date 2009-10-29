@@ -113,7 +113,7 @@ package body Empire.Comp_Move is
 
    procedure Comp_Prod (Cityp : in out City_Info_T; Is_Land_Locked : in Boolean) is
       City_Count : Piece_Value_Array := (others => 0); -- # of cities producing each piece
-      Cont_Map : Continent_Map := (others => FALSE);
+      Cont_Map : Continent_Map; --  := (others => FALSE);
       Total_Cities : Integer := 0;
       Comp_Army_Count : Integer := 0;   -- # of army-producing cities
       P : City_Info_P;
@@ -125,7 +125,8 @@ package body Empire.Comp_Move is
       -- Make sure we have army producers for current continent
 
       -- map out city's continent
-      Mapping.Vmap_Cont(Cont_Map, View(COMP), Cityp.Loc, '.');
+      -- Mapping.Vmap_Cont(Cont_Map, View(COMP), Cityp.Loc, '.');
+      Cont_Map := Vmap_Land(View(COMP), Cityp.Loc);
 
       -- count items of interest on the continent
       Counts := Mapping.Vmap_Cont_Scan (Cont_Map, View(COMP));
@@ -365,10 +366,11 @@ package body Empire.Comp_Move is
 -- have unexplored territory on the edges.
 
    function Land_Locked (Loc : in Location_T) return Boolean is
-      Cont_Map : Continent_Map;
+      Cont_Map : Continent_Map; -- := (others => false)
       Counts : Scan_Counts_T;
    begin
-      Mapping.Vmap_Cont(Cont_Map, Emap, Loc, '+');
+      -- Mapping.Vmap_Cont(Cont_Map, Emap, Loc, '+');
+      Cont_Map := Vmap_Water(Emap, Loc);
       Counts := Mapping.Vmap_Cont_Scan(Cont_Map, Emap);
 
       return (Counts.Unowned_Cities > 0) or (Counts.User_Cities > 0) or (Counts.Unexplored > 0);
@@ -743,8 +745,8 @@ package body Empire.Comp_Move is
 --  d)  Any other attackable city is marked with a '0'.
 
    procedure Make_Unload_Map (Xmap : in out View_Map; Vmap : in View_Map) is
-      Owncont_Map : Continent_Map := (others => FALSE);
-      Tcont_Map : Continent_Map;
+      --  Owncont_Map : Continent_Map := (others => FALSE);
+      Tcont_Map : Continent_Map; --  := (others => false);
       Counts : Scan_Counts_T;
       Total_Cities : Integer;
    begin
@@ -752,21 +754,25 @@ package body Empire.Comp_Move is
       Xmap := Vmap;
       Unmark_Explore_Locs(Xmap);
 
-      Owncont_Map := (others => False);
+      -- Owncont_Map := (others => False);
 
-      for I in City'Range
-      loop
-         if City(I).Owner = COMP
-         then
-            Mapping.Vmap_Mark_Up_Cont(Owncont_Map, Xmap, City(I).Loc, '.');
-         end if;
-      end loop;
+      -- XXX XXX XXX this was here from long ago in the c, but it's a no-op, as
+      -- XXX XXX XXX it fills in owncont_map, which is never used!
+      --  for I in City'Range
+      --  loop
+      --     if City(I).Owner = COMP
+      --     then
+      --        -- can't easily switch to vmap_land, because we want to map multiple continents
+      --        Mapping.Vmap_Mark_Up_Cont(Owncont_Map, Xmap, City(I).Loc, '.');
+      --     end if;
+      --  end loop;
 
       for I in Vmap'Range
       loop
          if (Vmap(I).Contents = 'O') or (Vmap(I).Contents = '*')
          then
-            Mapping.Vmap_Cont(Tcont_Map, Xmap, I, '.');
+            -- Mapping.Vmap_Cont(Tcont_Map, Xmap, I, '.');
+            Tcont_Map := Vmap_Water(Xmap, I);
             Counts := Mapping.Vmap_Cont_Scan(Tcont_Map, Xmap);
 
             Total_Cities := Counts.Unowned_Cities + Counts.User_Cities + Counts.Comp_Cities;
