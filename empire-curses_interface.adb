@@ -137,9 +137,8 @@ package body Empire.Curses_Interface is
    procedure Print_Sector (Whose  : in Piece_Owner_T;
                            Sector : in Sector_T)
    is
-      First_Row : Row_T;
-      First_Col : Column_T;
-      Last_Row, Last_Col : Integer;
+      First_Row, Last_Row : Row_T;
+      First_Col, Last_Col : Column_T;
       Display_Rows : Integer;
       Display_Cols : Integer;
    begin
@@ -195,15 +194,15 @@ package body Empire.Curses_Interface is
       then
          Ref_Row := 1;
       end if;
-      if Ref_Row = MAP_HEIGHT - 1
+      if Ref_Row > MAP_HEIGHT - 1
       then
-         Ref_Row := MAP_HEIGHT - 2;
+         Ref_Row := MAP_HEIGHT - 1;
       end if;
       if Ref_Col < 1
       then
         Ref_Col := 1;
       end if;
-      if Ref_Col = MAP_WIDTH - 1
+      if Ref_Col > MAP_WIDTH - 1
       then
         Ref_Col := MAP_WIDTH - 1;
       end if;
@@ -237,7 +236,6 @@ package body Empire.Curses_Interface is
          C := Ref_Col;
          while C < Ref_Col + Display_Cols - 1 and C < Column_T'Last
          loop
-            exit when C = MAP_WIDTH - 1;
             T := Locations.Row_Col_Loc(R, C);
             Curses.Add(Win => Map_Win,
                        Line => Curses.Line_Position(R - Ref_Row + 1),
@@ -245,6 +243,7 @@ package body Empire.Curses_Interface is
                        Ch => Ctab(View(Which)(T).Contents));
             C := C + 1;
          end loop;
+         R := R + 1;
       end loop;
       Curses.Box(Map_Win);
       Curses.Refresh(Map_Win);
@@ -372,22 +371,26 @@ package body Empire.Curses_Interface is
                               Row_Inc : in Integer;
                               Col_Inc : in integer)
    is
+      R : Row_T;
+      C : Column_T;
       T : Location_T;
       Cell : Content_Display_T;
    begin
       Cell := ' ';
-      for R in Row .. Row + Row_Inc - 1           --  loop over area being compressed to one square
+      R := Row;
+      while R < Row + Row_Inc and R < MAP_HEIGHT - 1           --  while within area being compr
       loop
-         exit when R = MAP_HEIGHT - 1;
-         for C in Col .. Col + Col_Inc - 1
+         C := Col;
+         while C < Col + Col_Inc and C < MAP_WIDTH - 1
          loop
-            exit when C = MAP_WIDTH - 1;
             T := Locations.Row_Col_Loc(R, C);
             if Zoom_List(Vmap(T).Contents) < Zoom_List(Cell)
             then
                Cell := Vmap(T).Contents;
             end if;
+            C := C + 1;
          end loop;
+         R := R + 1;
       end loop;
 
       Curses.Add(Win => Map_Win,
@@ -402,6 +405,8 @@ package body Empire.Curses_Interface is
                           Pmap : in Path_Map;
                           Vmap : in View_Map)
    is
+      R : Row_T;
+      C : Column_T;
       Row_Inc, Col_Inc : Integer;
    begin
       Row_Inc := (MAP_HEIGHT + Integer(Map_Win_Height) - 2) / (Integer(Map_Win_Height) - 2);
@@ -409,12 +414,16 @@ package body Empire.Curses_Interface is
 
       Curses.Clear(Map_Win);
 
-      for R in 1 .. Map_Height - 1
+      R := 0;
+      while R < MAP_HEIGHT
       loop
-         for C in 1 .. Map_Width - 1
+         C := 0;
+         while C < MAP_WIDTH
          loop
             Print_Pzoom_Cell(Pmap, Vmap, R, C, Row_Inc, Col_Inc);
+            C := C + Col_Inc;
          end loop;
+         R := R + Row_Inc;
       end loop;
 
       Curses.Box(Map_Win);
@@ -524,7 +533,7 @@ package body Empire.Curses_Interface is
       while C < First_Col + ((Integer(Map_Win_Width) - 1) * Col_Inc) and
         C <= MAP_WIDTH - Col_Inc
       loop
-         if (C / Col_Inc) mod 10 = 0 and C < MAP_WIDTH
+         if (C / Col_Inc) mod 10 = 0
          then
             Curses.Add(Line => Curses.Lines - 1,
                        Column => Curses.Column_Count(C / Col_Inc + 1),
@@ -544,6 +553,8 @@ package body Empire.Curses_Interface is
                        Column => Curses.Columns - NUMSIDES,
                        Str => Integer'Image(R), Len => NUMSIDES - 1);
          else
+            Curses.Move_Cursor(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
+                               Column => Curses.Columns - NUMSIDES);
             Curses.Clear_To_End_Of_Line;
          end if;
          R := R + Row_Inc;
@@ -611,7 +622,7 @@ package body Empire.Curses_Interface is
 --      wrefresh(stdscr);
    end Print_Movie_Screen;
 
---  /* Print a screen of help information. */
+--  Print a screen of help information
 
    procedure Help (Text : in Help_Array)
    is
