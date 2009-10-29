@@ -45,19 +45,6 @@ package body Empire.Comp_Move is
       Do_Cities;                        -- handle city production
       Ui.Debug_Info("handling pieces");
       Do_Pieces;                        -- move pieces
-
-      if Save_Movie
-      then
-         Game.Save_Movie_Screen;
-      end if;
-
-      Ui.Prompt("Checking for winners...");
-      Check_Endgame;
-
-      -- originally in Check_Endgame, but without good reason
-      Date := Date + 1;
-      Ui.Prompt("");
-
    end Comp_Move;
 
 -- Handle city production.  First, we set production for new cities.
