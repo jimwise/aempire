@@ -7,7 +7,6 @@
 --     3)  Check to see if the game is over.
 
 with Empire.Attack;
-with Empire.Game;
 with Empire.Mapping;
 with Empire.Math;
 with Empire.Objects;
@@ -22,6 +21,7 @@ package body Empire.Comp_Move is
 
       Ui.Prompt("Updating...");
       -- update our view of the world
+      Ui.Debug_Info("Updating worldview");
       for I in Piece_Type_T'Range
       loop
          Obj := Comp_Obj(I);
@@ -38,10 +38,12 @@ package body Empire.Comp_Move is
       Ui.Prompt("Thinking...");
 
       Emap := View(COMP);
+      Ui.Debug_Info("calling vmap_prune_explore_locs");
       Mapping.Vmap_Prune_Explore_Locs(Emap);
 
       Ui.Prompt("Moving...");
       Do_Cities;                        -- handle city production
+      Ui.Debug_Info("handling pieces");
       Do_Pieces;                        -- move pieces
 
       if Save_Movie
@@ -641,7 +643,7 @@ package body Empire.Comp_Move is
 -- Make a load map.  We copy the view map and mark each loading
 -- transport and transport-producing city with a '$'.
 
-   procedure Make_Army_Load_Map (Obj : in out Piece_Info_P; Xmap : in out View_Map; Vmap : in View_Map) is
+   procedure Make_Army_Load_Map (Obj : in Piece_Info_P; Xmap : in out View_Map; Vmap : in View_Map) is
       P : Piece_Info_P;
    begin
       Xmap := Vmap;
@@ -857,7 +859,7 @@ package body Empire.Comp_Move is
 
 -- Load an army onto the most full non-full ship
 
-   procedure Load_Army (Obj : in out Piece_Info_P) is
+   procedure Load_Army (Obj : in Piece_Info_P) is
       X_Loc : Location_T;
       P : Piece_Info_P := Obj.Ship;
    begin
@@ -1269,156 +1271,5 @@ package body Empire.Comp_Move is
       end if;
 
 end Move_Objective;
-
--- Check to see if the game is over.  We count the number of cities
--- owned by each side.  If either side has no cities and no armies, then
--- the game is over.  If the computer has less than one third as many cities
--- and armies as the user, then the computer will offer to resign.
---
--- The computer will only offer to resign once per session, and the game continues
--- normally if the player refuses the computers offer.
-
-   procedure Check_Endgame is
-      Nuser_City : Integer := 0;
-      Ncomp_City : Integer := 0;
-      Nuser_Army : Integer := 0;
-      Ncomp_Army : Integer := 0;
-      P : Piece_Info_P;
-   begin
-
-      if Win /= UNOWNED
-      then
-         return;     -- we already know game is over
-      end if;
-
-      for I in City'Range
-      loop
-         case City(I).Owner is
-            when USER =>
-               Nuser_City := Nuser_City + 1;
-            when COMP =>
-               Ncomp_City := Ncomp_City + 1;
-            when UNOWNED =>
-               null;
-         end case;
-      end loop;
-
-      P := User_Obj(ARMY);
-      while P /= null
-      loop
-         Nuser_Army := Nuser_Army + 1;
-         P := P.Links(Piece_Link).Next;
-      end loop;
-
-      P := Comp_Obj(ARMY);
-      while P /= null
-      loop
-         Ncomp_Army := Ncomp_Army + 1;
-         P := P.Links(Piece_Link).Next;
-      end loop;
-
-      if (Ncomp_City < Nuser_City / 3) and (Ncomp_Army < Nuser_Army / 3)
-      then
-         if not To_The_Death
-         then
-            if Ui.Get_Yn("The enemy acknowledges defeat.  Do you accept?")
-            then
-               Ui.Info("The enemy inadvertantly revealed the code they use for");
-               Ui.Info("receiving battle information. You can display what");
-               Ui.Info("they've learned with the 'Examine' command.");
-
-               Resigned := TRUE;
-               Win := USER;
-               Automove := FALSE;
-            else
-               To_The_Death := TRUE;
-            end if;
-         end if;
-      elsif (Ncomp_City = 0) and (Ncomp_Army = 0)
-      then
-         -- given the above condition, this can only happen if the computer is defeated while
-         -- the user is also very weak.
-
-         Ui.Info("The enemy is incapable of defeating you.");
-         Ui.Info("There may be, however, remnants of the enemy fleet");
-         Ui.Info("to be routed out and destroyed.");
-
-         Win := USER;
-         Automove := FALSE;
-      elsif (Nuser_City = 0) and (Nuser_Army = 0)
-      then
-         Ui.Info("You have been rendered incapable of defeating");
-         Ui.Info("the rampaging enemy. The empire is lost. If you");
-         Ui.Info("have any ships left, you may hold out at sea.");
-
-         Win := COMP;
-         Automove := FALSE;
-      elsif (Nuser_City < Ncomp_City / 3) and (Nuser_Army < Ncomp_Army / 3)
-      then
-         -- XXX Not in the original, but may be helpful.  Let's see how it plays out.
-         Ui.Info("Intelligence reports suggest that the enemy are becoming");
-         Ui.Info("much more powerful than your empire.  Your advisers");
-         Ui.Info("recommend immediate steps to address this military gap.");
-      end if;
-
-   end Check_Endgame;
-
-   -- eventual replacements for Vmap_{Mark_Up_}Cont -- explicitly floodfill
-   -- land or water, resulting in simpler calls and simpler functions
-
-   function Vmap_Water (Vmap : in View_Map; Loc : in Location_T) return Continent_Map is
-      Water_Chars : constant Acceptable_Terrain_Array := ('.'|'*' => True, others => False);
-   begin
-      return Vmap_Flood_Fill(Vmap, Loc, Water_Chars);
-   end Vmap_Water;
-
-   function Vmap_Land (Vmap : in View_Map; Loc : in Location_T) return Continent_Map is
-      Land_Chars : constant Acceptable_Terrain_Array := ('+'|'*' => True, others => False);
-   begin
-      return Vmap_Flood_Fill(Vmap, Loc, Land_Chars);
-   end Vmap_Land;
-
-   function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Terrain_Array) return Continent_Map is
-      Cont_Map : Continent_Map := (others => False);
-      Seen: Location_Vectors.Vector;            --  XXX XXX XXX should switch to a set
-      Workset : Location_Vectors.Vector;
-      Cur, New_Loc : Location_T;
-   begin
-      -- test if loc is acceptable, or raise
-      if not Good_Terrain(Map(Loc).Contents)
-      then
-         raise Program_Error;
-      end if;
-
-      -- push loc into a collection
-      Cont_Map(Loc) := True;
-      Workset.Prepend(Loc);
-
-      -- while collection not empty
-      while not Workset.Is_Empty
-      loop
-         Cur := Workset.First_element;
-         Workset.Delete_First;
-
-         -- FOREACH New_Loc Next To Cur
-         for D in Direction_T'range
-         loop
-            New_Loc := Cur + Dir_Offset(D);
-         --     if unexplored (per vmap) or desired_terrain (per vmap) or desired terrain (per map)
-         --   we check desired terrain in two places, so that we can use the pruned Emap if desired
-            if Map(New_Loc).On_Board and then (Seen.Find(New_Loc) /= No_Element)
-            then
-               if Vmap(New_Loc).Contents = ' ' or else Good_Terrain(Vmap(Cur).Contents) or else Good_Terrain(Map(Cur).Contents)
-               then
-                  Cont_Map(New_Loc) := True;
-                  Workset.Prepend(New_Loc);
-                  Seen.Prepend(New_Loc);
-               end if;
-            end if;
-         end loop;
-      end loop;
-
-      return Cont_Map;
-   end Vmap_Flood_Fill;
 
 end Empire.Comp_Move;
