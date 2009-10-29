@@ -227,6 +227,8 @@ package body Empire.Curses_Interface is
    is
       Display_Rows : constant Integer := Integer(Map_Win_Height) - 2;
       Display_Cols : constant Integer := Integer(Map_Win_Width) - 2;
+      R : Row_T;
+      C : Column_T;
       T : Location_T;
    begin
       R := Ref_Row;
@@ -521,13 +523,15 @@ package body Empire.Curses_Interface is
 
       while C < First_Col + ((Integer(Map_Win_Width) - 1) * Col_Inc) and
         C <= MAP_WIDTH - Col_Inc
-        Curses.Add(Line => Curses.Lines - 1,
-                   Column => Curses.Column_Count(C / Col_Inc + 1),
-                   Str => Integer'Image(C));
+      loop
+         if (C / Col_Inc) mod 10 = 0 and C < MAP_WIDTH
+         then
+            Curses.Add(Line => Curses.Lines - 1,
+                       Column => Curses.Column_Count(C / Col_Inc + 1),
+                       Str => Integer'Image(C));
          end if;
          C := C + Col_Inc;
       end loop;
-      end if;
 
       -- print y-coordinates along right of screen
       R := First_Row;
@@ -535,13 +539,14 @@ package body Empire.Curses_Interface is
         R <= MAP_HEIGHT - Row_Inc
       loop
          if (R / Row_Inc) mod 10 = 0 and R < MAP_HEIGHT
+         then
             Curses.Add(Line => Curses.Line_Position(R / Row_Inc + NUMTOPS + 1),
                        Column => Curses.Columns - NUMSIDES,
                        Str => Integer'Image(R), Len => NUMSIDES - 1);
-            Curses.Refresh;
          else
             Curses.Clear_To_End_Of_Line;
          end if;
+         R := R + Row_Inc;
       end loop;
    end Print_Map_Frame;
    -- Display the score off in the corner of the screen
