@@ -110,7 +110,7 @@ private
       'S' => 'S', 'D' => 'D', 'P' => 'P',
       'F' => 'F', 'A' => 'A',
       'z' => 'z', 'Z' => 'Z',
-      '+' => '+', '.' => '.', ' ' => '_', --  XXX XXX change '_' to ' ' after testing
+      '+' => '+', '.' => '.', ' ' => ' ',
       others => '?');
 
   Ptab : constant Path_Display_Table :=
