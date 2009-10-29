@@ -23,7 +23,7 @@ package body Empire is
       Debug := True;
       Print_Debug := True;
       Print_Vmap := '0';
-      Trace_Pmap := True;
+      Trace_Pmap := False;
 
       Emp_Start;
 
