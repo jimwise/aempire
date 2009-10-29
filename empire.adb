@@ -26,13 +26,20 @@ package body Empire is
       loop
          if Automove
          then
+            Ui.Prompt("User_Move...");
             User_Move.User_Move;
+            Ui.Prompt("Comp_Move...");
             Ai.Comp_Move;
             Turn := Turn + 1;
             if (Turn mod Save_Interval) = 0
             then
                Game.Save_Game;
             end if;
+            -- XXX XXX XXX could add this to make map label update, but...
+            -- Ui.Print_Sector(USER, Ui.Cur_Sector);
+            Ui.Display_Score;
+            Ui.Display_Turn;
+            Ui.Prompt("");
          else
             Ui.Prompt("Your orders? ");
             Order := Ui.Get_Chx;
@@ -95,6 +102,8 @@ package body Empire is
 
          when 'G' =>                 -- give one free enemy move
             Ai.Comp_Move;
+            Ui.Display_Score;
+            Ui.Display_Turn;
 
          when '?' =>                  -- help
             Ui.Help(Help_Cmd);
@@ -165,9 +174,11 @@ package body Empire is
             E := Ui.Get_Chx;
             if E = '+'
             then
-                Debug := TRUE;
+               Ui.Error("Debug enabled");
+               Debug := TRUE;
             elsif E = '-'
             then
+               Ui.Error("Debug disabled");
                Debug := FALSE;
             else
                Ui.Huh;

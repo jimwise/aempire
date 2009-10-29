@@ -159,7 +159,7 @@ package body Empire.Curses_Interface is
 
       -- compute row and column edges of sector
       First_Row := Locations.Sector_Row(Sector) * ROWS_PER_SECTOR;
-      First_Col := Locations.Sector_Row(Sector) * COLS_PER_SECTOR;
+      First_Col := Locations.Sector_Col(Sector) * COLS_PER_SECTOR;
       Last_Row := First_Row + ROWS_PER_SECTOR - 1;
       Last_Col := First_Col + COLS_PER_SECTOR - 1;
 
@@ -201,12 +201,22 @@ package body Empire.Curses_Interface is
 
          if Wasted_Rows > 0
          then
-            Ref_Row := Ref_Row - Wasted_Rows;
+            if Ref_Row > Wasted_Rows
+            then
+               Ref_Row := Ref_Row - Wasted_Rows;
+            else
+               Ref_Row:= 1;
+            end if;
          end if;
 
          if Wasted_Cols > 0
          then
-            Ref_Col := Ref_Col - Wasted_Rows;
+            if Ref_Col > Wasted_Cols
+            then
+               Ref_Col := Ref_Col - Wasted_Rows;
+            else
+               Ref_Col := 1;
+            end if;
          end if;
       end;
 
@@ -233,11 +243,8 @@ package body Empire.Curses_Interface is
       Ref_Col := 1;
       Display_Screen(Whose);
 
-      declare
-         S : String := "Sector " & Integer'Image(Sector) & " Round " & Integer'Image(Date);
-      begin
-         Print_Map_Frame(Ref_Row, Ref_Col, 1, 1, S);
-      end;
+      Display_Turn;
+      Display_Score;
       Curses.Refresh;
    end Print_Sector;
 
@@ -360,11 +367,10 @@ package body Empire.Curses_Interface is
       Curses.Box(Map_Win);
       Curses.Refresh(Map_Win);
 
-      declare
-         S : String := "Zoomed Map Round " & Integer'Image(Date);
-      begin
-         Print_Map_Frame(0, 0, Row_Inc, Col_Inc, S);
-      end;
+      Prompt("Zoomed Map Round " & Integer'Image(Date));
+      Print_Map_Frame(0, 0, Row_Inc, Col_Inc);
+      Display_Score;
+      Display_Turn;
 
       Curses.Refresh;
 
@@ -452,11 +458,10 @@ package body Empire.Curses_Interface is
       Curses.Box(Map_Win);
       Curses.Refresh(Map_Win);
 
-      declare
-         S : String := "Path Debug Map Round " & Integer'Image(Date);
-      begin
-         Print_Map_Frame(0, 0, Row_Inc, Col_Inc, S);
-      end;
+      Prompt("Path Debug Map Round " & Integer'Image(Date));
+      Print_Map_Frame(0, 0, Row_Inc, Col_Inc);
+      Display_Score;
+      Display_Turn;
 
       Curses.Refresh;
 
@@ -545,8 +550,7 @@ package body Empire.Curses_Interface is
    procedure Print_Map_Frame (First_Row : in Row_T;
                               First_Col : in Column_T;
                               Row_Inc   : in Integer;
-                              Col_Inc   : in Integer;
-                              Label     : in String)
+                              Col_Inc   : in Integer)
    is
       R : Integer;
       C : Integer;
@@ -559,7 +563,6 @@ package body Empire.Curses_Interface is
       while C < First_Col + ((Integer(Map_Win_Width) - 1) * Col_Inc) and
         C <= MAP_WIDTH - Col_Inc
       loop
-         Prompt("C = " & Integer'Image(C));
          if (C / Col_Inc) mod 10 = 0
          then
             --  Curses.Move_Cursor(Line => Curses.Lines - 1,
@@ -593,16 +596,6 @@ package body Empire.Curses_Interface is
          end if;
          R := R + Row_Inc;
       end loop;
-
-      for R in 1 .. Label'Length
-      loop
-         if R + NUMTOPS + 1 >= Map_Height
-         then
-            exit;
-         end if;
-         Curses.Move_Cursor(Line => Curses.Line_Position(R + NUMTOPS + 1), Column => Curses.Columns - NUMSIDES + 4);
-         Text_Io.Put(Label(R));
-      end loop;
    end Print_Map_Frame;
    -- Display the score off in the corner of the screen
 
@@ -613,12 +606,32 @@ package body Empire.Curses_Interface is
       Ada.Strings.Fixed.Move(Integer'Image(User_Score), U, Justify => Ada.Strings.Right);
       Ada.Strings.Fixed.Move(Integer'Image(Comp_Score), C, Justify => Ada.Strings.Right);
 
-      Curses.Move_Cursor(Line => 0, Column => Curses.Columns - 12);
-      Text_Io.Put(" User  Comp");
-      Curses.Move_Cursor(Line => 1, Column => Curses.Columns - 12);
-      -- "%5d %5d", user_score, comp_score
-      Text_Io.Put(U & C);
+      Curses.Add(Line => 0, Column => Curses.Columns - 12, Str => " User  Comp");
+      Curses.Add(Line => 1, Column => Curses.Columns - 12, Str => U & C);
+      --  Curses.Move_Cursor(Line => 0, Column => Curses.Columns - 12);
+      --  Text_Io.Put(" User  Comp");
+      --  Curses.Move_Cursor(Line => 1, Column => Curses.Columns - 12);
+      --  -- "%5d %5d", user_score, comp_score
+      --  Text_Io.Put(U & C);
+      Curses.Refresh;
    end Display_Score;
+
+   procedure Display_Turn
+   is
+      S : String := "Sector " & Integer'Image(Cur_Sector) & " Round " & Integer'Image(Date);
+   begin
+      for R in 1 .. S'Length
+      loop
+         if R + NUMTOPS + 1 >= Map_Height
+         then
+            exit;
+         end if;
+         Curses.Add(Line => Curses.Line_Position(R + NUMTOPS + 1),
+                    Column => Curses.Columns - NUMSIDES + 4,
+                    Ch => S(R));
+      end loop;
+      Curses.Refresh;
+   end Display_Turn;
 
    -- given a frame of a movie (i.e. the map at one particular point), print a zoomed
    -- map at that point)

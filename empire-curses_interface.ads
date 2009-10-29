@@ -22,6 +22,7 @@ package Empire.Curses_Interface is
    function Cur_Sector return Sector_T;
    procedure Display_Loc (Whose : in Piece_Owner_T; Loc : in Location_T);
    procedure Display_Locx (Whose : in Piece_Owner_T; Loc : in Location_T);
+   procedure Display_Turn;
    procedure Display_Score;
    procedure Help (Text : in Help_Array);
    procedure Kill_Display;
@@ -51,8 +52,7 @@ private
    procedure Print_Map_Frame (First_Row : in Row_T;
                               First_Col : in Column_T;
                               Row_Inc   : in Integer;
-                              Col_Inc   : in Integer;
-                              Label     : in String);
+                              Col_Inc   : in Integer);
 
    Whose_Map : Owner_T := UNOWNED;      --  user or computer (none yet)
    -- we start the game with these set to 'Last, as no sector is displayed
