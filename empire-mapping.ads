@@ -63,8 +63,6 @@ package Empire.Mapping is
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T);
-   procedure Vmap_Prune_Explore_Locs
-     (Vmap : in out View_Map);
 
 private
 
@@ -87,14 +85,6 @@ private
       Inc_Lcost :        Integer;
       Waterp    : in out Perimeter_T;
       Landp     : in out Perimeter_T);
-
-   procedure Expand_Prune
-     (Vmap     : in out View_Map;
-      Pmap     : in out Path_Map;
-      Loc      : in     Location_T;
-      Ttype    : in     Terrain_T;
-      To       : in out Perimeter_T;
-      Explored : in out Integer);
 
    function Objective_Cost
      (Vmap      : in View_Map;

@@ -39,7 +39,7 @@ package body Empire.Comp_Move is
 
       Emap := View(COMP);
       Ui.Debug_Info("calling vmap_prune_explore_locs");
-      Mapping.Vmap_Prune_Explore_Locs(Emap);
+      Vmap_Prune_Explore_Locs(Emap);
 
       Ui.Prompt("Moving...");
       Do_Cities;                        -- handle city production
@@ -1322,5 +1322,265 @@ package body Empire.Comp_Move is
 
       return Cont_Map;
    end Vmap_Flood_Fill;
+
+   -- Prune unexplored territory.  We take a view map and we modify it
+   -- so that unexplored territory that is adjacent to a lot of land
+   -- or a lot of water is marked as being either that land or water.
+   -- So basically, we are making a predicition about what we expect
+   -- for land and water.  We iterate this algorithm until either
+   -- the next iteration would remove all unexplored territory, or
+   -- there is nothing more about which we can make an assumption.
+   --
+   -- First, we use a pathmap to save the number of adjacent land
+   -- and water cells for each unexplored cell.  Cells which have
+   -- adjacent explored territory are placed in a perimeter list.
+   -- We also count the number of cells that are not unexplored.
+   --
+   -- We now take this perimeter list and make high-probability
+   -- predictions.
+   --
+   -- Then we round things off by making one pass of medium
+   -- probability predictions.
+   --
+   -- Then we make multiple passes extending our predictions.
+   --
+   -- We stop if at any point all remaining unexplored cells are
+   -- in a perimeter list, or if no predictions were made during
+   -- one of the final passes.
+   --
+   -- Unlike other algorithms, here we deal with "off board" locations.
+   -- So be careful. XXX XXX XXX is this necessary?!  would be cleaner
+   -- to code without this caveat...
+
+   -- XXX used only in comp_move, maybe should move there?
+
+   procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map)
+   is
+      Pmap : Path_Map := (others => (0, 0, T_UNKNOWN));
+      From, To, Tmp : Perimeter_T;
+      Explored : Integer := 0;
+      New_Loc, Loc : Location_T;
+      Copied : Integer;
+   begin
+      From.Len := 0;
+
+      -- build initial path map and perimeter list
+      for L in Location_T'Range
+      loop
+         if Vmap(L).Contents /= ' '
+         then
+            Explored := Explored + 1;
+         else                           --  add unexplored cell to perim
+            for D in Direction_T'Range
+            loop
+               begin
+                  New_Loc := L + Dir_Offset(D);
+                  case Vmap(New_Loc).Contents is
+                     when ' ' => null;  --  ignore adjacent unexplored
+                     when '.' => Pmap(L).Inc_Cost := Pmap(L).Inc_Cost + 1; --  count water
+                                                           -- XXX does this count ships as land?
+                     when others => Pmap(L).Cost := Pmap(L).Cost + 1; --  count_land
+                  end case;
+               exception
+                  when Constraint_Error => null; --  went off map via dir_offset (remember, we're working with all map locs)
+               end;
+            end loop;
+            if Pmap(L).Cost > 0 or Pmap(L).Inc_Cost > 0
+            then
+               From.List(From.Len) := L;
+               From.Len := From.Len + 1;
+            end if;
+         end if;
+      end loop;
+
+      if Print_Vmap = 'I'
+      then
+         Ui.Print_Zoom(Vmap);
+      end if;
+
+      loop    --  do high-probability predictions
+         if From.Len + Explored = MAP_SIZE
+         then
+            return;                     --  nothing left to guess
+         end if;
+
+         To.Len := 0;
+         Copied := 0;
+
+         for I in 0 .. From.Len - 1
+         loop
+            Loc := From.List(I);
+            if Pmap(Loc).Cost >= 5
+            then
+               Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
+            elsif Pmap(Loc).Inc_Cost >= 5
+            then
+               Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE-MAP_WIDTH) and Pmap(Loc).Cost >= 3
+            then
+               Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
+            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE-MAP_WIDTH) and Pmap(Loc).Inc_Cost >= 3
+            then
+               Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+            elsif (Loc = 0 or Loc = Map_Size-1) and Pmap(Loc).Cost >= 2
+            then
+               Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
+            elsif (Loc = 0 or Loc = MAP_SIZE-1) and Pmap(Loc).Inc_Cost >= 2
+            then
+               Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+            else                        --  copy perimeter cell as is
+               To.List(To.Len) := Loc;
+               To.Len := To.Len + 1;
+               Copied := Copied + 1;
+            end if;
+         end loop;
+         if Copied = From.Len
+         then
+            exit;                       --  nothing expanded
+         end if;
+         Tmp := From;
+         From := To;
+         To := Tmp;
+      end loop;
+
+      if Print_Vmap = 'I'
+      then
+         Ui.Print_Zoom(Vmap);
+      end if;
+
+      -- one pass for medium probability predictions
+      if From.Len + Explored = Map_Size
+      then
+         return;                        --  nothing left to guess
+      end if;
+      To.Len := 0;
+
+      for I in 0 .. From.Len - 1
+      loop
+         Loc := From.List(I);
+         if Pmap(Loc).Cost > Pmap(Loc).Inc_Cost
+         then
+            Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
+         elsif Pmap(Loc).Cost < Pmap(Loc).Inc_Cost
+         then
+            Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+         else         --  copy perimeter cell as is
+            To.List(To.Len) := Loc;
+            To.Len := To.Len + 1;
+            -- note we don't track `Copied' here, as it is not used in this loop
+            -- (it will be zero'ed in next loop)
+         end if;
+      end loop;
+
+      Tmp := From;
+      From := To;
+      To := Tmp;
+
+      if Print_Vmap = 'I'
+      then
+         Ui.Print_Zoom(Vmap);
+      end if;
+
+      -- multiple low probability passes
+      loop
+      -- return if very little left to explore
+      if From.Len + Explored >= MAP_SIZE - MAP_HEIGHT --  XXX XXX arbitrary, should probably be a tunable
+      then
+         if Print_Vmap = 'I'
+         then
+            Ui.Print_Zoom(Vmap);
+         end if;
+         return;
+      end if;
+
+      To.Len := 0;
+      Copied := 0;
+
+      for I in 0 .. From.Len - 1
+      loop
+         Loc := From.List(I);
+         if Pmap(Loc).Cost >= 4 and Pmap(Loc).Inc_Cost < 4
+         then
+            Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
+         elsif Pmap(Loc).Inc_Cost >= 4 and Pmap(Loc).Cost < 4
+         then
+            Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and Pmap(Loc).Cost > Pmap(Loc).Inc_Cost
+         then
+            Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
+         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and Pmap(Loc).Inc_Cost > Pmap(Loc).Cost
+         then
+            Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+         else --  copy perimeter cell as-is
+            To.List(To.Len) := Loc;
+            To.Len := To.Len + 1;
+            Copied := Copied + 1;
+         end if;
+      end loop;
+      if Copied = From.Len
+      then
+         exit;                          --  nothing expanded
+      end if;
+      Tmp := From;
+      From := To;
+      To := Tmp;
+   end loop;
+
+   if Print_Vmap = 'I'
+   then
+      Ui.Print_Zoom(Vmap);
+   end if;
+   end Vmap_Prune_Explore_Locs;
+
+
+   -- Expand an unexplored cell.  We increment the land or water count
+   -- of each neighbor.  Any neighbor that acquires a non-zero count
+   -- is added to the 'to' perimiter list.  The count of explored
+   -- territory is incremented.
+   --
+   -- Careful:  'loc' may be "off board" XXX XXX as above, is this necessary?
+
+   procedure Expand_Prune
+     (Vmap     : in out View_Map;
+      Pmap     : in out Path_Map;
+      Loc      : in     Location_T;
+      Ttype    : in     Terrain_T;
+      To       : in out Perimeter_T;
+      Explored : in out Integer)
+   is
+      New_Loc : Location_T;
+   begin
+      Explored := Explored + 1;
+
+      if Ttype = T_LAND
+      then
+         Vmap(Loc).Contents := '+';
+      else
+         Vmap(Loc).Contents := '.';
+      end if;
+
+      for D in Direction_T'Range
+        loop
+           begin
+              New_Loc := Loc + Dir_Offset(D);
+              if Vmap(New_Loc).Contents = ' '
+              then
+                 if Pmap(New_Loc).Cost = 0 and Pmap(New_Loc).Inc_Cost = 0
+                 then
+                    To.List(To.Len) := New_Loc;
+                    To.Len := To.Len + 1;
+                 end if;
+                 if Ttype = T_LAND
+                 then
+                    Pmap(New_Loc).Cost := Pmap(New_Loc).Cost + 1;
+                 else
+                    Pmap(New_Loc).Inc_Cost := Pmap(New_Loc).Inc_Cost + 1;
+                 end if;
+              end if;
+           exception
+              when Constraint_Error => null; --  skips for off-board locations. XXX XXX
+           end;
+      end loop;
+   end Expand_Prune;
 
 end Empire.Comp_Move;
