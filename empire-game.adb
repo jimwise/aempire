@@ -470,15 +470,15 @@ package body Empire.Game is
 -- to see if it is a shore city, and we install it in the list of
 -- cities for the continent.  We then examine each surrounding cell.
 
-   procedure Mark_Cont (Mapi : in Location_T) is
+   procedure Mark_Cont (Loc : in Location_T) is
    begin
-      --  Ui.Prompt("Entered Mark_Cont.  Mapi = " & Integer'Image(Mapi) &
+      --  Ui.Prompt("Entered Mark_Cont.  Loc = " & Integer'Image(Loc) &
       --              " Ncity = " & Integer'Image(Ncity) &
       --              " / " & Integer'Image(NUM_CITY) &
       --              " Ncont = " & Integer'Image(Ncont) &
       --              " / " & Integer'Image(MAX_CONT) );
 
-      if Marked(Mapi) or (Map(Mapi).Contents = '.') or (not Map(Mapi).On_Board)
+      if Marked(Loc) or (Map(Loc).Contents = '.') or (not Map(Loc).On_Board)
       then
          return;                        --  don't recurse if we've hit the water
       end if;
@@ -488,7 +488,7 @@ package body Empire.Game is
 
       if Map(Loc).Contents = '*'
       then                              --  a city
-         Cont_Tab(Ncont).Cityp(Ncity) := Map(Mapi).Cityp;
+         Cont_Tab(Ncont).Cityp(Ncity) := Map(Loc).Cityp;
          Ncity := Ncity + 1;
          if Empire.Mapping.Rmap_Shore(Loc)
          then
