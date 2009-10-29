@@ -129,7 +129,7 @@ package body Empire.Comp_Move is
       Cont_Map := Vmap_Land(View(COMP), Cityp.Loc);
 
       -- count items of interest on the continent
-      Counts := Mapping.Vmap_Cont_Scan (Cont_Map, View(COMP));
+      Counts := Vmap_Cont_Scan (Cont_Map, View(COMP));
 
       for I in View(COMP)'Range
       loop
@@ -371,7 +371,7 @@ package body Empire.Comp_Move is
    begin
       -- Mapping.Vmap_Cont(Cont_Map, Emap, Loc, '+');
       Cont_Map := Vmap_Water(Emap, Loc);
-      Counts := Mapping.Vmap_Cont_Scan(Cont_Map, Emap);
+      Counts := Vmap_Cont_Scan(Cont_Map, Emap);
 
       return (Counts.Unowned_Cities > 0) or (Counts.User_Cities > 0) or (Counts.Unexplored > 0);
    end Land_Locked;
@@ -773,7 +773,7 @@ package body Empire.Comp_Move is
          then
             -- Mapping.Vmap_Cont(Tcont_Map, Xmap, I, '.');
             Tcont_Map := Vmap_Water(Xmap, I);
-            Counts := Mapping.Vmap_Cont_Scan(Tcont_Map, Xmap);
+            Counts := Vmap_Cont_Scan(Tcont_Map, Xmap);
 
             Total_Cities := Counts.Unowned_Cities + Counts.User_Cities + Counts.Comp_Cities;
 
@@ -1322,6 +1322,69 @@ package body Empire.Comp_Move is
 
       return Cont_Map;
    end Vmap_Flood_Fill;
+
+   -- Scan a continent recording items of interest on the continent.
+   -- XXX XXX XXX This could be done as we flood-fill the continent.
+
+   function Vmap_Cont_Scan (Cont_Map : in Continent_Map; Vmap : in View_Map) return Scan_Counts_T is
+      procedure Incr (I : in out Integer) is
+      begin
+         I := I + 1;
+      end;
+      Counts : Scan_Counts_T;
+   begin
+      for I in Location_T'Range
+      loop
+         if Cont_Map(I)
+         then
+            Counts.Size := Counts.Size + 1;
+
+            case Vmap(I).Contents is
+               when ' ' => Incr(Counts.Unexplored);
+
+               when 'O' => Incr(Counts.User_Cities);
+
+               when 'A' => Incr(Counts.User_Objects(ARMY));
+               when 'F' => Incr(Counts.User_Objects(FIGHTER));
+               when 'P' => Incr(Counts.User_Objects(PATROL));
+               when 'D' => Incr(Counts.User_Objects(DESTROYER));
+               when 'S' => Incr(Counts.User_Objects(SUBMARINE));
+               when 'T' => Incr(Counts.User_Objects(TRANSPORT));
+               when 'C' => Incr(Counts.User_Objects(CARRIER));
+               when 'B' => Incr(Counts.User_Objects(BATTLESHIP));
+
+               when 'X' => Incr(Counts.Comp_Cities);
+
+               when 'a' => Incr(Counts.Comp_Objects(ARMY));
+               when 'f' => Incr(Counts.Comp_Objects(FIGHTER));
+               when 'p' => Incr(Counts.Comp_Objects(PATROL));
+               when 'd' => Incr(Counts.Comp_Objects(DESTROYER));
+               when 's' => Incr(Counts.Comp_Objects(SUBMARINE));
+               when 't' => Incr(Counts.Comp_Objects(TRANSPORT));
+               when 'c' => Incr(Counts.Comp_Objects(CARRIER));
+               when 'b' => Incr(Counts.Comp_Objects(BATTLESHIP));
+
+               when '*' => Incr(Counts.Unowned_Cities);
+
+               when '+'|'.' => null;
+
+               when 'Z'|'z' =>                --  check for city underneath satellite
+                 if Map(I).Contents = '*'
+                 then
+                    case Map(I).Cityp.Owner is
+                        when USER => Incr(Counts.User_Cities);
+                        when COMP => Incr(Counts.Comp_Cities);
+                        when UNOWNED => Incr(Counts.Unowned_Cities);
+                     end case;
+                 end if;
+               when others =>           --  XXX XXX XXX special markers '$' .. '9'
+                  raise Program_Error;
+            end case;
+         end if;
+      end loop;
+
+      return Counts;
+   end Vmap_Cont_Scan;
 
    -- Prune unexplored territory.  We take a view map and we modify it
    -- so that unexplored territory that is adjacent to a lot of land

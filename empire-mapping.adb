@@ -18,70 +18,6 @@ package body Empire.Mapping is
    -- XXX XXX XXX (As an idea of scale, each perimeter_t contains one integer
    -- XXX XXX XXX per location_t value.
 
-
-   -- Scan a continent recording items of interest on the continent.
-   -- XXX This could be done as we mark up the continent.
-
-   function Vmap_Cont_Scan (Cont_Map : in Continent_Map; Vmap : in View_Map) return Scan_Counts_T is
-      procedure Incr (I : in out Integer) is
-      begin
-         I := I + 1;
-      end;
-      Counts : Scan_Counts_T;
-   begin
-      for I in Location_T'Range
-      loop
-         if Cont_Map(I)
-         then
-            Counts.Size := Counts.Size + 1;
-
-            case Vmap(I).Contents is
-               when ' ' => Incr(Counts.Unexplored);
-
-               when 'O' => Incr(Counts.User_Cities);
-
-               when 'A' => Incr(Counts.User_Objects(ARMY));
-               when 'F' => Incr(Counts.User_Objects(FIGHTER));
-               when 'P' => Incr(Counts.User_Objects(PATROL));
-               when 'D' => Incr(Counts.User_Objects(DESTROYER));
-               when 'S' => Incr(Counts.User_Objects(SUBMARINE));
-               when 'T' => Incr(Counts.User_Objects(TRANSPORT));
-               when 'C' => Incr(Counts.User_Objects(CARRIER));
-               when 'B' => Incr(Counts.User_Objects(BATTLESHIP));
-
-               when 'X' => Incr(Counts.Comp_Cities);
-
-               when 'a' => Incr(Counts.Comp_Objects(ARMY));
-               when 'f' => Incr(Counts.Comp_Objects(FIGHTER));
-               when 'p' => Incr(Counts.Comp_Objects(PATROL));
-               when 'd' => Incr(Counts.Comp_Objects(DESTROYER));
-               when 's' => Incr(Counts.Comp_Objects(SUBMARINE));
-               when 't' => Incr(Counts.Comp_Objects(TRANSPORT));
-               when 'c' => Incr(Counts.Comp_Objects(CARRIER));
-               when 'b' => Incr(Counts.Comp_Objects(BATTLESHIP));
-
-               when '*' => Incr(Counts.Unowned_Cities);
-
-               when '+'|'.' => null;
-
-               when 'Z'|'z' =>                --  check for city underneath satellite
-                 if Map(I).Contents = '*'
-                 then
-                    case Map(I).Cityp.Owner is
-                        when USER => Incr(Counts.User_Cities);
-                        when COMP => Incr(Counts.Comp_Cities);
-                        when UNOWNED => Incr(Counts.Unowned_Cities);
-                     end case;
-                 end if;
-               when others =>           --  XXX XXX XXX special markers '$' .. '9'
-                  raise Program_Error;
-            end case;
-         end if;
-      end loop;
-
-      return Counts;
-      end Vmap_Cont_Scan;
-
       -- Find the nearest objective for a piece.  This routine actually does
       -- some real work.  This code represents my fourth rewrite of the
       -- algorithm.  This algorithm is central to the strategy used by the
@@ -185,7 +121,8 @@ package body Empire.Mapping is
          Vmap_Find_Xobj(Objective, Pmap, Vmap, Loc, Move_Info, T_LAND, T_LAND);
       end Vmap_Find_Ground_Obj;
 
-      -- Find an objective moving from land to water.
+
+               -- Find an objective moving from land to water.
       --
       -- With vmap_find_wlobj, this is a complex path-finding routine used only by Empire.Comp_Move
       --
@@ -373,10 +310,10 @@ package body Empire.Mapping is
       Vmap      : in     View_Map;
       Move_Info : in     Move_Info_T;
       Perim     : in     Perimeter_T;
-      Ttype     :        Terrain_T;
-      Cur_Cost  :        Integer;
-      Inc_Wcost :        Integer;
-      Inc_Lcost :        Integer;
+      Ttype     : in     Terrain_T;
+      Cur_Cost  : in     Integer;
+      Inc_Wcost : in     Integer;
+      Inc_Lcost : in     Integer;
       Waterp    : in out Perimeter_T;
       Landp     : in out Perimeter_T)
    is
@@ -535,16 +472,17 @@ package body Empire.Mapping is
    procedure Vmap_Find_Dest
      (New_Loc  :    out Location_T;
       Pmap     :    out Path_Map;
-      Vmap     : in out View_Map;       --  XXX XXX XXX this isn't quite right.  we unmodify it by end of function, but it would be very
-                                        --  expensive to make a copy
-      Cur_Loc  :        Location_T;
-      Dest_Loc :        Location_T;
-      Owner    :        Owner_T;
-      Terrain  :        Terrain_T)
+      OVmap    : in     View_Map;
+      Cur_Loc  : in     Location_T;
+      Dest_Loc : in     Location_T;
+      Owner    : in     Owner_T;
+      Terrain  : in     Terrain_T)
    is
       From, To, Tmp : Perimeter_T;
       Cur_Cost : Integer := 0;     --  cost to reach current perimeter
 
+      Vmap : View_Map := OVmap;         --  XXX XXX XXX this is expensive, but ensures we don't
+                                        --  XXX XXX XXX accidentally modify passed vmap
       Start_Terrain : Terrain_T;
       Move_Info : Move_Info_T;
       Old_Contents : Content_Display_T;

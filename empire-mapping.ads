@@ -1,7 +1,6 @@
 package Empire.Mapping is
    function Rmap_Shore (Loc : in Location_T) return Boolean;
    function Vmap_At_Sea (Vmap : in View_Map; Loc : in Location_T) return Boolean;
-   function Vmap_Cont_Scan (Cont_Map : in Continent_Map; Vmap : in View_Map) return Scan_Counts_T;
 
    procedure Vmap_Find_Aircraft_Obj
      (Objective :    out Location_T;
@@ -22,29 +21,14 @@ package Empire.Mapping is
       Loc       : in     Location_T;
       Move_Info : in     Move_Info_T);
 
-   -- complex pathfinding for comp_move
-   procedure Vmap_Find_Landsea_Obj
-     (Objective :    out Location_T;
-      Pmap      :    out Path_Map;
-      Vmap      : in     View_Map;
-      Loc       : in     Location_T;
-      Move_Info : in     Move_Info_T;
-      Beat_Cost :        Integer);
-   procedure Vmap_Find_Sealand_Obj
-     (Objective :    out Location_T;
-      Pmap      :    out Path_Map;
-      Vmap      : in     View_Map;
-      Loc       : in     Location_T;
-      Move_Info : in     Move_Info_T);
-
    procedure Vmap_Find_Dest
      (New_Loc  :    out Location_T;
       Pmap     :    out Path_Map;
-      Vmap     : in out View_Map;       --  XXX XXX XXX see note in package body
-      Cur_Loc  :        Location_T;
-      Dest_Loc :        Location_T;
-      Owner    :        Owner_T;
-      Terrain  :        Terrain_T);
+      OVmap    : in     View_Map;
+      Cur_Loc  : in     Location_T;
+      Dest_Loc : in     Location_T;
+      Owner    : in      Owner_T;
+      Terrain  : in     Terrain_T);
    procedure Vmap_Find_Dir
      (Found_Loc :    out Location_T;
       Pmap      : in     Path_Map;
@@ -64,6 +48,21 @@ package Empire.Mapping is
       Vmap : in     View_Map;
       Dest : in     Location_T);
 
+   -- complex pathfinding for comp_move
+   procedure Vmap_Find_Landsea_Obj
+     (Objective :    out Location_T;
+      Pmap      :    out Path_Map;
+      Vmap      : in     View_Map;
+      Loc       : in     Location_T;
+      Move_Info : in     Move_Info_T;
+      Beat_Cost :        Integer);
+   procedure Vmap_Find_Sealand_Obj
+     (Objective :    out Location_T;
+      Pmap      :    out Path_Map;
+      Vmap      : in     View_Map;
+      Loc       : in     Location_T;
+      Move_Info : in     Move_Info_T);
+
 private
 
    procedure Add_Cell
@@ -79,10 +78,10 @@ private
       Vmap      : in     View_Map;
       Move_Info : in     Move_Info_T;
       Perim     : in     Perimeter_T;
-      Ttype     :        Terrain_T;
-      Cur_Cost  :        Integer;
-      Inc_Wcost :        Integer;
-      Inc_Lcost :        Integer;
+      Ttype     : in     Terrain_T;
+      Cur_Cost  : in     Integer;
+      Inc_Wcost : in     Integer;
+      Inc_Lcost : in     Integer;
       Waterp    : in out Perimeter_T;
       Landp     : in out Perimeter_T);
 
@@ -126,8 +125,6 @@ private
       Move_Info : in     Move_Info_T;
       Start     : in     Terrain_T;
       Expand    : in     Terrain_T);
-
-
 
    -- XXX XXX XXX these globals are used to cache current best objective
    -- XXX XXX XXX we need a way to pass this information around, as we

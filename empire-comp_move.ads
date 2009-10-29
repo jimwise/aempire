@@ -83,4 +83,6 @@ private
       To       : in out Perimeter_T;
       Explored : in out Integer);
 
+   function Vmap_Cont_Scan (Cont_Map : in Continent_Map; Vmap : in View_Map) return Scan_Counts_T;
+
 end Empire.Comp_Move;
