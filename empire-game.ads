@@ -8,6 +8,7 @@ package Empire.Game is
    procedure Restore_Game;
    procedure Save_Game;
    procedure Save_Movie_Screen;
+   procedure Check_Endgame;
 
 private
 
@@ -16,7 +17,7 @@ private
    function Good_Cont (Mapi : in Location_T) return Boolean;
    procedure Make_Map;
    procedure Make_Pair;
-   procedure Mark_Cont (Mapi : in Location_T);
+   procedure Mark_Cont (Loc : in Location_T);
    procedure Place_Cities;
    procedure Read_Embark (List : in Piece_Info_P; Ptype : in Piece_Type_T);
    procedure Regen_Land (Placed : in Natural; Num_Land : in out Natural);
@@ -56,12 +57,14 @@ private
    Ncont : Natural;
    Cont_Tab : array (Cont_Index_T) of Cont_T; --  good continents
    Rank_Tab : array (Cont_Index_T)  of Cont_Index_T; --  sorted indices into cont_tab, in rank order
-   Pair_Tab : array (0 .. (MAX_CONT**2 - 1)) of Pair_T; --  ranked pairs of continents
+   Pair_Tab : array (0 .. MAX_CONT ** 2 - 1) of Pair_T; --  ranked pairs of continents
 
    -- XXX XXX this cries out for a record type to return from mark_cont and pass around
    Ncity : Integer := 0;
    Nland : Integer := 0;
    Nshore : Integer := 0;
+
+   To_The_Death : Boolean := FALSE;
 
 -- static int      xread (FILE *, void *, int);
 -- static int      xwrite (FILE *, void *, int);
