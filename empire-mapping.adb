@@ -30,7 +30,7 @@ package body Empire.Mapping is
       Loc         :        Location_T;
       Bad_Terrain :        Terrain_Display_T) is
    begin
-      Cont_Map := (others => false);
+      Cont_Map := (others => False);
       Vmap_Mark_Up_Cont(Cont_Map, Vmap, Loc, Bad_Terrain);
    end Vmap_Cont;
 
@@ -39,7 +39,7 @@ package body Empire.Mapping is
    -- known to be either on the continent or adjacent to the continent.
 
    procedure Vmap_Mark_Up_Cont
-     (Cont_Map    :    out Continent_Map;
+     (Cont_Map    : out Continent_Map;
       Vmap        : in     View_Map;
       Loc         : in     Location_T;
       Bad_Terrain :        Terrain_Display_T)
@@ -48,6 +48,10 @@ package body Empire.Mapping is
       From, To, Tmp : Perimeter_T;
       This_Terrain : Terrain_Display_T;
    begin
+      if not Map(Loc).On_Board
+      then
+         raise Program_Error;
+      end if;
       From.Len := 1;
       From.List(0) := Loc;
       Cont_Map(Loc) := True;            --  loc is on continent, by definition
@@ -60,6 +64,7 @@ package body Empire.Mapping is
          loop
             for D in Direction_T'Range
             loop
+               Ui.Prompt("Updating based on " & Location_T'Image(From.List(I)));
                New_Loc := From.List(I) + Dir_Offset(D);
                if Map(New_Loc).On_Board
                then
@@ -84,6 +89,10 @@ package body Empire.Mapping is
                            Cont_Map(New_Loc) := True;
                            To.List(To.Len) := New_Loc;
                            To.Len := To.Len + 1;
+                           if To.Len > Location_T'Last - 1
+                           then
+                              raise Program_Error;
+                           end if;
                         end if;
                      end if;
                   end if;
