@@ -34,11 +34,8 @@ private
    -- weight we assign to a user city on a continent where he has one and we have none (and unowned cities are one or zero)
    SINGLE_USER_CITY_WEIGHT : constant Integer := 2;
 
-   To_The_Death : Boolean := FALSE;
-
    procedure Do_Cities;
    procedure Do_Pieces;
-   procedure Check_Endgame;
 
    procedure Comp_Prod (Cityp : in out City_Info_T; Is_Land_Locked : in Boolean);
    procedure Comp_Set_Needed (Cityp : in out City_Info_T; City_Count : in out Piece_Value_Array; Army_Ok : in Boolean; Is_Land_Locked : in Boolean);
@@ -56,7 +53,7 @@ private
    function Move_Away (Vmap : in View_Map; Loc : in Location_T; Terrain : in Acceptable_Content_Array) return Location_T;
    procedure Move_Objective (Obj : in out Piece_Info_P; Pathmap : in out Path_Map; Loc : in Location_T; Adj_List : in Content_Value_Array);
    Could_Not_Load : exception;
-   procedure Load_Army (Obj : in out Piece_Info_P);
+   procedure Load_Army (Obj : in Piece_Info_P);
    procedure Find_Best_Tt (Best : in out Piece_Info_P; Loc : in Location_T);
 
    function Find_Attack (Loc : in Location_T; Obj_List : in Content_Value_Array; Terrain : Acceptable_Terrain_Array) return Location_T;
@@ -64,7 +61,7 @@ private
    function Nearby_Count (Loc : in Location_T) return Integer;
    function Nearby_Load (Obj : in Piece_Info_P; Loc : in Location_T) return Boolean;
 
-   procedure Make_Army_Load_Map (Obj : in out Piece_Info_P; xmap : in out View_Map; Vmap : in View_Map);
+   procedure Make_Army_Load_Map (Obj : in Piece_Info_P; xmap : in out View_Map; Vmap : in View_Map);
    procedure Make_Tt_Load_Map (Xmap : in out View_Map; Vmap : in View_Map);
    procedure Make_Unload_Map (Xmap : in out View_Map; Vmap : in View_Map);
    procedure Unmark_Explore_Locs (Xmap : in out View_Map);
