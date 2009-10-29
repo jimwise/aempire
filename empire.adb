@@ -1,6 +1,8 @@
 -- this file contains initialization code, the main command
 -- parser, and the simple commands.
 
+with Ada.Exceptions;
+
 with Empire.Commands;
 with Empire.Ai;
 with Empire.Editing;
@@ -16,6 +18,13 @@ package body Empire is
       Order : Character;
       Turn : Natural := 0; -- distinct from date to track save_interval even if we loaded a saved game
    begin
+      -- DEBUGGING CONFIG GOES HERE
+      -- XXX this should move to empire.ads
+      Debug := True;
+      Print_Debug := True;
+      Print_Vmap := '0';
+      Trace_Pmap := True;
+
       Emp_Start;
 
       Ui.Clear;
@@ -30,13 +39,18 @@ package body Empire is
             User_Move.User_Move;
             Ui.Prompt("Comp_Move...");
             Ai.Comp_Move;
+            Ui.Debug_Info("checking for endgame");
+            Game.Check_Endgame;
             Turn := Turn + 1;
+            Date := Date + 1;
             if (Turn mod Save_Interval) = 0
             then
                Game.Save_Game;
             end if;
-            -- XXX XXX XXX could add this to make map label update, but...
-            -- Ui.Print_Sector(USER, Ui.Cur_Sector);
+            if Save_Movie
+            then
+               Game.Save_Movie_Screen;
+            end if;
             Ui.Display_Score;
             Ui.Display_Turn;
             Ui.Prompt("");
@@ -49,7 +63,11 @@ package body Empire is
 
    exception
       when User_Quit =>
+         null;
+      when E : others =>
          Ui.End_Ui;
+         Ada.Text_Io.Put_Line("Unexpected Exception:");
+         Ada.Text_Io.Put(Ada.Exceptions.Exception_Information(E));
          return;
    end Run_Empire;
 
@@ -57,15 +75,16 @@ package body Empire is
 
    procedure Emp_Start is
    begin
-      Ui.Init_Ui;                          -- init tty, and info and status windows
-      Ui.Init_Map;                      -- init map window
-      Math.Rand_Init;                   -- init random number generator
+      Ui.Init_Ui;                   -- init tty, and info and status windows
+      Ui.Init_Map;                  -- init map window
+      Math.Rand_Init;               -- init random number generator
    end;
 
 -- This provides a single place for collecting all cleanup routines */
 
    procedure Emp_End is
    begin
+      Ui.End_Ui;
       raise User_Quit;
    end Emp_End;
 
