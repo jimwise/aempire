@@ -1257,6 +1257,64 @@ package body Empire.Comp_Move is
          Move_Objective(Obj, Pathmap, Old_Dest, Adj_List);
       end if;
 
-end Move_Objective;
+   end Move_Objective;
+
+   -- eventual replacements for Vmap_{Mark_Up_}Cont -- explicitly floodfill
+   -- land or water, resulting in simpler calls and simpler functions
+
+   function Vmap_Water (Vmap : in View_Map; Loc : in Location_T) return Continent_Map is
+      Water_Chars : constant Acceptable_Terrain_Array := ('.'|'*' => True, others => False);
+   begin
+      return Vmap_Flood_Fill(Vmap, Loc, Water_Chars);
+   end Vmap_Water;
+
+   function Vmap_Land (Vmap : in View_Map; Loc : in Location_T) return Continent_Map is
+      Land_Chars : constant Acceptable_Terrain_Array := ('+'|'*' => True, others => False);
+   begin
+      return Vmap_Flood_Fill(Vmap, Loc, Land_Chars);
+   end Vmap_Land;
+
+   function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Terrain_Array) return Continent_Map is
+      Cont_Map : Continent_Map := (others => False);
+      Seen: Location_Vectors.Vector;            --  XXX XXX XXX should switch to a set
+      Workset : Location_Vectors.Vector;
+      Cur, New_Loc : Location_T;
+   begin
+      -- test if loc is acceptable, or raise
+      if not Good_Terrain(Map(Loc).Contents)
+      then
+         raise Program_Error;
+      end if;
+
+      -- push loc into a collection
+      Cont_Map(Loc) := True;
+      Workset.Prepend(Loc);
+
+      -- while collection not empty
+      while not Workset.Is_Empty
+      loop
+         Cur := Workset.First_element;
+         Workset.Delete_First;
+
+         -- FOREACH New_Loc Next To Cur
+         for D in Direction_T'range
+         loop
+            New_Loc := Cur + Dir_Offset(D);
+         --     if unexplored (per vmap) or desired_terrain (per vmap) or desired terrain (per map)
+         --   we check desired terrain in two places, so that we can use the pruned Emap if desired
+            if Map(New_Loc).On_Board and then (Seen.Find(New_Loc) /= No_Element)
+            then
+               if Vmap(New_Loc).Contents = ' ' or else Good_Terrain(Vmap(Cur).Contents) or else Good_Terrain(Map(Cur).Contents)
+               then
+                  Cont_Map(New_Loc) := True;
+                  Workset.Prepend(New_Loc);
+                  Seen.Prepend(New_Loc);
+               end if;
+            end if;
+         end loop;
+      end loop;
+
+      return Cont_Map;
+   end Vmap_Flood_Fill;
 
 end Empire.Comp_Move;
