@@ -1,8 +1,15 @@
+with Ada.Containers.Vectors;
+
 package Empire.Comp_Move is
 
    procedure Comp_Move;
 
 private
+
+   package Location_Vectors is new Ada.Containers.Vectors
+     (Element_Type => Location_T,
+      Index_Type => Natural);
+   use Location_Vectors;
 
    Emap : View_Map;                     -- pruned explore map
 
@@ -64,5 +71,9 @@ private
 
    -- utility func to turn a numeric weight into a Content_Display_T for Comp_Map
    function Comp_Map_Weight (Weight : in Natural) return Content_Display_T;
+
+   function Vmap_Water (Vmap : in View_Map; Loc : in Location_T) return Continent_Map;
+   function Vmap_Land (Vmap : in View_Map; Loc : in Location_T) return Continent_Map;
+   function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Terrain_Array) return Continent_Map;
 
 end Empire.Comp_Move;
