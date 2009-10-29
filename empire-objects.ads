@@ -1,6 +1,6 @@
 package Empire.Objects is
-   procedure Disembark (Obj : in out Piece_Info_P);
-   procedure Embark (Ship : in out Piece_Info_P; Obj : in out Piece_Info_P);
+   procedure Disembark (Obj : in Piece_Info_P);
+   procedure Embark (Ship : in Piece_Info_P; Obj : in Piece_Info_P);
 
    function Find_City_At_Loc (Loc    : in Location_T;
                               Owners : in Acceptable_Owner_Array := (others => TRUE)) return City_Info_P;
@@ -34,9 +34,9 @@ package Empire.Objects is
    -- this belongs elsewhere, since it queries the user (and doesn't otherwise search)
    function Good_Loc (Obj : in Piece_Info_P; Loc: in Location_T) return Boolean;
    procedure Kill_City (City : in out City_Info_T);
-   procedure Kill_Obj (Obj : in out Piece_Info_P; Loc : Location_T);
-   procedure Move_Obj (Obj : in out Piece_Info_P; New_Loc : Location_T);
-   procedure Move_Sat (Obj : in out Piece_Info_P);
+   procedure Kill_Obj (Obj : in Piece_Info_P; Loc : Location_T);
+   procedure Move_Obj (Obj : in Piece_Info_P; New_Loc : Location_T);
+   procedure Move_Sat (Obj : in Piece_Info_P);
    function Obj_Capacity (Obj : in Piece_Info_P) return Integer; -- XXX limit?
    function Obj_Moves (Obj : in Piece_Info_P) return Integer; -- XXX limit?
    procedure Produce (City : in out City_Info_T);
@@ -53,9 +53,9 @@ private
                     Dir1, Dir2, Dir3 : in Direction_T)
                    return Direction_T;
 
-   procedure Kill_One (Obj : in out Piece_Info_P);
+   procedure Kill_One (Obj : in Piece_Info_P);
 
-   procedure Move_Sat1 (Obj : in out Piece_Info_P);
+   procedure Move_Sat1 (Obj : in Piece_Info_P);
 
    procedure Scan_Sat (Owner : in Piece_Owner_T;
                        Loc   : in Location_T);

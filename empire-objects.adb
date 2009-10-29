@@ -173,7 +173,7 @@ package body Empire.Objects is
 
    -- If an object is on a ship, remove it from that ship
 
-   procedure Disembark (Obj : in out Piece_Info_P)
+   procedure Disembark (Obj : in Piece_Info_P)
    is
    begin
       if Obj.Ship /= null
@@ -186,8 +186,8 @@ package body Empire.Objects is
 
    -- Move an object onto a ship
 
-   procedure Embark (Ship : in out Piece_Info_P;
-                     Obj  : in out Piece_Info_P)
+   procedure Embark (Ship : in Piece_Info_P;
+                     Obj  : in Piece_Info_P)
    is
    begin
       --  XXX XXX XXX should check that we have room here, not just in caller!
@@ -199,7 +199,7 @@ package body Empire.Objects is
    -- Kill an object.  We scan around the piece and free it.  If there is
    -- anything in the object, it is killed as well.
 
-   procedure Kill_Obj (Obj : in out Piece_Info_P;
+   procedure Kill_Obj (Obj : in Piece_Info_P;
                        Loc :        Location_T)
    is
    begin
@@ -214,7 +214,7 @@ package body Empire.Objects is
    end Kill_Obj;
 
    -- kill an object without scanning
-   procedure Kill_One (Obj : in out Piece_Info_P)
+   procedure Kill_One (Obj : in Piece_Info_P)
    is
    begin
       Disembark(Obj);
@@ -318,8 +318,8 @@ package body Empire.Objects is
             Lists.Link(User_Obj(City.Prod), New_Obj, Piece_Link);
          when COMP =>
             Lists.Link(Comp_Obj(City.Prod), New_Obj, Piece_Link);
-         when others =>
-            raise Program_Error;
+         when UNOWNED =>
+            Utility.Panic("Producing an object in an unowned city");
       end case;
       Lists.Link(Map(City.Loc).Objp, New_Obj, Loc_Link);
 
@@ -344,7 +344,6 @@ package body Empire.Objects is
          -- XXX XXX XXX get to choose, as otherwise it is not so useful to make multiple satellites at one
          -- XXX XXX XXX location (and all the effort which went into a satellite can be lost if it goes in
          -- XXX XXX XXX a more-or-less useless direction
-
          New_obj.Func := Sat_Dir(Math.Rand_Long(4));
       end if;
    end Produce;
@@ -355,7 +354,7 @@ package body Empire.Objects is
    -- of an object, keeping track of the number of pieces on a boat,
    -- etc.
 
-   procedure Move_Obj (Obj     : in out Piece_Info_P;
+   procedure Move_Obj (Obj     : in Piece_Info_P;
                        New_Loc :        Location_T)
    is
       Old_Loc : Location_T;
@@ -448,7 +447,7 @@ package body Empire.Objects is
 
    -- Move a satellite one square
 
-   procedure Move_Sat1 (Obj : in out Piece_Info_P)
+   procedure Move_Sat1 (Obj : in Piece_Info_P)
    is
       Dir : Direction_T;
       New_Loc : Location_T;
@@ -480,7 +479,7 @@ package body Empire.Objects is
    -- Now move the satellite all of its squares.
    -- Satellite burns iff it's range reaches zero.
 
-   procedure Move_Sat (Obj : in out Piece_Info_P)
+   procedure Move_Sat (Obj : in Piece_Info_P)
    is
    begin
       if Piece_Attr(Obj.Piece_Type).class /= SPACECRAFT
@@ -650,7 +649,10 @@ package body Empire.Objects is
             Strings.Append(Func, ")");
          end if;
 
-         Strings.Append(Func, "; ");
+         if City.Func(I) /= NOFUNC and I /= Piece_Type_T'Last --  avoid a trailing ';', or '; ;'
+         then
+            Strings.Append(Func, "; ");
+         end if;
       end loop;
 
       Prod := Strings.To_Bounded_String("City at location " & Location_T'Image(City.Loc) &
@@ -755,7 +757,7 @@ package body Empire.Objects is
 
    procedure Ask_Prod (City : in out City_Info_T)
    is
-      T : Piece_Type_T;
+      T : Piece_Choice_T;
    begin
       Scan(USER, City.Loc);         --  in case something has moved away
       Ui.Display_Loc(USER,City.Loc);
