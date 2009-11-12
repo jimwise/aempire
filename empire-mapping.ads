@@ -2,13 +2,13 @@ package Empire.Mapping is
    function Rmap_Shore (Loc : in Location_T) return Boolean;
    function Vmap_At_Sea (Vmap : in View_Map; Loc : in Location_T) return Boolean;
 
-   procedure Vmap_Mark_Adjacent
+   procedure Pmap_Mark_Adjacent
      (Pmap : in out Path_Map;
       Loc  : in     Location_T);
-   procedure Vmap_Mark_Near_Path
+   procedure Pmap_Mark_Near_Path
      (Pmap : in out Path_Map;
       Loc  : in     Location_T);
-   procedure Vmap_Mark_Path
+   procedure Pmap_Mark_Path
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T);

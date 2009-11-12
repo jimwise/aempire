@@ -275,9 +275,9 @@ package body Empire.User_Move is
 
       if View(USER)(Loc).Contents = ' ' and PMap(Loc).Cost = 2
       then
-         Mapping.Vmap_Mark_Adjacent(PMap, Obj.Loc);
+         Mapping.Pmap_Mark_Adjacent(PMap, Obj.Loc);
       else
-         Mapping.Vmap_Mark_Path(PMap, View(USER), Loc);
+         Mapping.Pmap_Mark_Path(PMap, View(USER), Loc);
       end if;
 
       Mapping.Vmap_Find_Dir(Loc, PMap, View(USER), Obj.Loc, Terrain, (' ' => 1, others => 0));
@@ -344,7 +344,7 @@ package body Empire.User_Move is
          return;                        --  nothing to attack
       end if;
 
-      Mapping.Vmap_Mark_Path(PMap, View(USER), Loc);
+      Mapping.Pmap_Mark_Path(PMap, View(USER), Loc);
       Mapping.Vmap_Find_Dir(Loc, PMap, View(USER), Obj.Loc,
                             ('+' => True, others => False),
                             ('X' => 3, '*' => 2, 'a' => 1, others => 0));
@@ -386,7 +386,7 @@ package body Empire.User_Move is
          return;
       end if;
 
-      Mapping.Vmap_Mark_Path(Pmap, View(USER), Loc);
+      Mapping.Pmap_Mark_Path(Pmap, View(USER), Loc);
 
       --  try to avoid land (literally, stay adjacent to ocean)
       Mapping.Vmap_Find_Dir(Loc, PMap, View(USER), Obj.Loc, ('.'|'O' => True, others => False), ('.' => 1, others => 0));
@@ -517,7 +517,7 @@ package body Empire.User_Move is
          return;                        --  can't get there -- user_move will remove func setting
       end if;
 
-      Mapping.Vmap_Mark_Path(PMap, View(USER), Dest);
+      Mapping.Pmap_Mark_Path(PMap, View(USER), Dest);
       Mapping.Vmap_Find_Dir(New_Loc, PMap, View(USER), Obj.Loc, Mterrain, (' ' => 2, '.' => 1, others => 0));
 
       if New_Loc = Obj.loc              --  no good move along path

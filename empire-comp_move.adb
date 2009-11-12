@@ -754,19 +754,6 @@ package body Empire.Comp_Move is
       Xmap := Vmap;
       Unmark_Explore_Locs(Xmap);
 
-      -- Owncont_Map := (others => False);
-
-      -- XXX XXX XXX this was here from long ago in the c, but it's a no-op, as
-      -- XXX XXX XXX it fills in owncont_map, which is never used!
-      --  for I in City'Range
-      --  loop
-      --     if City(I).Owner = COMP
-      --     then
-      --        -- can't easily switch to vmap_land, because we want to map multiple continents
-      --        Mapping.Vmap_Mark_Up_Cont(Owncont_Map, Xmap, City(I).Loc, '.');
-      --     end if;
-      --  end loop;
-
       for I in Vmap'Range
       loop
          if (Vmap(I).Contents = 'O') or (Vmap(I).Contents = '*')
@@ -1130,10 +1117,10 @@ package body Empire.Comp_Move is
 
       if (View(COMP)(New_Loc).Contents = ' ') and (D = 2) -- are we exploring?
       then
-         Mapping.Vmap_Mark_Adjacent(Pmap, Obj.Loc);
+         Mapping.Pmap_Mark_Adjacent(Pmap, Obj.Loc);
          Reuse := FALSE;
       else
-         Mapping.Vmap_Mark_Path(Pmap, View(COMP), New_Loc); -- find routes to destination
+         Mapping.Pmap_Mark_Path(Pmap, View(COMP), New_Loc); -- find routes to destination
       end if;
 
       case Piece_Attr(Obj.Piece_Type).Class is
@@ -1153,7 +1140,7 @@ package body Empire.Comp_Move is
       if New_Loc = Obj.Loc and          -- path is blocked?
         (Piece_Attr(Obj.Piece_Type).Class /= GROUND) and (Obj.Ship /= null) -- don't unblock armies on a ship
       then
-         Mapping.Vmap_Mark_Near_Path(Pmap, Obj.Loc);
+         Mapping.Pmap_Mark_Near_Path(Pmap, Obj.Loc);
          Reuse := FALSE;
          Mapping.Vmap_Find_Dir(New_Loc, Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
       end if;

@@ -530,7 +530,7 @@ package body Empire.Mapping is
    --
    -- Someday, this routine should probably use perimeter lists as well.
 
-   procedure Vmap_Mark_Path
+   procedure Pmap_Mark_Path
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T)
@@ -555,16 +555,16 @@ package body Empire.Mapping is
          New_Dest := Dest + Dir_Offset(D);
          if Map(New_Dest).On_Board and Pmap(New_Dest).Cost = (Pmap(Dest).Cost - Pmap(Dest).Inc_Cost)
          then
-            Vmap_Mark_Path(Pmap, Vmap, New_Dest);
+            Pmap_Mark_Path(Pmap, Vmap, New_Dest);
          end if;
       end loop;
-   end Vmap_Mark_Path;
+   end Pmap_Mark_Path;
 
    -- Create a marked path map.  We mark those squares adjacent to the
    -- starting location which are on the board.  'find_dir' must be
    -- invoked to decide which squares are actually valid.
 
-   procedure Vmap_Mark_Adjacent
+   procedure Pmap_Mark_Adjacent
      (Pmap : in out Path_Map;
       Loc  : in     Location_T)
    is
@@ -578,13 +578,13 @@ package body Empire.Mapping is
             Pmap(New_Loc).Terrain := T_PATH;
          end if;
       end loop;
-   end Vmap_Mark_Adjacent;
+   end Pmap_Mark_Adjacent;
 
    -- Modify a marked path map.  We mark those squares adjacent to the
    -- starting location which are on the board and which are adjacent
    -- to a location on the existing shortest path.
 
-   procedure Vmap_Mark_Near_Path
+   procedure Pmap_Mark_Near_Path
      (Pmap : in out Path_Map;
       Loc  : in     Location_T)
    is
@@ -617,7 +617,7 @@ package body Empire.Mapping is
             Pmap(Loc + Dir_Offset(I)).Terrain := T_PATH;
          end if;
       end loop;
-   end Vmap_Mark_Near_Path;
+   end Pmap_Mark_Near_Path;
 
    -- Look at each neighbor of 'loc'.  Select the first marked cell which
    -- is on a short path to the desired destination, and which holds a valid
