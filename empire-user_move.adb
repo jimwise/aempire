@@ -280,7 +280,7 @@ package body Empire.User_Move is
          Mapping.Pmap_Mark_Path(PMap, View(USER), Loc);
       end if;
 
-      Mapping.Vmap_Find_Dir(Loc, PMap, View(USER), Obj.Loc, Terrain, (' ' => 1, others => 0));
+      Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc, Terrain, (' ' => 1, others => 0));
 
       if Loc /= Obj.Loc
       then
@@ -345,7 +345,7 @@ package body Empire.User_Move is
       end if;
 
       Mapping.Pmap_Mark_Path(PMap, View(USER), Loc);
-      Mapping.Vmap_Find_Dir(Loc, PMap, View(USER), Obj.Loc,
+      Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc,
                             ('+' => True, others => False),
                             ('X' => 3, '*' => 2, 'a' => 1, others => 0));
 
@@ -389,7 +389,7 @@ package body Empire.User_Move is
       Mapping.Pmap_Mark_Path(Pmap, View(USER), Loc);
 
       --  try to avoid land (literally, stay adjacent to ocean)
-      Mapping.Vmap_Find_Dir(Loc, PMap, View(USER), Obj.Loc, ('.'|'O' => True, others => False), ('.' => 1, others => 0));
+      Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc, ('.'|'O' => True, others => False), ('.' => 1, others => 0));
       if Loc /= Obj.Loc
       then
         Objects.Move_Obj(Obj, Loc);
@@ -518,7 +518,7 @@ package body Empire.User_Move is
       end if;
 
       Mapping.Pmap_Mark_Path(PMap, View(USER), Dest);
-      Mapping.Vmap_Find_Dir(New_Loc, PMap, View(USER), Obj.Loc, Mterrain, (' ' => 2, '.' => 1, others => 0));
+      New_Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc, Mterrain, (' ' => 2, '.' => 1, others => 0));
 
       if New_Loc = Obj.loc              --  no good move along path
       then

@@ -517,6 +517,9 @@ package body Empire.Mapping is
       end loop;
    end Vmap_Find_Dest;
 
+   --  ---------------------------------------------------------------------------
+   --  Path_Map -- a map with per-cell and incremental costs
+
    -- Starting with the destination, we recursively back track toward the source
    -- marking all cells which are on a shortest path between the start and the
    -- destination.  To do this, we know the distance from the destination to
@@ -643,26 +646,25 @@ package body Empire.Mapping is
    -- 3)  User pieces will move more intuitively by staying in the
    -- center of the best path.
 
-   procedure Vmap_Find_Dir
-     (Found_Loc :    out Location_T;
-      Pmap      : in     Path_Map;
-      Vmap      : in     View_Map;
-      Loc       : in     Location_T;
-      Terrain   : in     Acceptable_Content_Array;
-      Adj_Char  : in     Content_Value_Array)
+   function Pmap_Find_Dir
+     (Pmap     : in Path_Map;
+      Vmap     : in View_Map;
+      Loc      : in Location_T;
+      Terrain  : in Acceptable_Content_Array;
+      Adj_Char : in Content_Value_Array) return Location_T
    is
       Count, Best_Count : Integer;
       Best_Loc, New_Loc : Location_T;
       Path_Count, Best_Path : Integer;
 
+      --  XXX XXX XXX why is order important here?
       Order : constant array (1 .. 8) of Direction_T := (NORTHWEST, NORTHEAST,
                                                          SOUTHWEST, SOUTHEAST,
                                                          WEST, EAST, NORTH, SOUTH);
-
    begin
       if Trace_Pmap
       then
-         Ui.Print_Pzoom("Before Vmap_Find_Dir:", Pmap, Vmap);
+         Ui.Print_Pzoom("Before Pmap_Find_Dir:", Pmap, Vmap);
       end if;
 
       -- no best yet
@@ -691,9 +693,9 @@ package body Empire.Mapping is
          end if;
       end loop;
 
-      Found_Loc := Best_Loc;
-      return;
-   end Vmap_Find_Dir;
+      return Best_Loc;
+   end Pmap_Find_Dir;
+   --  ---------------------------------------------------------------------------
 
    -- Count the number of adjacent squares of interest.
    -- Squares are weighted based on value in the passed

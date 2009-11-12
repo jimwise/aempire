@@ -1138,14 +1138,14 @@ package body Empire.Comp_Move is
             raise Program_Error;
       end case;
 
-      Mapping.Vmap_Find_Dir(New_Loc, Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
+      New_Loc := Mapping.Pmap_Find_Dir(Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
 
       if New_Loc = Obj.Loc and          -- path is blocked?
         (Piece_Attr(Obj.Piece_Type).Class /= GROUND) and (Obj.Ship /= null) -- don't unblock armies on a ship
       then
          Mapping.Pmap_Mark_Near_Path(Pmap, Obj.Loc);
          Reuse := FALSE;
-         Mapping.Vmap_Find_Dir(New_Loc, Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
+         New_Loc := Mapping.Pmap_Find_Dir(Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
       end if;
 
       -- encourage army to leave city

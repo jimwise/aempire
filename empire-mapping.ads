@@ -23,6 +23,14 @@ package Empire.Mapping is
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T);
+
+   function Pmap_Find_Dir
+     (Pmap     : in Path_Map;
+      Vmap     : in View_Map;
+      Loc      : in Location_T;
+      Terrain  : in Acceptable_Content_Array;
+      Adj_Char : in Content_Value_Array) return Location_T;
+
    --  ---------------------------------------------------------------------------
 
    procedure Vmap_Find_Aircraft_Obj
@@ -52,13 +60,6 @@ package Empire.Mapping is
       Dest_Loc : in     Location_T;
       Owner    : in      Owner_T;
       Terrain  : in     Terrain_T);
-   procedure Vmap_Find_Dir
-     (Found_Loc :    out Location_T;
-      Pmap      : in     Path_Map;
-      Vmap      : in     View_Map;
-      Loc       : in     Location_T;
-      Terrain   : in     Acceptable_Content_Array;
-      Adj_Char  : in     Content_Value_Array);
 
    -- complex pathfinding for comp_move
    procedure Vmap_Find_Landsea_Obj
