@@ -2,6 +2,17 @@ package Empire.Mapping is
    function Rmap_Shore (Loc : in Location_T) return Boolean;
    function Vmap_At_Sea (Vmap : in View_Map; Loc : in Location_T) return Boolean;
 
+   --  ---------------------------------------------------------------------------
+   --  Path_Map -- a map with per-cell and incremental costs
+
+   type Path_Map_T is
+      record
+         Cost : Integer;                -- total cost to get here
+         Inc_Cost : Integer;            -- incremental cost to get here
+         Terrain : Terrain_T;
+      end record;
+   type Path_Map is array (Location_T) of Path_Map_T;
+
    procedure Pmap_Mark_Adjacent
      (Pmap : in out Path_Map;
       Loc  : in     Location_T);
@@ -12,6 +23,7 @@ package Empire.Mapping is
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T);
+   --  ---------------------------------------------------------------------------
 
    procedure Vmap_Find_Aircraft_Obj
      (Objective :    out Location_T;

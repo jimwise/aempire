@@ -1,5 +1,7 @@
 with Terminal_Interface.Curses;
 
+with Empire.Mapping;
+
 package Empire.Curses_Interface is
    type Movie_Screen is array (Location_T) of Content_Display_T;
 
@@ -33,14 +35,16 @@ package Empire.Curses_Interface is
    procedure Move_Cursor (Cursor : in out Location_T; Dir : in Direction_T);
 
    procedure Print_Movie_Screen (Mapbuf : in Movie_Screen);
-   procedure Print_Pzoom (S : in String; Pmap : in Path_Map; Vmap : in View_Map);
+   procedure Print_Pzoom (S    : in String;
+                          Pmap : in Mapping.Path_Map;
+                          Vmap : in View_Map);
    procedure Print_Sector (Whose : in Piece_Owner_T; Sector : in Sector_T);
    procedure Print_Zoom (Vmap : in View_Map);
 
 private
    procedure Display_Screen (Which : in Piece_Owner_T);
    function On_Screen (Loc : in Location_T) return Boolean;
-   procedure Print_Pzoom_Cell (Pmap    : in Path_Map;
+   procedure Print_Pzoom_Cell (Pmap    : in Mapping.Path_Map;
                                Vmap    : in View_Map;
                                Row     : in Row_T;
                                Col     : in Column_T;

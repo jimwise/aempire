@@ -276,14 +276,6 @@ package Empire is
 
    type City_Info_P is access all City_Info_T;
 
-   type Path_Map_T is
-      record
-         Cost : Integer;                -- total cost to get here
-         Inc_Cost : Integer;            -- incremental cost to get here
-         Terrain : Terrain_T;
-      end record;
-   type Path_Map is array (Location_T) of Path_Map_T;
-
    -- A record for counts we obtain when scanning a continent
 
    type Scan_Counts_T is

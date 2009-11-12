@@ -1,5 +1,7 @@
 with Ada.Containers.Vectors;
 
+with Empire.Mapping;
+
 package Empire.Comp_Move is
 
    procedure Comp_Move;
@@ -51,7 +53,10 @@ private
 
    procedure Move1 (Obj : in out Piece_Info_P);
    function Move_Away (Vmap : in View_Map; Loc : in Location_T; Terrain : in Acceptable_Content_Array) return Location_T;
-   procedure Move_Objective (Obj : in out Piece_Info_P; Pathmap : in out Path_Map; Loc : in Location_T; Adj_List : in Content_Value_Array);
+   procedure Move_Objective (Obj      : in out Piece_Info_P;
+                             Pathmap  : in out Mapping.Path_Map;
+                             Loc      : in     Location_T;
+                             Adj_List : in     Content_Value_Array);
    Could_Not_Load : exception;
    procedure Load_Army (Obj : in Piece_Info_P);
    procedure Find_Best_Tt (Best : in out Piece_Info_P; Loc : in Location_T);
@@ -77,7 +82,7 @@ private
 
    procedure Expand_Prune
      (Vmap     : in out View_Map;
-      Pmap     : in out Path_Map;
+      Pmap     : in out Mapping.Path_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
       To       : in out Perimeter_T;

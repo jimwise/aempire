@@ -250,7 +250,7 @@ package body Empire.User_Move is
    -- territory.
 
    procedure Move_Explore(Obj : in Piece_Info_P) is
-      PMap : Path_Map;
+      PMap : Mapping.Path_Map;
       Loc : Location_T;
       Terrain : Acceptable_Content_Array;
    begin
@@ -329,7 +329,7 @@ package body Empire.User_Move is
    -- Move an army toward an attackable city or enemy army
 
    procedure Move_Armyattack (Obj : in Piece_Info_P) is
-      PMap : Path_Map;
+      PMap : Mapping.Path_Map;
       Loc : Location_T;
    begin
       if Obj.Piece_Type /= ARMY
@@ -358,7 +358,7 @@ package body Empire.User_Move is
    -- Move a ship toward port.  If the ship is healthy, wake it up.
 
    procedure Move_Repair (Obj : in Piece_Info_P) is
-      Pmap : Path_Map;
+      Pmap : Mapping.Path_Map;
       Loc : Location_T;
    begin
       if Piece_Attr(Obj.Piece_Type).Class /= SHIP
@@ -491,7 +491,7 @@ package body Empire.User_Move is
    -- move.
 
    procedure Move_To_Dest (Obj : in Piece_Info_P; Dest : in Location_T) is
-      PMap : Path_Map;
+      PMap : Mapping.Path_Map;
       Fterrain : Terrain_T;
       Mterrain : Acceptable_Content_Array;
       New_Loc : Location_T;

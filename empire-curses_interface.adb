@@ -402,7 +402,7 @@ package body Empire.Curses_Interface is
 
    -- Print a condensed version of a pathmap (for debugging)
    procedure Print_Pzoom (S    : in String;
-                          Pmap : in Path_Map;
+                          Pmap : in Mapping.Path_Map;
                           Vmap : in View_Map)
    is
       R : Row_T;
@@ -456,7 +456,7 @@ package body Empire.Curses_Interface is
    -- a value of INFINITY are printed with 'Z'.  Squares with a value
    -- between P and Z are printed as U.
 
-   procedure Print_Pzoom_Cell (Pmap    : in Path_Map;
+   procedure Print_Pzoom_Cell (Pmap    : in Mapping.Path_Map;
                                Vmap    : in View_Map;
                                Row     : in Row_T;
                                Col     : in Column_T;

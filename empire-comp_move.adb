@@ -513,8 +513,8 @@ package body Empire.Comp_Move is
    procedure Army_Move (Obj : in out Piece_Info_P) is
       New_Loc : Location_T;
       New_Loc2 : Location_T;
-      Pmap : Path_Map;                  -- file-global in original
-      Pmap2 : Path_Map;
+      Pmap : Mapping.Path_Map;          -- file-global in original
+      Pmap2 : Mapping.Path_Map;
       Cross_Cost : Integer;             -- cost to enter water
       Amap: View_Map;                   -- file-global in original
    begin
@@ -941,7 +941,7 @@ package body Empire.Comp_Move is
    procedure Transport_Move (Obj : in out Piece_Info_P) is
       New_Loc : Location_T;
       Amap: View_Map;                   -- file-global in original
-      Pmap : Path_Map;               -- file-global in original
+      Pmap : Mapping.Path_Map;          -- file-global in original
    begin
 
       if Obj.Count = 0                  -- empty
@@ -997,7 +997,7 @@ package body Empire.Comp_Move is
 
    procedure Fighter_Move (Obj : in out Piece_Info_P) is
       New_Loc : Location_T;
-      Pmap : Path_Map;
+      Pmap : Mapping.Path_Map;
       City_Found : Boolean;
       City_Cost : Integer;
    begin
@@ -1041,7 +1041,7 @@ package body Empire.Comp_Move is
       New_Loc : Location_T;
       Adj_List : Content_Value_Array;
       Amap : View_Map;                  -- file-global in original
-      Pmap : Path_Map;                  -- file-global in original
+      Pmap : Mapping.Path_Map;          -- file-global in original
    begin
       -- if we're damaged, head to port (or stay there)
       if Obj.Hits < Piece_Attr(Obj.Piece_Type).Max_Hits
@@ -1079,7 +1079,10 @@ package body Empire.Comp_Move is
 
 -- Move to an objective
 
-   procedure Move_Objective (Obj : in out Piece_Info_P; Pathmap : in out Path_Map; Loc : in Location_T; Adj_List : in Content_Value_Array) is
+   procedure Move_Objective (Obj      : in out Piece_Info_P;
+                             Pathmap  : in out Mapping.Path_Map;
+                             Loc      : in     Location_T;
+                             Adj_List : in     Content_Value_Array) is
       PTerrain : Acceptable_Content_Array;
       Terrain : Acceptable_Terrain_Array;
       Attack_List : Content_Value_Array;
@@ -1089,7 +1092,7 @@ package body Empire.Comp_Move is
       Reuse : Boolean := TRUE;          -- try to reuse unless we learn otherwise
       Old_Loc : Location_T;
       Old_Dest : Location_T;
-      Pmap : Path_Map;
+      Pmap : Mapping.Path_Map;
       New_Loc : Location_T := Loc;
    begin
       if New_Loc = Obj.Loc              -- standing still to burn a turn?
@@ -1408,7 +1411,7 @@ package body Empire.Comp_Move is
 
    procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map)
    is
-      Pmap : Path_Map := (others => (0, 0, T_UNKNOWN));
+      Pmap : Mapping.Path_Map := (others => (0, 0, T_UNKNOWN));
       From, To, Tmp : Perimeter_T;
       Explored : Integer := 0;
       New_Loc, Loc : Location_T;
@@ -1594,7 +1597,7 @@ package body Empire.Comp_Move is
 
    procedure Expand_Prune
      (Vmap     : in out View_Map;
-      Pmap     : in out Path_Map;
+      Pmap     : in out Mapping.Path_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
       To       : in out Perimeter_T;
