@@ -57,13 +57,13 @@ package body Empire.Mapping is
          Start     : in     Terrain_T;
          Expand    : in     Terrain_T)
       is
-         From, To, Tmp : Perimeter_T;
+         From, To, Tmp : Location_Vector;
          Cur_Cost : Integer := 0;      --  const to reach current perimeter
       begin
          Start_Perimeter(Pmap, From, Loc, Start);
 
          loop
-            To.Len := 0;                --  nothing in perim yet
+            To := To_Vector(0);         --  nothing in perim yet
             Expand_Perimeter(Pmap, Vmap, Move_Info, From, Expand,
                              Cur_Cost, 1, 1, To, To);
 
@@ -73,7 +73,7 @@ package body Empire.Mapping is
             end if;
 
               Cur_Cost := Cur_Cost + 1;
-              if To.Len = 0 or Best_Cost <= Cur_Cost
+              if To.Is_Empty or Best_Cost <= Cur_Cost
               then
                  Objective := Best_Loc;
                  return;
@@ -144,28 +144,27 @@ package body Empire.Mapping is
          Move_Info : in     Move_Info_T;
          Beat_Cost :        Integer)
       is
-         Cur_Land : Perimeter_T;
-         Cur_Water : Perimeter_T;
-         New_Land : Perimeter_T;
-         New_Water : Perimeter_T;
-         Tmp : Perimeter_T;
+         Cur_Land : Location_Vector;
+         Cur_Water : Location_Vector;
+         New_Land : Location_Vector;
+         New_Water : Location_Vector;
+         Tmp : Location_Vector;
          Cur_Cost : Integer := 0;       --  cost to reach current perimeter
       begin
          Start_Perimeter(Pmap, Cur_Land, Loc, T_LAND);
-         Cur_Water.Len := 0;
          Best_Cost := Beat_Cost;        --  we can do this well
 
          loop
             -- expand current perimeter one cell
-            New_Water.Len := 0;
-            New_Land.Len := 0;
+            New_Water := To_Vector(0);
+            New_Land := To_Vector(0);
             Expand_Perimeter(Pmap, Vmap, Move_Info, Cur_Water, T_WATER,
                              Cur_Cost, 1, 1, New_Water, Tmp); --  tmp ignored
             Expand_Perimeter(Pmap, Vmap, Move_Info, Cur_Land, T_AIR,
                              Cur_Cost, 1, 2, New_Water, New_Land);
 
             -- expand new water one cell
-            Cur_Water.Len := 0;
+            Cur_Water := To_Vector(0);
             Expand_Perimeter(Pmap, Vmap, Move_Info, New_Water, T_WATER,
                              Cur_Cost+1, 1, 1, Cur_Water, Tmp); --  tmp ignored
 
@@ -176,7 +175,7 @@ package body Empire.Mapping is
 
             Cur_Cost := Cur_Cost + 2;
 
-            if (Cur_Water.Len = 0 and New_Land.Len = 0) or Best_Cost <= Cur_Cost
+            if (Cur_Water.Is_Empty and New_Land.Is_Empty) or Best_Cost <= Cur_Cost
             then
               Objective := Best_Loc;
               return;
@@ -207,27 +206,27 @@ package body Empire.Mapping is
          Loc       : in     Location_T;
          Move_Info : in     Move_Info_T)
       is
-         Cur_Land : Perimeter_T;
-         Cur_Water : Perimeter_T;
-         New_Land : Perimeter_T;
-         New_Water : Perimeter_T;
-         Tmp : Perimeter_T;
+         Cur_Land : Location_Vector;
+         Cur_Water : Location_Vector;
+         New_Land : Location_Vector;
+         New_Water : Location_Vector;
+         Tmp : Location_Vector;
          Cur_Cost : Integer := 0;  --  cost to reach current perimeter
       begin
          Start_Perimeter(Pmap, Cur_Water, Loc, T_WATER);
-         Cur_Land.Len := 0;
 
          loop
             -- expand current perimeter one cell
-            New_Water.Len := 0;
-            New_Land.Len := 0;
+            New_Land := To_Vector(0);
+            New_Water := To_Vector(0);
+
             Expand_Perimeter(Pmap, Vmap, Move_Info, Cur_Water, T_AIR,
                              Cur_Cost, 1, 2, New_Water, New_Land);
             Expand_Perimeter(Pmap, Vmap, Move_Info, Cur_Land, T_LAND,
                              Cur_Cost, 1, 2, Tmp, New_Land);
 
             -- expand new water one cell to water
-            Cur_Water.Len := 0;
+            Cur_Water := To_Vector(0);
             Expand_Perimeter(Pmap, Vmap, Move_Info, New_Water, T_WATER,
                              Cur_Cost + 1, 1, 1, Cur_Water, Tmp);
 
@@ -238,7 +237,7 @@ package body Empire.Mapping is
 
             Cur_Cost := Cur_Cost + 2;
 
-            if (Cur_Water.Len = 0 and New_Land.Len = 0) or Best_Cost <= Cur_Cost
+            if (Cur_Water.Is_Empty And New_Land.Is_Empty) or Best_Cost <= Cur_Cost
             then
                Objective := Best_Loc;
                return;
@@ -260,7 +259,7 @@ package body Empire.Mapping is
 
    procedure Start_Perimeter
      (Pmap    : in out Path_Map;
-      Perim   : in out Perimeter_T;
+      Perim   : in out Location_Vector;
       Loc     : in     Location_T;
       Terrain : in     Terrain_T)
    is
@@ -275,8 +274,8 @@ package body Empire.Mapping is
       Pmap.Map(Loc).Inc_Cost := 0;
       Pmap.Map(Loc).Terrain := Terrain;
 
-      Perim.Len := 1;
-      Perim.List(0) := Loc;
+      Perim := To_Vector(0);
+      Perim.Append(Loc);
 
       --  XXX XXX XXX yes, these are package-global.  they should be come a 'search_t' record
       --  XXX XXX XXX which will be passed around the same way the pmap is...
@@ -311,28 +310,28 @@ package body Empire.Mapping is
      (Pmap      : in out Path_Map;
       Vmap      : in     View_Map;
       Move_Info : in     Move_Info_T;
-      Perim     : in     Perimeter_T;
+      Perim     : in     Location_Vector;
       Ttype     : in     Terrain_T;
       Cur_Cost  : in     Integer;
       Inc_Wcost : in     Integer;
       Inc_Lcost : in     Integer;
-      Waterp    : in out Perimeter_T;
-      Landp     : in out Perimeter_T)
+      Waterp    : in out Location_Vector;
+      Landp     : in out Location_Vector)
    is
       New_Loc : Location_T;
       Obj_Cost : Integer;
       New_Type : Terrain_T;
    begin
-      for I in 0 .. Perim.Len - 1
+      for I in 1 .. Perim.Last_Index
       loop
          for D in Direction_T'Range
          loop
-            New_Loc := Perim.List(I) + Dir_Offset(D);
+            New_Loc := Perim.Element(I) + Dir_Offset(D);
             if Map(New_Loc).On_Board
             then
                if Pmap.Map(New_Loc).Cost = INFINITY
                then
-                  New_Type := Terrain_Type(Pmap, Vmap, Move_Info, Perim.List(I), New_Loc);
+                  New_Type := Terrain_Type(Pmap, Vmap, Move_Info, Perim.Element(I), New_Loc);
                   if New_Type = T_LAND and (Ttype = T_LAND or Ttype = T_AIR)
                   then
                      Add_Cell(Pmap, New_Loc, Landp, New_Type, Cur_Cost, Inc_Lcost);
@@ -372,7 +371,7 @@ package body Empire.Mapping is
    procedure Add_Cell
      (Pmap     : in out Path_Map;
       New_Loc  : in     Location_T;
-      Perim    : in out Perimeter_T;
+      Perim    : in out Location_Vector;
       Terrain  : in     Terrain_T;
       Cur_Cost : in     Integer;
       Inc_Cost : in     Integer)
@@ -382,8 +381,7 @@ package body Empire.Mapping is
       Pmap.Map(New_Loc).Inc_Cost := Inc_Cost;
       Pmap.Map(New_Loc).Cost := Cur_Cost + Inc_Cost;
 
-      Perim.List(Perim.Len) := New_Loc;
-      Perim.Len := Perim.Len + 1;
+      Perim.Append(New_Loc);
    end Add_Cell;
 
    -- Compute the cost to move to an objective
@@ -480,7 +478,7 @@ package body Empire.Mapping is
       Owner    : in     Owner_T;
       Terrain  : in     Terrain_T)
    is
-      From, To, Tmp : Perimeter_T;
+      From, To, Tmp : Location_Vector;
       Cur_Cost : Integer := 0;     --  cost to reach current perimeter
 
       Vmap : View_Map := OVmap;         --  XXX XXX XXX this is expensive, but ensures we don't
@@ -504,10 +502,10 @@ package body Empire.Mapping is
       Start_Perimeter(Pmap, From, Cur_Loc, Start_Terrain);
 
       loop
-         To.Len := 0;                   --  nothing in perim yet
+         To := To_Vector(0);            --  nothing in perim yet
          Expand_Perimeter(Pmap, Vmap, Move_Info, From, Terrain, Cur_Cost, 1, 1, To, To);
          Cur_Cost := Cur_Cost + 1;
-         if To.Len = 0 or Best_Cost <= Cur_Cost
+         if To.Is_Empty or Best_Cost <= Cur_Cost
          then
             Vmap(Dest_Loc).Contents := Old_Contents;
             New_Loc := Best_Loc;

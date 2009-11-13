@@ -42,16 +42,6 @@ package Empire.Mapping is
 
   -- ---------------------------------------------------------------------------
 
-      -- List of cells in the perimeter of our searching for a path
-   type Location_Value_Array is array (Location_T'Range) of Location_T;
-   type Perimeter_T is
-      record
-         Len : Integer range Location_T'range; -- number of items in list
-         List : Location_Value_Array;   -- list of locations
-      end record;
-
-   -- ---------------------------------------------------------------------------
-
    procedure Vmap_Find_Aircraft_Obj
      (Objective :    out Location_T;
       Pmap      :    out Path_Map;
@@ -113,7 +103,7 @@ private
    procedure Add_Cell
      (Pmap     : in out Path_Map;
       New_Loc  : in     Location_T;
-      Perim    : in out Perimeter_T;
+      Perim    : in out Location_Vector;
       Terrain  : in     Terrain_T;
       Cur_Cost : in     Integer;
       Inc_Cost : in     Integer);
@@ -122,13 +112,13 @@ private
      (Pmap      : in out Path_Map;
       Vmap      : in     View_Map;
       Move_Info : in     Move_Info_T;
-      Perim     : in     Perimeter_T;
+      Perim     : in     Location_Vector;
       Ttype     : in     Terrain_T;
       Cur_Cost  : in     Integer;
       Inc_Wcost : in     Integer;
       Inc_Lcost : in     Integer;
-      Waterp    : in out Perimeter_T;
-      Landp     : in out Perimeter_T);
+      Waterp    : in out Location_Vector;
+      Landp     : in out Location_Vector);
 
    function Objective_Cost
      (Vmap      : in View_Map;
@@ -139,7 +129,7 @@ private
 
    procedure Start_Perimeter
      (Pmap    : in out Path_Map;
-      Perim   : in out Perimeter_T;
+      Perim   : in out Location_Vector;
       Loc     : in     Location_T;
       Terrain : in     Terrain_T);
 
