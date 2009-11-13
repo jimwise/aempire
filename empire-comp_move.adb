@@ -1417,6 +1417,7 @@ package body Empire.Comp_Move is
       Copied : Integer;
    begin
       -- build initial path map and perimeter list
+      Ui.Debug_Info("Build initial path map and perimeter list");
       for L in Location_T'Range
       loop
          if Vmap(L).Contents /= ' '
@@ -1449,8 +1450,8 @@ package body Empire.Comp_Move is
          Ui.Print_Zoom(Vmap);
       end if;
 
+      Ui.Debug_Info("do high-probability predictions");
       loop    --  do high-probability predictions
-
          if (From.Last_Index) + Explored = MAP_SIZE
          then
             return;                     --  nothing left to guess
@@ -1504,9 +1505,9 @@ package body Empire.Comp_Move is
          return;                        --  nothing left to guess
       end if;
 
-      -- empty the To vector
       To := To_Vector(0);
 
+      Ui.Debug_Info("exmap loop");
       for I in 1 .. From.Last_Index
       loop
          Loc := From.Element(I);
@@ -1533,55 +1534,58 @@ package body Empire.Comp_Move is
       end if;
 
       -- multiple low probability passes
+      Ui.Debug_Info("low probability passes");
       loop
-      -- return if very little left to explore
-      if From.Last_Index + Explored >= MAP_SIZE - MAP_HEIGHT --  XXX XXX arbitrary, should probably be a tunable
-      then
-         if Print_Vmap = 'I'
+         -- return if very little left to explore
+         if From.Last_Index + Explored >= MAP_SIZE - MAP_HEIGHT --  XXX XXX arbitrary, should probably be a tunable
          then
-            Ui.Print_Zoom(Vmap);
+            if Print_Vmap = 'I'
+            then
+               Ui.Print_Zoom(Vmap);
+            end if;
+            return;
          end if;
-         return;
-      end if;
 
-      -- empty the To vector
-      To := To_Vector(0);
-      Copied := 0;
+         -- empty the To vector
+         To := To_Vector(0);
+         Copied := 0;
 
-      for I in 1 .. From.Last_Index
-      loop
-         Loc := From.Element(I);
-         if Exmap(Loc).Land >= 4 and Exmap(Loc).Water < 4
+         for I in 1 .. From.Last_Index
+         loop
+            Loc := From.Element(I);
+            if Exmap(Loc).Land >= 4 and Exmap(Loc).Water < 4
+            then
+               Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+            elsif Exmap(Loc).Water >= 4 and Exmap(Loc).Land < 4
+            then
+               Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
+            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and
+              Exmap(Loc).Land > Exmap(Loc).Water
+            then
+               Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and
+              Exmap(Loc).Water > Exmap(Loc).Land
+            then
+               Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
+            else --  copy perimeter cell as-is
+               To.Append(Loc);
+               Copied := Copied + 1;
+            end if;
+         end loop;
+         if Copied = From.Last_Index
          then
-            Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
-         elsif Exmap(Loc).Water >= 4 and Exmap(Loc).Land < 4
-         then
-            Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
-         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and
-           Exmap(Loc).Land > Exmap(Loc).Water
-         then
-            Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
-         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and
-           Exmap(Loc).Water > Exmap(Loc).Land
-         then
-            Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
-         else --  copy perimeter cell as-is
-            To.Append(Loc);
+            -- XXX XXX DON'T GET HERE -- WHY? XXX XXX
+            exit;                          --  nothing expanded
          end if;
+         Tmp := From;
+         From := To;
+         To := Tmp;
       end loop;
-      if Copied = From.Last_Index
-      then
-         exit;                          --  nothing expanded
-      end if;
-      Tmp := From;
-      From := To;
-      To := Tmp;
-   end loop;
 
-   if Print_Vmap = 'I'
-   then
-      Ui.Print_Zoom(Vmap);
-   end if;
+      if Print_Vmap = 'I'
+      then
+         Ui.Print_Zoom(Vmap);
+      end if;
    end Vmap_Prune_Explore_Locs;
 
 
