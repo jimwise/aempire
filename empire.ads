@@ -18,8 +18,6 @@ package Empire is
    subtype Row_T is Integer range 0 .. MAP_HEIGHT-1;
    subtype Column_T is Integer range 0 .. MAP_WIDTH-1;
 
-   type Location_Value_Array is array (Location_T'Range) of Location_T;
-
    LIST_SIZE : constant Integer := 5000; -- max number of pieces on board
 
 
@@ -298,14 +296,6 @@ package Empire is
 
    -- special cost for a city building a tt
    W_TT_BUILD : constant Integer := -1;
-
-   -- List of cells in the perimeter of our searching for a path
-
-   type Perimeter_T is
-      record
-         Len : Integer range Location_T'range; -- number of items in list
-         List : Location_Value_Array;   -- list of locations
-      end record;
 
    -- There are 3 maps.  'map' describes the world as it actually
    -- exists; it tells whether each map cell is land, water or a city;

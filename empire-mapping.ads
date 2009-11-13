@@ -40,7 +40,17 @@ package Empire.Mapping is
      (Pmap : in out Path_Map;
       Loc : in Location_T);
 
-   --  ---------------------------------------------------------------------------
+  -- ---------------------------------------------------------------------------
+
+      -- List of cells in the perimeter of our searching for a path
+   type Location_Value_Array is array (Location_T'Range) of Location_T;
+   type Perimeter_T is
+      record
+         Len : Integer range Location_T'range; -- number of items in list
+         List : Location_Value_Array;   -- list of locations
+      end record;
+
+   -- ---------------------------------------------------------------------------
 
    procedure Vmap_Find_Aircraft_Obj
      (Objective :    out Location_T;

@@ -1408,7 +1408,7 @@ package body Empire.Comp_Move is
    procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map)
    is
       Exmap : Explore_Map := (others => (Land => 0, Water => 0));
-      From, To, Tmp : Perimeter_T;
+      From, To, Tmp : Mapping.Perimeter_T;
       Explored : Integer := 0;
       New_Loc, Loc : Location_T;
       Copied : Integer;
@@ -1598,7 +1598,7 @@ package body Empire.Comp_Move is
       Exmap     : in out Explore_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
-      To       : in out Perimeter_T;
+      To       : in out Mapping.Perimeter_T;
       Explored : in out Integer)
    is
       New_Loc : Location_T;

@@ -92,7 +92,7 @@ private
       Exmap     : in out Explore_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
-      To       : in out Perimeter_T;
+      To       : in out Mapping.Perimeter_T;
       Explored : in out Integer);
 
    function Vmap_Cont_Scan (Cont_Map : in Continent_Map; Vmap : in View_Map) return Scan_Counts_T;
