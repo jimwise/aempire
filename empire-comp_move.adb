@@ -125,7 +125,6 @@ package body Empire.Comp_Move is
       -- Make sure we have army producers for current continent
 
       -- map out city's continent
-      -- Mapping.Vmap_Cont(Cont_Map, View(COMP), Cityp.Loc, '.');
       Cont_Map := Vmap_Land(View(COMP), Cityp.Loc);
 
       -- count items of interest on the continent
@@ -369,7 +368,6 @@ package body Empire.Comp_Move is
       Cont_Map : Continent_Map; -- := (others => false)
       Counts : Scan_Counts_T;
    begin
-      -- Mapping.Vmap_Cont(Cont_Map, Emap, Loc, '+');
       Cont_Map := Vmap_Water(Emap, Loc);
       Counts := Vmap_Cont_Scan(Cont_Map, Emap);
 
@@ -585,7 +583,7 @@ package body Empire.Comp_Move is
             when others =>
                Utility.Panic("unrecognized objective");
          end case;
-         Cross_Cost := Pmap(New_Loc).Cost * 2 - Cross_Cost;
+         Cross_Cost := Pmap.Cost(New_Loc) * 2 - Cross_Cost;
       else
          Cross_Cost := INFINITY;
       end if;
@@ -758,7 +756,6 @@ package body Empire.Comp_Move is
       loop
          if (Vmap(I).Contents = 'O') or (Vmap(I).Contents = '*')
          then
-            -- Mapping.Vmap_Cont(Tcont_Map, Xmap, I, '.');
             Tcont_Map := Vmap_Water(Xmap, I);
             Counts := Vmap_Cont_Scan(Tcont_Map, Xmap);
 
@@ -1106,7 +1103,7 @@ package body Empire.Comp_Move is
          if Print_Debug
          then
             -- XXX spaces right?
-            Ui.Info("No destination found for" & Piece_Type_T'Image(Obj.Piece_Type) & " at " & Location_T'Image(Obj.Loc) &
+            Ui.Debug_Info("No destination found for" & Piece_Type_T'Image(Obj.Piece_Type) & " at " & Location_T'Image(Obj.Loc) &
                     "; func=" & Strings.To_String(Function_Name(Obj.Func)));
          end if;
 
@@ -1120,10 +1117,10 @@ package body Empire.Comp_Move is
 
       if (View(COMP)(New_Loc).Contents = ' ') and (D = 2) -- are we exploring?
       then
-         Mapping.Pmap_Mark_Adjacent(Pmap, Obj.Loc);
+         Pmap.Mark_Adjacent(Obj.Loc);
          Reuse := FALSE;
       else
-         Mapping.Pmap_Mark_Path(Pmap, View(COMP), New_Loc); -- find routes to destination
+         Pmap.Mark_Path(View(COMP), New_Loc); -- find routes to destination
       end if;
 
       case Piece_Attr(Obj.Piece_Type).Class is
@@ -1138,14 +1135,14 @@ package body Empire.Comp_Move is
             raise Program_Error;
       end case;
 
-      New_Loc := Mapping.Pmap_Find_Dir(Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
+      New_Loc := Pmap.Find_Dir(View(COMP), Obj.Loc, PTerrain, Adj_List);
 
       if New_Loc = Obj.Loc and          -- path is blocked?
         (Piece_Attr(Obj.Piece_Type).Class /= GROUND) and (Obj.Ship /= null) -- don't unblock armies on a ship
       then
-         Mapping.Pmap_Mark_Near_Path(Pmap, Obj.Loc);
+         Pmap.Mark_Near_Path(Obj.Loc);
          Reuse := FALSE;
-         New_Loc := Mapping.Pmap_Find_Dir(Pmap, View(COMP), Obj.Loc, PTerrain, Adj_List);
+         New_Loc := Pmap.Find_Dir(View(COMP), Obj.Loc, PTerrain, Adj_List);
       end if;
 
       -- encourage army to leave city
@@ -1242,12 +1239,13 @@ package body Empire.Comp_Move is
          end if;
 
          -- clear old path before moving, so we don't oscillate
-         Pmap(Old_Loc).Terrain := T_UNKNOWN;
-         for I in Dir_Offset'Range
-         loop
-            New_Loc := Old_Loc + Dir_Offset(I);
-            Pathmap(New_Loc).Terrain := T_UNKNOWN;
-         end loop;
+         Pathmap.Clear(Old_Loc);
+         --  Pathmap(Old_Loc).Terrain := T_UNKNOWN;
+         --  for I in Dir_Offset'Range
+         --  loop
+         --     New_Loc := Old_Loc + Dir_Offset(I);
+         --     Pathmap(New_Loc).Terrain := T_UNKNOWN;
+         --  end loop;
 
          -- pathmap is already marked, but that should be harmless (XXX)
          Move_Objective(Obj, Pathmap, Old_Dest, Adj_List);
@@ -1296,8 +1294,8 @@ package body Empire.Comp_Move is
          for D in Direction_T'range
          loop
             New_Loc := Cur + Dir_Offset(D);
-         --     if unexplored (per vmap) or desired_terrain (per vmap) or desired terrain (per map)
-         --   we check desired terrain in two places, so that we can use the pruned Emap if desired
+         --  if unexplored (per vmap) or desired_terrain (per vmap) or desired terrain (per map)
+         --  we check desired terrain in two places, so we can use the pruned Emap if desired
             if Map(New_Loc).On_Board and not Seen(New_Loc)
             then
                if Vmap(New_Loc).Contents = ' ' or else
@@ -1386,7 +1384,7 @@ package body Empire.Comp_Move is
    -- the next iteration would remove all unexplored territory, or
    -- there is nothing more about which we can make an assumption.
    --
-   -- First, we use a pathmap to save the number of adjacent land
+   -- First, we use an explore_map to save the number of adjacent land
    -- and water cells for each unexplored cell.  Cells which have
    -- adjacent explored territory are placed in a perimeter list.
    -- We also count the number of cells that are not unexplored.
@@ -1407,11 +1405,9 @@ package body Empire.Comp_Move is
    -- So be careful. XXX XXX XXX is this necessary?!  would be cleaner
    -- to code without this caveat...
 
-   -- XXX used only in comp_move, maybe should move there?
-
    procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map)
    is
-      Pmap : Mapping.Path_Map := (others => (0, 0, T_UNKNOWN));
+      Exmap : Explore_Map := (others => (Land => 0, Water => 0));
       From, To, Tmp : Perimeter_T;
       Explored : Integer := 0;
       New_Loc, Loc : Location_T;
@@ -1432,15 +1428,15 @@ package body Empire.Comp_Move is
                   New_Loc := L + Dir_Offset(D);
                   case Vmap(New_Loc).Contents is
                      when ' ' => null;  --  ignore adjacent unexplored
-                     when '.' => Pmap(L).Inc_Cost := Pmap(L).Inc_Cost + 1; --  count water
+                     when '.' => Exmap(L).Water := Exmap(L).Water + 1; --  count water
                                                            -- XXX does this count ships as land?
-                     when others => Pmap(L).Cost := Pmap(L).Cost + 1; --  count_land
+                     when others => Exmap(L).Land := Exmap(L).Land + 1; --  count_land
                   end case;
                exception
                   when Constraint_Error => null; --  went off map via dir_offset (remember, we're working with all map locs)
                end;
             end loop;
-            if Pmap(L).Cost > 0 or Pmap(L).Inc_Cost > 0
+            if Exmap(L).Land > 0 or Exmap(L).Water > 0
             then
                From.List(From.Len) := L;
                From.Len := From.Len + 1;
@@ -1465,24 +1461,24 @@ package body Empire.Comp_Move is
          for I in 0 .. From.Len - 1
          loop
             Loc := From.List(I);
-            if Pmap(Loc).Cost >= 5
+            if Exmap(Loc).Land >= 5
             then
-               Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
-            elsif Pmap(Loc).Inc_Cost >= 5
+               Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+            elsif Exmap(Loc).Water >= 5
             then
-               Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
-            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE-MAP_WIDTH) and Pmap(Loc).Cost >= 3
+               Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
+            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE-MAP_WIDTH) and Exmap(Loc).Land >= 3
             then
-               Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
-            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE-MAP_WIDTH) and Pmap(Loc).Inc_Cost >= 3
+               Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+            elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE-MAP_WIDTH) and Exmap(Loc).Water >= 3
             then
-               Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
-            elsif (Loc = 0 or Loc = Map_Size-1) and Pmap(Loc).Cost >= 2
+               Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
+            elsif (Loc = 0 or Loc = Map_Size-1) and Exmap(Loc).Land >= 2
             then
-               Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
-            elsif (Loc = 0 or Loc = MAP_SIZE-1) and Pmap(Loc).Inc_Cost >= 2
+               Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+            elsif (Loc = 0 or Loc = MAP_SIZE-1) and Exmap(Loc).Water >= 2
             then
-               Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+               Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
             else                        --  copy perimeter cell as is
                To.List(To.Len) := Loc;
                To.Len := To.Len + 1;
@@ -1513,12 +1509,12 @@ package body Empire.Comp_Move is
       for I in 0 .. From.Len - 1
       loop
          Loc := From.List(I);
-         if Pmap(Loc).Cost > Pmap(Loc).Inc_Cost
+         if Exmap(Loc).Land > Exmap(Loc).Water
          then
-            Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
-         elsif Pmap(Loc).Cost < Pmap(Loc).Inc_Cost
+            Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+         elsif Exmap(Loc).Land < Exmap(Loc).Water
          then
-            Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+            Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
          else         --  copy perimeter cell as is
             To.List(To.Len) := Loc;
             To.Len := To.Len + 1;
@@ -1554,18 +1550,20 @@ package body Empire.Comp_Move is
       for I in 0 .. From.Len - 1
       loop
          Loc := From.List(I);
-         if Pmap(Loc).Cost >= 4 and Pmap(Loc).Inc_Cost < 4
+         if Exmap(Loc).Land >= 4 and Exmap(Loc).Water < 4
          then
-            Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
-         elsif Pmap(Loc).Inc_Cost >= 4 and Pmap(Loc).Cost < 4
+            Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+         elsif Exmap(Loc).Water >= 4 and Exmap(Loc).Land < 4
          then
-            Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
-         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and Pmap(Loc).Cost > Pmap(Loc).Inc_Cost
+            Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
+         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and
+           Exmap(Loc).Land > Exmap(Loc).Water
          then
-            Expand_Prune(Vmap, Pmap, Loc, T_LAND, To, Explored);
-         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and Pmap(Loc).Inc_Cost > Pmap(Loc).Cost
+            Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
+         elsif (Loc < MAP_WIDTH or Loc >= MAP_SIZE - MAP_WIDTH) and
+           Exmap(Loc).Water > Exmap(Loc).Land
          then
-            Expand_Prune(Vmap, Pmap, Loc, T_WATER, To, Explored);
+            Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
          else --  copy perimeter cell as-is
             To.List(To.Len) := Loc;
             To.Len := To.Len + 1;
@@ -1597,7 +1595,7 @@ package body Empire.Comp_Move is
 
    procedure Expand_Prune
      (Vmap     : in out View_Map;
-      Pmap     : in out Mapping.Path_Map;
+      Exmap     : in out Explore_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
       To       : in out Perimeter_T;
@@ -1620,16 +1618,16 @@ package body Empire.Comp_Move is
               New_Loc := Loc + Dir_Offset(D);
               if Vmap(New_Loc).Contents = ' '
               then
-                 if Pmap(New_Loc).Cost = 0 and Pmap(New_Loc).Inc_Cost = 0
+                 if Exmap(New_Loc).Land = 0 and Exmap(New_Loc).Water = 0
                  then
                     To.List(To.Len) := New_Loc;
                     To.Len := To.Len + 1;
                  end if;
                  if Ttype = T_LAND
                  then
-                    Pmap(New_Loc).Cost := Pmap(New_Loc).Cost + 1;
+                    Exmap(New_Loc).Land := Exmap(New_Loc).Land + 1;
                  else
-                    Pmap(New_Loc).Inc_Cost := Pmap(New_Loc).Inc_Cost + 1;
+                    Exmap(New_Loc).Water := Exmap(New_Loc).Water + 1;
                  end if;
               end if;
            exception

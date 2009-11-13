@@ -78,11 +78,18 @@ private
    function Vmap_Land (Vmap : in View_Map; Loc : in Location_T) return Continent_Map;
    function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Content_Array) return Continent_Map;
 
+   type Explore_Map_T is
+      record
+         Land : Integer;
+         Water : Integer;
+      end record;
+   type Explore_Map is array(Location_T) of Explore_Map_T;
+
    procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map);
 
    procedure Expand_Prune
      (Vmap     : in out View_Map;
-      Pmap     : in out Mapping.Path_Map;
+      Exmap     : in out Explore_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
       To       : in out Perimeter_T;

@@ -471,7 +471,7 @@ package body Empire.Curses_Interface is
       loop
          for C in Col .. Col + Col_Inc - 1
          loop
-            Sum := Sum + Pmap(Locations.Row_Col_Loc(R, C)).Cost;
+            Sum := Sum + Pmap.Cost(Locations.Row_Col_Loc(R, C));
             Debug_Error("sum is now " & Integer'Image(Sum) & ", d is now " & Integer'Image(D));
             D := D + 1;
          end loop;
@@ -479,7 +479,7 @@ package body Empire.Curses_Interface is
 
       Sum := Sum / D;
 
-      if Pmap(Locations.Row_Col_Loc(Row, Col)).Terrain = T_PATH
+      if Pmap.Terrain(Locations.Row_Col_Loc(Row, Col)) = T_PATH
       then
          Cell := '-';
       elsif Sum < 0

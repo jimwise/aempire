@@ -19,9 +19,9 @@ package body Empire.Mapping is
    -- XXX XXX XXX per location_t value.
 
       -- Find the nearest objective for a piece.  This routine actually does
-      -- some real work.  This code represents my fourth rewrite of the
-      -- algorithm.  This algorithm is central to the strategy used by the
-      -- computer.
+      --  some real work.  This code represents my (original author's)
+      --  fourth rewrite of the algorithm.  This algorithm is central to the
+      --  strategy used by the computer.
       --
       -- Given a view_map, we create a path_map.  On the path_map, we record
       -- the distance from a location to the nearest objective.  We are
@@ -124,7 +124,8 @@ package body Empire.Mapping is
 
                -- Find an objective moving from land to water.
       --
-      -- With vmap_find_wlobj, this is a complex path-finding routine used only by Empire.Comp_Move
+      -- With vmap_find_wlobj, this is a complex path-finding routine used
+      -- only by Empire.Comp_Move
       --
       -- This is mildly complicated.  It costs 2 to move on land
       -- and one to move on water.  To handle this, we expand our current
@@ -266,12 +267,13 @@ package body Empire.Mapping is
    begin
       -- XXX XXX XXX this isn't right -- it worked in the original, where we had a low value of `INFINITY', with the
       -- XXX XXX XXX result that we could sum INFINITY without overflowing int soon.
-      Pmap := (others => (Cost => INFINITY, Inc_Cost => INFINITY, Terrain => T_UNKNOWN));
+      Pmap := (Map =>
+                 (others => (Cost => INFINITY, Inc_Cost => INFINITY, Terrain => T_UNKNOWN)));
 
       -- put first location in perimeter
-      Pmap(Loc).Cost := 0;
-      Pmap(Loc).Inc_Cost := 0;
-      Pmap(Loc).Terrain := Terrain;
+      Pmap.Map(Loc).Cost := 0;
+      Pmap.Map(Loc).Inc_Cost := 0;
+      Pmap.Map(Loc).Terrain := Terrain;
 
       Perim.Len := 1;
       Perim.List(0) := Loc;
@@ -328,7 +330,7 @@ package body Empire.Mapping is
             New_Loc := Perim.List(I) + Dir_Offset(D);
             if Map(New_Loc).On_Board
             then
-               if Pmap(New_Loc).Cost = INFINITY
+               if Pmap.Map(New_Loc).Cost = INFINITY
                then
                   New_Type := Terrain_Type(Pmap, Vmap, Move_Info, Perim.List(I), New_Loc);
                   if New_Type = T_LAND and (Ttype = T_LAND or Ttype = T_AIR)
@@ -339,12 +341,12 @@ package body Empire.Mapping is
                      Add_Cell(Pmap, New_Loc, Waterp, New_Type, Cur_Cost, Inc_Wcost);
                   elsif New_Type = T_UNKNOWN
                   then                  --  unreachable cell
-                     Pmap(New_Loc).Terrain := New_Type;
-                     Pmap(New_Loc).Cost := Cur_Cost + (INFINITY/2);
-                     Pmap(New_Loc).Inc_Cost := INFINITY/2;
+                     Pmap.Map(New_Loc).Terrain := New_Type;
+                     Pmap.Map(New_Loc).Cost := Cur_Cost + (INFINITY/2);
+                     Pmap.Map(New_Loc).Inc_Cost := INFINITY/2;
                   end if;
 
-                  if Pmap(New_Loc).Cost /= INFINITY
+                  if Pmap.Map(New_Loc).Cost /= INFINITY
                   then                  --  we expanded
                      Obj_Cost := Objective_Cost(Vmap, Move_Info, New_Loc, Cur_Cost);
                      if Obj_Cost < Best_Cost
@@ -353,8 +355,8 @@ package body Empire.Mapping is
                         Best_Loc := New_Loc;
                         if New_Type = T_UNKNOWN
                         then
-                           Pmap(New_Loc).Cost := Cur_Cost + 2;
-                           Pmap(New_Loc).Inc_Cost := 2;
+                           Pmap.Map(New_Loc).Cost := Cur_Cost + 2;
+                           Pmap.Map(New_Loc).Inc_Cost := 2;
                         end if;
                      end if;
                   end if;
@@ -376,9 +378,9 @@ package body Empire.Mapping is
       Inc_Cost : in     Integer)
    is
    begin
-      Pmap(New_Loc).Terrain := Terrain;
-      Pmap(New_Loc).Inc_Cost := Inc_Cost;
-      Pmap(New_Loc).Cost := Cur_Cost + Inc_Cost;
+      Pmap.Map(New_Loc).Terrain := Terrain;
+      Pmap.Map(New_Loc).Inc_Cost := Inc_Cost;
+      Pmap.Map(New_Loc).Cost := Cur_Cost + Inc_Cost;
 
       Perim.List(Perim.Len) := New_Loc;
       Perim.Len := Perim.Len + 1;
@@ -445,7 +447,7 @@ package body Empire.Mapping is
          when '+' => return T_LAND;
          when '.' => return T_WATER;
          when '%' => return T_UNKNOWN;  --  magic objective
-         when ' ' => return Pmap(From_Loc).Terrain;
+         when ' ' => return Pmap.Map(From_Loc).Terrain;
          when others => null;
       end case;
 
@@ -520,6 +522,22 @@ package body Empire.Mapping is
    --  ---------------------------------------------------------------------------
    --  Path_Map -- a map with per-cell and incremental costs
 
+   function Cost
+     (Pmap : in Path_Map;
+      Loc  : in Location_t) return Integer
+   is
+   begin
+      return Pmap.Map(Loc).Cost;
+   end Cost;
+
+   function Terrain
+     (Pmap : in Path_Map;
+      Loc  : in Location_t) return Terrain_T
+   is
+   begin
+      return Pmap.Map(Loc).Terrain;
+   end Terrain;
+
    -- Starting with the destination, we recursively back track toward the source
    -- marking all cells which are on a shortest path between the start and the
    -- destination.  To do this, we know the distance from the destination to
@@ -533,41 +551,41 @@ package body Empire.Mapping is
    --
    -- Someday, this routine should probably use perimeter lists as well.
 
-   procedure Pmap_Mark_Path
+   procedure Mark_Path
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T)
    is
       New_Dest : Location_T;
    begin
-      if Pmap(Dest).Cost = 0
+      if Pmap.Map(Dest).Cost = 0
       then
          return;                        --  reached end of path (recursive exit condition)
       end if;
 
-      if Pmap(Dest).Terrain = T_PATH
+      if Pmap.Map(Dest).Terrain = T_PATH
       then
          return;                        --  already marked (other recursive exit condition)
       end if;
 
-      Pmap(Dest).Terrain := T_PATH;     --  this square is on path
+      Pmap.Map(Dest).Terrain := T_PATH;     --  this square is on path
 
       -- loop to mark adjacent squares on shortest path
       for D in Direction_T'Range
       loop
          New_Dest := Dest + Dir_Offset(D);
-         if Map(New_Dest).On_Board and Pmap(New_Dest).Cost = (Pmap(Dest).Cost - Pmap(Dest).Inc_Cost)
+         if Map(New_Dest).On_Board and Pmap.Map(New_Dest).Cost = (Pmap.Map(Dest).Cost - Pmap.Map(Dest).Inc_Cost)
          then
-            Pmap_Mark_Path(Pmap, Vmap, New_Dest);
+            Pmap.Mark_Path(Vmap, New_Dest);
          end if;
       end loop;
-   end Pmap_Mark_Path;
+   end Mark_Path;
 
    -- Create a marked path map.  We mark those squares adjacent to the
    -- starting location which are on the board.  'find_dir' must be
    -- invoked to decide which squares are actually valid.
 
-   procedure Pmap_Mark_Adjacent
+   procedure Mark_Adjacent
      (Pmap : in out Path_Map;
       Loc  : in     Location_T)
    is
@@ -578,16 +596,16 @@ package body Empire.Mapping is
          New_Loc := Loc + Dir_Offset(D);
          if Map(New_Loc).On_Board
          then
-            Pmap(New_Loc).Terrain := T_PATH;
+            Pmap.Map(New_Loc).Terrain := T_PATH;
          end if;
       end loop;
-   end Pmap_Mark_Adjacent;
+   end Mark_Adjacent;
 
    -- Modify a marked path map.  We mark those squares adjacent to the
    -- starting location which are on the board and which are adjacent
    -- to a location on the existing shortest path.
 
-   procedure Pmap_Mark_Near_Path
+   procedure Mark_Near_Path
      (Pmap : in out Path_Map;
       Loc  : in     Location_T)
    is
@@ -604,7 +622,7 @@ package body Empire.Mapping is
                Xloc := New_Loc + Dir_Offset(E);
                if Map(New_Loc).On_Board
                then
-                  if Xloc /= Loc and Pmap(Xloc).Terrain = T_PATH
+                  if Xloc /= Loc and Pmap.Map(Xloc).Terrain = T_PATH
                   then
                      Hit_Loc(D) := True;
                      exit;
@@ -617,10 +635,10 @@ package body Empire.Mapping is
       loop
          if Hit_Loc(I)
          then
-            Pmap(Loc + Dir_Offset(I)).Terrain := T_PATH;
+            Pmap.Map(Loc + Dir_Offset(I)).Terrain := T_PATH;
          end if;
       end loop;
-   end Pmap_Mark_Near_Path;
+   end Mark_Near_Path;
 
    -- Look at each neighbor of 'loc'.  Select the first marked cell which
    -- is on a short path to the desired destination, and which holds a valid
@@ -646,7 +664,7 @@ package body Empire.Mapping is
    -- 3)  User pieces will move more intuitively by staying in the
    -- center of the best path.
 
-   function Pmap_Find_Dir
+   function Find_Dir
      (Pmap     : in Path_Map;
       Vmap     : in View_Map;
       Loc      : in Location_T;
@@ -657,7 +675,7 @@ package body Empire.Mapping is
       Best_Loc, New_Loc : Location_T;
       Path_Count, Best_Path : Integer;
 
-      --  XXX XXX XXX why is order important here?
+      -- prefer diagonal moves
       Order : constant array (1 .. 8) of Direction_T := (NORTHWEST, NORTHEAST,
                                                          SOUTHWEST, SOUTHEAST,
                                                          WEST, EAST, NORTH, SOUTH);
@@ -675,7 +693,7 @@ package body Empire.Mapping is
       for I in Order'Range
       loop
          New_Loc := Loc + Dir_Offset(Order(I)); --  shuffle order to chosen order
-         if Pmap(New_Loc).Terrain = T_PATH
+         if Pmap.Map(New_Loc).Terrain = T_PATH
          then
             if Terrain(Vmap(New_Loc).Contents) --  desirable square?
             then
@@ -694,7 +712,24 @@ package body Empire.Mapping is
       end loop;
 
       return Best_Loc;
-   end Pmap_Find_Dir;
+   end Find_Dir;
+
+   -- XXX XXX XXX check if this is, in fact, needed
+   -- XXX XXX XXX (see comp_move.move_objective)
+   procedure Clear
+     (Pmap : in out Path_Map;
+      Loc : in Location_T)
+   is
+      New_Loc : Location_T;
+   begin
+        Pmap.Map(Loc).Terrain := T_UNKNOWN;
+        for I in Dir_Offset'Range
+        loop
+           New_Loc := Loc + Dir_Offset(I);
+           Pmap.Map(New_Loc).Terrain := T_UNKNOWN;
+        end loop;
+   end Clear;
+
    --  ---------------------------------------------------------------------------
 
    -- Count the number of adjacent squares of interest.
@@ -739,7 +774,7 @@ package body Empire.Mapping is
          New_Loc := Loc + Dir_Offset(D);
          if Map(New_Loc).On_Board
          then
-            if Pmap(New_Loc).Terrain = T_PATH
+            if Pmap.Map(New_Loc).Terrain = T_PATH
             then
                Count := Count + 1;
             end if;

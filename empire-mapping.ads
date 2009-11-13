@@ -5,31 +5,40 @@ package Empire.Mapping is
    --  ---------------------------------------------------------------------------
    --  Path_Map -- a map with per-cell and incremental costs
 
-   type Path_Map_T is
-      record
-         Cost : Integer;                -- total cost to get here
-         Inc_Cost : Integer;            -- incremental cost to get here
-         Terrain : Terrain_T;
-      end record;
-   type Path_Map is array (Location_T) of Path_Map_T;
+   type Path_Map is tagged private;
 
-   procedure Pmap_Mark_Adjacent
+   function Cost
+     (Pmap : in Path_Map;
+      Loc  : in Location_T) return Integer;
+
+   function Terrain
+     (Pmap : in Path_Map;
+      Loc  : in Location_T) return Terrain_T;
+
+   procedure Mark_Adjacent
      (Pmap : in out Path_Map;
       Loc  : in     Location_T);
-   procedure Pmap_Mark_Near_Path
+   procedure Mark_Near_Path
      (Pmap : in out Path_Map;
       Loc  : in     Location_T);
-   procedure Pmap_Mark_Path
+   procedure Mark_Path
      (Pmap : in out Path_Map;
       Vmap : in     View_Map;
       Dest : in     Location_T);
 
-   function Pmap_Find_Dir
+   function Find_Dir
      (Pmap     : in Path_Map;
       Vmap     : in View_Map;
       Loc      : in Location_T;
       Terrain  : in Acceptable_Content_Array;
       Adj_Char : in Content_Value_Array) return Location_T;
+
+   -- clear a loc and its surrounds from a path_map
+   -- used in comp_move to keep from oscillating between the first two
+   -- locs of a path map
+   procedure Clear
+     (Pmap : in out Path_Map;
+      Loc : in Location_T);
 
    --  ---------------------------------------------------------------------------
 
@@ -77,6 +86,19 @@ package Empire.Mapping is
       Move_Info : in     Move_Info_T);
 
 private
+   type Path_Map_T is
+      record
+         Cost : Integer;                -- total cost to get here
+         Inc_Cost : Integer;            -- incremental cost to get here
+         Terrain : Terrain_T;
+      end record;
+   type Path_Map_Array is array (Location_T) of Path_Map_T;
+
+   type Path_Map is tagged
+      record
+         Map : Path_Map_Array;
+      end record;
+
 
    procedure Add_Cell
      (Pmap     : in out Path_Map;

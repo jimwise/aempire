@@ -250,19 +250,19 @@ package body Empire.User_Move is
    -- territory.
 
    procedure Move_Explore(Obj : in Piece_Info_P) is
-      PMap : Mapping.Path_Map;
+      Pmap : Mapping.Path_Map;
       Loc : Location_T;
       Terrain : Acceptable_Content_Array;
    begin
       case Piece_Attr(Obj.Piece_Type).Class is
          when GROUND =>
-            Mapping.Vmap_Find_Ground_Obj(Loc, PMap, View(USER), Obj.Loc, User_Army);
+            Mapping.Vmap_Find_Ground_Obj(Loc, Pmap, View(USER), Obj.Loc, User_Army);
             Terrain := ('+' => True, others => False);
          when AIRCRAFT =>
-            Mapping.Vmap_Find_Aircraft_Obj(Loc, PMap, View(USER), Obj.Loc, User_Fighter);
+            Mapping.Vmap_Find_Aircraft_Obj(Loc, Pmap, View(USER), Obj.Loc, User_Fighter);
             Terrain := ('+'|'.'|'O' => True, others => False);
          when SHIP =>
-            Mapping.Vmap_Find_Ship_Obj(Loc, PMap, View(USER), Obj.Loc, User_Ship);
+            Mapping.Vmap_Find_Ship_Obj(Loc, Pmap, View(USER), Obj.Loc, User_Ship);
             Terrain := ('.'|'O' => True, others => False);
          when SPACECRAFT =>
             raise Program_Error;        --  spacecraft can't have a function
@@ -273,14 +273,14 @@ package body Empire.User_Move is
          return;                        --  nothing to explore (that's reachable)
       end if;
 
-      if View(USER)(Loc).Contents = ' ' and PMap(Loc).Cost = 2
+      if View(USER)(Loc).Contents = ' ' and Pmap.Cost(Loc) = 2
       then
-         Mapping.Pmap_Mark_Adjacent(PMap, Obj.Loc);
+         Pmap.Mark_Adjacent(Obj.Loc);
       else
-         Mapping.Pmap_Mark_Path(PMap, View(USER), Loc);
+         Pmap.Mark_Path(View(USER), Loc);
       end if;
 
-      Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc, Terrain, (' ' => 1, others => 0));
+      Loc := Pmap.Find_Dir(View(USER), Obj.Loc, Terrain, (' ' => 1, others => 0));
 
       if Loc /= Obj.Loc
       then
@@ -329,7 +329,7 @@ package body Empire.User_Move is
    -- Move an army toward an attackable city or enemy army
 
    procedure Move_Armyattack (Obj : in Piece_Info_P) is
-      PMap : Mapping.Path_Map;
+      Pmap : Mapping.Path_Map;
       Loc : Location_T;
    begin
       if Obj.Piece_Type /= ARMY
@@ -337,15 +337,15 @@ package body Empire.User_Move is
          raise Program_Error;
       end if;
 
-      Mapping.Vmap_Find_Ground_Obj(Loc, PMap, View(USER), Obj.Loc, User_Army_Attack);
+      Mapping.Vmap_Find_Ground_Obj(Loc, Pmap, View(USER), Obj.Loc, User_Army_Attack);
 
       if Loc = Obj.Loc
       then
          return;                        --  nothing to attack
       end if;
 
-      Mapping.Pmap_Mark_Path(PMap, View(USER), Loc);
-      Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc,
+      Pmap.Mark_Path(View(USER), Loc);
+      Loc := Pmap.Find_Dir(View(USER), Obj.Loc,
                             ('+' => True, others => False),
                             ('X' => 3, '*' => 2, 'a' => 1, others => 0));
 
@@ -379,17 +379,17 @@ package body Empire.User_Move is
          return;
       end if;
 
-      Mapping.Vmap_Find_Ship_Obj(Loc, PMap, View(USER), Obj.Loc, User_Ship_Repair);
+      Mapping.Vmap_Find_Ship_Obj(Loc, Pmap, View(USER), Obj.Loc, User_Ship_Repair);
 
       if Loc = Obj.loc                  --  no reachable city (how?)
       then
          return;
       end if;
 
-      Mapping.Pmap_Mark_Path(Pmap, View(USER), Loc);
+      Pmap.Mark_Path(View(USER), Loc);
 
       --  try to avoid land (literally, stay adjacent to ocean)
-      Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc, ('.'|'O' => True, others => False), ('.' => 1, others => 0));
+      Loc := Pmap.Find_Dir(View(USER), Obj.Loc, ('.'|'O' => True, others => False), ('.' => 1, others => 0));
       if Loc /= Obj.Loc
       then
         Objects.Move_Obj(Obj, Loc);
@@ -491,7 +491,7 @@ package body Empire.User_Move is
    -- move.
 
    procedure Move_To_Dest (Obj : in Piece_Info_P; Dest : in Location_T) is
-      PMap : Mapping.Path_Map;
+      Pmap : Mapping.Path_Map;
       Fterrain : Terrain_T;
       Mterrain : Acceptable_Content_Array;
       New_Loc : Location_T;
@@ -510,15 +510,15 @@ package body Empire.User_Move is
             raise Program_Error;        --  spacecraft can't make controlled moves
       end case;
 
-      Mapping.Vmap_Find_Dest(New_Loc, PMap, View(USER), Obj.Loc, Dest, USER, Fterrain);
+      Mapping.Vmap_Find_Dest(New_Loc, Pmap, View(USER), Obj.Loc, Dest, USER, Fterrain);
 
       if New_Loc = Obj.Loc
       then
          return;                        --  can't get there -- user_move will remove func setting
       end if;
 
-      Mapping.Pmap_Mark_Path(PMap, View(USER), Dest);
-      New_Loc := Mapping.Pmap_Find_Dir(PMap, View(USER), Obj.Loc, Mterrain, (' ' => 2, '.' => 1, others => 0));
+      Pmap.Mark_Path(View(USER), Dest);
+      New_Loc := Pmap.Find_Dir(View(USER), Obj.Loc, Mterrain, (' ' => 2, '.' => 1, others => 0));
 
       if New_Loc = Obj.loc              --  no good move along path
       then
