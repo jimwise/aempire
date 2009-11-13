@@ -1,3 +1,4 @@
+with Ada.Containers.Vectors;
 with Ada.Strings.Bounded;
 with Ada.Text_IO;
 package Empire is
@@ -20,6 +21,11 @@ package Empire is
 
    LIST_SIZE : constant Integer := 5000; -- max number of pieces on board
 
+   package Location_Vectors is new Ada.Containers.Vectors
+     (Element_Type => Location_T,
+      Index_Type => Positive);
+   use Location_Vectors;
+   subtype Location_Vector is Location_Vectors.Vector;
 
    -- XXX XXX XXX XXX need to move to bounded_strings.  will make
    -- XXX XXX XXX XXX describe_obj (at least) cleaner, for instance.

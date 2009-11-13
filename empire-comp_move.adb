@@ -13,6 +13,9 @@ with Empire.Objects;
 with Empire.Ui;
 with Empire.Utility;
 
+with Ada.Containers;
+use Ada.Containers;
+
 package body Empire.Comp_Move is
 
    procedure Comp_Move is
@@ -1271,7 +1274,7 @@ package body Empire.Comp_Move is
    function Vmap_Flood_Fill (Vmap : in View_Map; Loc : in Location_T; Good_Terrain : in Acceptable_Content_Array) return Continent_Map is
       Cont_Map : Continent_Map := (others => False);
       Seen : array (Location_T) of Boolean := (others => False); --  cells we've examined
-      Workset : Location_Vectors.Vector;
+      Workset : Location_Vector;
       Cur, New_Loc : Location_T;
    begin
       -- test if loc is acceptable, or raise
@@ -1408,13 +1411,11 @@ package body Empire.Comp_Move is
    procedure Vmap_Prune_Explore_Locs (Vmap : in out View_Map)
    is
       Exmap : Explore_Map := (others => (Land => 0, Water => 0));
-      From, To, Tmp : Mapping.Perimeter_T;
+      From, To, Tmp : Location_Vector;
       Explored : Integer := 0;
       New_Loc, Loc : Location_T;
       Copied : Integer;
    begin
-      From.Len := 0;
-
       -- build initial path map and perimeter list
       for L in Location_T'Range
       loop
@@ -1438,8 +1439,7 @@ package body Empire.Comp_Move is
             end loop;
             if Exmap(L).Land > 0 or Exmap(L).Water > 0
             then
-               From.List(From.Len) := L;
-               From.Len := From.Len + 1;
+               From.Append(L);
             end if;
          end if;
       end loop;
@@ -1450,17 +1450,17 @@ package body Empire.Comp_Move is
       end if;
 
       loop    --  do high-probability predictions
-         if From.Len + Explored = MAP_SIZE
+
+         if (From.Last_Index) + Explored = MAP_SIZE
          then
             return;                     --  nothing left to guess
          end if;
 
-         To.Len := 0;
          Copied := 0;
 
-         for I in 0 .. From.Len - 1
+         for I in 1 .. From.Last_Index
          loop
-            Loc := From.List(I);
+            Loc := From.Element(I);
             if Exmap(Loc).Land >= 5
             then
                Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
@@ -1480,12 +1480,11 @@ package body Empire.Comp_Move is
             then
                Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
             else                        --  copy perimeter cell as is
-               To.List(To.Len) := Loc;
-               To.Len := To.Len + 1;
+               To.Append(Loc);
                Copied := Copied + 1;
             end if;
          end loop;
-         if Copied = From.Len
+         if Copied = From.Last_Index
          then
             exit;                       --  nothing expanded
          end if;
@@ -1500,15 +1499,17 @@ package body Empire.Comp_Move is
       end if;
 
       -- one pass for medium probability predictions
-      if From.Len + Explored = Map_Size
+      if From.Last_Index + Explored = Map_Size
       then
          return;                        --  nothing left to guess
       end if;
-      To.Len := 0;
 
-      for I in 0 .. From.Len - 1
+      -- empty the To vector
+      To := To_Vector(0);
+
+      for I in 1 .. From.Last_Index
       loop
-         Loc := From.List(I);
+         Loc := From.Element(I);
          if Exmap(Loc).Land > Exmap(Loc).Water
          then
             Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
@@ -1516,8 +1517,7 @@ package body Empire.Comp_Move is
          then
             Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
          else         --  copy perimeter cell as is
-            To.List(To.Len) := Loc;
-            To.Len := To.Len + 1;
+            To.Append(Loc);
             -- note we don't track `Copied' here, as it is not used in this loop
             -- (it will be zero'ed in next loop)
          end if;
@@ -1535,7 +1535,7 @@ package body Empire.Comp_Move is
       -- multiple low probability passes
       loop
       -- return if very little left to explore
-      if From.Len + Explored >= MAP_SIZE - MAP_HEIGHT --  XXX XXX arbitrary, should probably be a tunable
+      if From.Last_Index + Explored >= MAP_SIZE - MAP_HEIGHT --  XXX XXX arbitrary, should probably be a tunable
       then
          if Print_Vmap = 'I'
          then
@@ -1544,12 +1544,13 @@ package body Empire.Comp_Move is
          return;
       end if;
 
-      To.Len := 0;
+      -- empty the To vector
+      To := To_Vector(0);
       Copied := 0;
 
-      for I in 0 .. From.Len - 1
+      for I in 1 .. From.Last_Index
       loop
-         Loc := From.List(I);
+         Loc := From.Element(I);
          if Exmap(Loc).Land >= 4 and Exmap(Loc).Water < 4
          then
             Expand_Prune(Vmap, Exmap, Loc, T_LAND, To, Explored);
@@ -1565,12 +1566,10 @@ package body Empire.Comp_Move is
          then
             Expand_Prune(Vmap, Exmap, Loc, T_WATER, To, Explored);
          else --  copy perimeter cell as-is
-            To.List(To.Len) := Loc;
-            To.Len := To.Len + 1;
-            Copied := Copied + 1;
+            To.Append(Loc);
          end if;
       end loop;
-      if Copied = From.Len
+      if Copied = From.Last_Index
       then
          exit;                          --  nothing expanded
       end if;
@@ -1598,7 +1597,7 @@ package body Empire.Comp_Move is
       Exmap     : in out Explore_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
-      To       : in out Mapping.Perimeter_T;
+      To       : in out Location_Vector;
       Explored : in out Integer)
    is
       New_Loc : Location_T;
@@ -1620,8 +1619,7 @@ package body Empire.Comp_Move is
               then
                  if Exmap(New_Loc).Land = 0 and Exmap(New_Loc).Water = 0
                  then
-                    To.List(To.Len) := New_Loc;
-                    To.Len := To.Len + 1;
+                    To.Append(New_Loc);
                  end if;
                  if Ttype = T_LAND
                  then

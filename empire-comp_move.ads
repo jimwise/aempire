@@ -1,5 +1,3 @@
-with Ada.Containers.Vectors;
-
 with Empire.Mapping;
 
 package Empire.Comp_Move is
@@ -7,11 +5,6 @@ package Empire.Comp_Move is
    procedure Comp_Move;
 
 private
-
-   package Location_Vectors is new Ada.Containers.Vectors
-     (Element_Type => Location_T,
-      Index_Type => Natural);
-   use Location_Vectors;
 
    Emap : View_Map;                     -- pruned explore map
 
@@ -92,7 +85,7 @@ private
       Exmap     : in out Explore_Map;
       Loc      : in     Location_T;
       Ttype    : in     Terrain_T;
-      To       : in out Mapping.Perimeter_T;
+      To       : in out Location_Vector;
       Explored : in out Integer);
 
    function Vmap_Cont_Scan (Cont_Map : in Continent_Map; Vmap : in View_Map) return Scan_Counts_T;
