@@ -83,7 +83,6 @@ package Empire is
 
   type Piece_Value_Array is array (Piece_Type_T) of Integer;
   type Acceptable_Piece_Array is array (Piece_Type_T) of Boolean;
-  type Piece_Value_P is access all Piece_Value_Array;
 
   type Piece_Class_T is
      (GROUND,
@@ -103,12 +102,6 @@ package Empire is
        '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%');
    subtype Terrain_Display_T is Content_Display_T range '.' .. '*';
 
-   Display_Chars : constant array (Content_Display_T'Range) of Character :=
-     ('.', '+', '*', 'O', 'X', ' ',
-       'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd', 'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z',
-       '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%');
-
-
    type Acceptable_Content_Array is array (Content_Display_T) of Boolean;
    type Acceptable_Terrain_Array is array (Terrain_Display_T) of Boolean;
    type Content_Value_Array is array (Content_Display_T) of Integer;
@@ -125,9 +118,7 @@ package Empire is
       others => False
      );
 
-
    package Content_IO is new Ada.Text_IO.Enumeration_IO(Content_Display_T);
-   package Terrain_IO is new Ada.Text_IO.Enumeration_IO(Terrain_Display_T);
 
    type Direction_Choice_T is
       (NORTH,
