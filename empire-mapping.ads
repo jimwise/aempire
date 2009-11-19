@@ -86,6 +86,10 @@ package Empire.Mapping is
       Move_Info : in     Move_Info_T);
 
 private
+
+   --  ---------------------------------------------------------------------------
+   --  Path_Map -- a map with per-cell and incremental costs
+
    type Path_Map_T is
       record
          Cost : Integer;                -- total cost to get here
@@ -98,7 +102,6 @@ private
       record
          Map : Path_Map_Array;
       end record;
-
 
    procedure Add_Cell
      (Pmap     : in out Path_Map;
@@ -120,11 +123,9 @@ private
       Waterp    : in out Location_Vector;
       Landp     : in out Location_Vector);
 
-   function Objective_Cost
-     (Vmap      : in View_Map;
-      Move_Info : in Move_Info_T;
-      Loc       : in Location_T;
-      Base_Cost : in Integer)
+   function Vmap_Count_Path
+     (Pmap : in Path_Map;
+      Loc  : in Location_T)
      return Integer;
 
    procedure Start_Perimeter
@@ -132,6 +133,16 @@ private
       Perim   : in out Location_Vector;
       Loc     : in     Location_T;
       Terrain : in     Terrain_T);
+
+   -- ---------------------------------------------------------------------------
+
+   function Objective_Cost
+     (Vmap      : in View_Map;
+      Move_Info : in Move_Info_T;
+      Loc       : in Location_T;
+      Base_Cost : in Integer)
+     return Integer;
+
 
    function Terrain_Type
      (Pmap      : in Path_Map;
@@ -145,11 +156,6 @@ private
      (Vmap     : in View_Map;
       Loc      : in Location_T;
       Adj_Type : in Content_Value_Array)
-     return Integer;
-
-   function Vmap_Count_Path
-     (Pmap : in Path_Map;
-      Loc  : in Location_T)
      return Integer;
 
    procedure Vmap_Find_Xobj
