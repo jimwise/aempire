@@ -202,6 +202,7 @@ package body Empire.Editing is
       while Obj /= null
       loop
          Obj.Func := NOFUNC;
+         Obj := Obj.Links(Loc_Link).Next;
       end loop;
    end E_Wake;
 
