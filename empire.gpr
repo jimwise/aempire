@@ -16,7 +16,12 @@ Project Empire is
         end Compiler;
 
         package Linker is
-                for Default_Switches ("Ada") use ("-g",  "-R/local/versions/ncurses-5.7/lib/ada/adalib", "-L/local/versions/ncurses-5.7/lib/ada/adalib", "-R/local/versions/ncurses-5.7/lib", "-L/local/versions/ncurses-5.7/lib");
+                for Default_Switches ("Ada") use ("-g",
+                "-R/local/versions/ncurses-5.7/lib/ada/adalib",
+                "-L/local/versions/ncurses-5.7/lib/ada/adalib",
+                "-R/local/versions/ncurses-5.7/lib",
+                "-L/local/versions/ncurses-5.7/lib",
+		"-R/opt/csw/lib", "-L/opt/csw/lib");
         end Linker;
 
 end Empire;
