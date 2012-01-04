@@ -45,7 +45,7 @@ package body Empire.Game is
          begin
             Object(I).Hits := 0;
             Objp := Object(I);
-            Lists.Link(Free_List, Objp, PIECE_LINK);
+            Lists.Link(Free_List, Objp, Piece_Link);
          end;
       end loop;
 

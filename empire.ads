@@ -214,7 +214,7 @@ package Empire is
          Prev : Piece_Info_P;
       end record;
 
-   type Link_Type_T is (PIECE_LINK, LOC_LINK, CARGO_LINK);
+   type Link_Type_T is (Piece_Link, Loc_Link, Cargo_Link);
    type Link_Array is array (Link_Type_T'Range) of Link_T;
 
    type Piece_Info_T is
