@@ -33,7 +33,7 @@ package body Empire.Comp_Move is
             Ui.Prompt("ENEMY: UPDATING PIECE AT " & Location_T'Image(Obj.Loc));
             Objects.Scan(COMP, Obj.Loc);
             Ui.Prompt("");
-            Obj := Obj.Links(PIECE_LINK).Next;
+            Obj := Obj.Links(Piece_Link).Next;
          end loop;
       end loop;
 
@@ -712,6 +712,7 @@ package body Empire.Comp_Move is
          then
            Xmap(P.Loc).Contents := '$';
          end if;
+         P := P.Links(Piece_Link).Next;
       end loop;
 
       if Print_Vmap = 'L'
@@ -831,6 +832,7 @@ package body Empire.Comp_Move is
             if (Best = null) or else (P.Count >= Best.Count)
             then
                Best := P;
+               P := P.Links(Loc_Link).Next;
             end if;
          end if;
       end loop;
