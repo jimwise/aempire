@@ -1,6 +1,6 @@
 Project Empire is
 
-        for Source_Dirs use (".", "/usr/local/lib/ada/**");
+        for Source_Dirs use (".");
         for Object_Dir use "./obj";
 
         for Main use ("main");
