@@ -1,3 +1,4 @@
 * abstract Content_Display_T, so we use superset type, and then make Piece_Type_T and Terrain_Type_T subranges thereof?
 * use Pragma Assert / -gnata instead of if Foo then raise
 * consider making Piece_Type_T and City_Type_T limited private
+* runs now, no crashes seen in some time, but hangs in AI sometimes.

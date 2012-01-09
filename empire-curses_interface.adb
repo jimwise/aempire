@@ -194,18 +194,19 @@ package body Empire.Curses_Interface is
       then
          Ref_Row := 1;
       end if;
-      if Ref_Row > MAP_HEIGHT - 1
-      then
-         Ref_Row := MAP_HEIGHT - 1;
-      end if;
+      -- XXX check if these should be - 2 instead of removed
+      --  if Ref_Row > MAP_HEIGHT - 1
+      --  then
+      --     Ref_Row := MAP_HEIGHT - 1;
+      --  end if;
       if Ref_Col < 1
       then
         Ref_Col := 1;
       end if;
-      if Ref_Col > MAP_WIDTH - 1
-      then
-        Ref_Col := MAP_WIDTH - 1;
-      end if;
+      --  if Ref_Col > MAP_WIDTH - 1
+      --  then
+      --    Ref_Col := MAP_WIDTH - 1;
+      --  end if;
 
       Whose_Map := Whose;               --  remember which map we are displaying
       Ref_Row := 1;
@@ -576,7 +577,7 @@ package body Empire.Curses_Interface is
 
    procedure Display_Turn
    is
-      S : String := "Sector " & Integer'Image(Cur_Sector) & " Round " & Integer'Image(Date);
+      S : constant String := "Sector " & Integer'Image(Cur_Sector) & " Round " & Integer'Image(Date);
    begin
       for R in 1 .. S'Length
       loop

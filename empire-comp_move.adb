@@ -7,14 +7,10 @@
 --     3)  Check to see if the game is over.
 
 with Empire.Attack;
-with Empire.Mapping;
 with Empire.Math;
 with Empire.Objects;
 with Empire.Ui;
 with Empire.Utility;
-
-with Ada.Containers;
-use Ada.Containers;
 
 package body Empire.Comp_Move is
 

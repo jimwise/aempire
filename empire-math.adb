@@ -1,4 +1,4 @@
--- math.c -- various mathematical routines.
+-- empire-math.adb -- various mathematical routines.
 --
 -- This file contains routines used to create random integers.  The
 -- initialization routine 'rand_init' should be called at program startup.
@@ -13,8 +13,8 @@
 with Empire.Locations;
 with Ada.Numerics.Elementary_Functions;
 use Ada.Numerics.Elementary_Functions;
-with Ada.Numerics.Float_Random;
-use Ada.Numerics.Float_Random;
+--  with Ada.Numerics.Float_Random;
+--  use Ada.Numerics.Float_Random;
 
 package body Empire.Math is
 
@@ -25,7 +25,7 @@ package body Empire.Math is
       Ay := Locations.Loc_Col(A);
       Bx := Locations.Loc_Row(B);
       By := Locations.Loc_Col(B);
-      
+
       -- XXX use an integer equivalent, possibly isqrt from cempire.
       return Integer(Sqrt( Float((Ax-Bx) * (abs Ax-Bx)) + Float((Ay-By) * (Ay-By))));
    end Dist;

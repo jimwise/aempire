@@ -1,6 +1,5 @@
 with Empire.Attack;
 with Empire.Editing;
-with Empire.Game;
 with Empire.Locations;
 with Empire.Mapping;
 with Empire.Math;
@@ -574,17 +573,14 @@ package body Empire.User_Move is
             when 'A' =>
               User_Dir(Obj, WEST);
               return;
-
             when 'J' =>
               Editing.Edit(Obj.Loc);
               Reset_Func(Obj);
               return;
-
             when 'V' =>
                User_Set_City_Func(Obj.Loc);
                Reset_Func(Obj);
                return;
-
             when ' ' =>
                User_Skip(Obj);
                return;
@@ -615,7 +611,6 @@ package body Empire.User_Move is
             when 'Y' =>
                User_Obj_Func(Obj, ARMYATTACK, (ARMY => True, others => False));
                return;
-
             when 'B' =>
                User_Build(Obj.Loc);
                -- from here in we loop, thus asking user again after command is complete
@@ -623,6 +618,7 @@ package body Empire.User_Move is
                Ui.Help(Help_User);
             when 'K' =>
                User_Obj_Func(Obj, NOFUNC);
+               return;
             when 'O' =>
                User_Cancel_Auto;
             when 'P'|Character'Val(12) =>
