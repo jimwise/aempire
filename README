@@ -7,8 +7,10 @@ some functionality of the C version, and is still not completely stable.
 
 This code is Copyright (C) 2006-2012 Jim Wise
 
-As a derivative work (a straight port) of a GPL'ed program, this software is
-offered under the GPLv2.
+As a derivative work (a straight port) of a program under a GPL-like
+license, this software is offered under the same license as that program --
+this corresponds with the author's clear intent, although it may not be a
+legal necessity.
 
 
 --- Below is the README from the C version ----
