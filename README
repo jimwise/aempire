@@ -1,3 +1,19 @@
+This is a port to Ada of cempire (see
+
+     https://github.com/jimwise/cempire
+
+).  This is very much a work in progress -- it works, but is missing
+some functionality of the C version, and is still not completely stable.
+
+This code is Copyright (C) 2006-2012 Jim Wise
+
+As a derivative work (a straight port) of a GPL'ed program, this software is
+offered under the GPLv2.
+
+
+--- Below is the README from the C version ----
+
+
 /*
  *    Copyright (C) 1987, 1988 Chuck Simmons
  * 
