@@ -68,11 +68,8 @@ package body Empire.Editing is
    begin
       loop
          Cmd := Ui.Get_Chx;
-         if Dir_Chars(Cmd) = NODIRECTION
-         then
-            exit;
-         else
-            Ui.Move_Cursor(Edit_Cursor, Dir_Chars(Cmd));
+         exit when Dir_Chars(Cmd) = Nodirection;
+         Ui.Move_Cursor(Edit_Cursor, Dir_Chars(Cmd));
          end if;
       end loop;
    end E_Cursor;

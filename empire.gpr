@@ -11,7 +11,7 @@ Project Empire is
 
         package Compiler is
                 for Default_Switches ("Ada")
-                    use ("-Wall", "-gnata", "-gnato", "-gnatE", "-gnat12", "-I/local/versions/ncurses-5.7/lib/ada/adainclude", "-L/local/versions/ncurses-5.7/lib/ada/adalib");
+                    use ("-Wall", "-gnata", "-gnato", "-gnatE", "-gnat12", "-I/local/versions/ncurses-5.9/lib/ada/adainclude", "-L/local/versions/ncurses-5.7/lib/ada/adalib");
         end Compiler;
 
         package Linker is

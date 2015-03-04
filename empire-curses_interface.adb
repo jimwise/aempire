@@ -581,10 +581,7 @@ package body Empire.Curses_Interface is
    begin
       for R in 1 .. S'Length
       loop
-         if R + NUMTOPS + 1 >= Map_Height
-         then
-            exit;
-         end if;
+         exit when R + NUMTOPS + 1 >= Map_Height;
          Curses.Add(Line => Curses.Line_Position(R + NUMTOPS + 1),
                     Column => Curses.Columns - NUMSIDES + 4,
                     Ch => S(R));

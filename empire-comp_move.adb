@@ -1483,10 +1483,7 @@ package body Empire.Comp_Move is
                Copied := Copied + 1;
             end if;
          end loop;
-         if Copied = From.Last_Index
-         then
-            exit;                       --  nothing expanded
-         end if;
+         exit when Copied = From.Last_Index; -- nothing expanded
          Tmp := From;
          From := To;
          To := Tmp;
@@ -1570,11 +1567,8 @@ package body Empire.Comp_Move is
                Copied := Copied + 1;
             end if;
          end loop;
-         if Copied = From.Last_Index
-         then
-            -- XXX XXX DON'T GET HERE -- WHY? XXX XXX
-            exit;                          --  nothing expanded
-         end if;
+         -- XXX XXX DON'T EXIT HERE -- WHY? XXX XXX
+         exit when Copied = From.Last_Index;             --  nothing expanded
          Tmp := From;
          From := To;
          To := Tmp;
