@@ -406,22 +406,21 @@ package body Empire.Curses_Interface is
                           Pmap : in Mapping.Path_Map;
                           Vmap : in View_Map)
    is
-      R : Row_T;
-      C : Column_T;
-      Row_Inc, Col_Inc : Integer;
+      R, C : Natural;             -- must support larger values than Row_T, Col_T
+      Row_Inc, Col_Inc : Natural;
    begin
       Row_Inc := (MAP_HEIGHT + Integer(Map_Win_Height) - 2) / (Integer(Map_Win_Height) - 2);
       Col_Inc := (MAP_WIDTH + Integer(Map_Win_Width) - 2) / (Integer(Map_Win_Width) - 2);
 
       Curses.Clear(Map_Win);
-
+      
       R := 0;
       while R < MAP_HEIGHT
       loop
          C := 0;
          while C < MAP_WIDTH
          loop
-            Print_Pzoom_Cell(Pmap, Vmap, R, C, Row_Inc, Col_Inc);
+            Print_Pzoom_Cell(Pmap, Vmap, Row_T(R), Column_T(C), Row_Inc, Col_Inc);
             C := C + Col_Inc;
          end loop;
          R := R + Row_Inc;
