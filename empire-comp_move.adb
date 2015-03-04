@@ -1412,7 +1412,7 @@ package body Empire.Comp_Move is
       From, To, Tmp : Location_Vector;
       Explored : Integer := 0;
       New_Loc, Loc : Location_T;
-      Copied : Integer;
+      Copied : Location_Count;
    begin
       -- build initial path map and perimeter list
       Ui.Debug_Info("Build initial path map and perimeter list");
@@ -1483,7 +1483,7 @@ package body Empire.Comp_Move is
                Copied := Copied + 1;
             end if;
          end loop;
-         exit when Copied = From.Last_Index; -- nothing expanded
+         exit when Copied = From.Length; -- nothing expanded
          Tmp := From;
          From := To;
          To := Tmp;
@@ -1568,7 +1568,7 @@ package body Empire.Comp_Move is
             end if;
          end loop;
          -- XXX XXX DON'T EXIT HERE -- WHY? XXX XXX
-         exit when Copied = From.Last_Index;             --  nothing expanded
+         exit when Copied = From.Length;             --  nothing expanded
          Tmp := From;
          From := To;
          To := Tmp;

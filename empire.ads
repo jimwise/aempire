@@ -1,6 +1,10 @@
+with Ada.Containers;
 with Ada.Containers.Vectors;
 with Ada.Strings.Bounded;
 with Ada.Text_IO;
+
+use type Ada.Containers.Count_Type;
+
 package Empire is
    -- these include a `frame' of one cell all around the playable area.
    -- XXX maybe this should change, but it allows easy assumption that we can go
@@ -26,6 +30,7 @@ package Empire is
       Index_Type => Positive);
    use Location_Vectors;
    subtype Location_Vector is Location_Vectors.Vector;
+   subtype Location_Count is Ada.Containers.Count_Type;
 
    -- XXX XXX XXX XXX need to move to bounded_strings.  will make
    -- XXX XXX XXX XXX describe_obj (at least) cleaner, for instance.
