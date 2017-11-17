@@ -72,16 +72,16 @@ package body Empire.Mapping is
                Ui.Print_Pzoom("After xobj loop:", Pmap, Vmap);
             end if;
 
-              Cur_Cost := Cur_Cost + 1;
-              if To.Is_Empty or Best_Cost <= Cur_Cost
-              then
-                 Objective := Best_Loc;
-                 return;
-              end if;
+            Cur_Cost := Cur_Cost + 1;
+            if To.Is_Empty or Best_Cost <= Cur_Cost
+            then
+               Objective := Best_Loc;
+               return;
+            end if;
 
-              Tmp := From;
-              From := To;
-              To := Tmp;
+            Tmp := From;
+            From := To;
+            To := Tmp;
          end loop;
       end Vmap_Find_Xobj;
 
