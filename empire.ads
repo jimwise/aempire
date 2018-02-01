@@ -32,8 +32,6 @@ package Empire is
    subtype Location_Vector is Location_Vectors.Vector;
    subtype Location_Count is Ada.Containers.Count_Type;
 
-   -- XXX XXX XXX XXX need to move to bounded_strings.  will make
-   -- XXX XXX XXX XXX describe_obj (at least) cleaner, for instance.
    STRING_MAX : constant := 256;
    package Strings is new Ada.Strings.Bounded.Generic_Bounded_Length(STRING_MAX);
    subtype Bstring is Strings.Bounded_String;
@@ -100,7 +98,6 @@ package Empire is
    --  'x' represents transport-producing city
    --  '0' .. '9' represent explorable territory
 
-  -- XXX XXX XXX
    type Content_Display_T is
       ('.', '+', '*', 'O', 'X', ' ',
        'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd', 'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z',
