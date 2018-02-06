@@ -1,23 +1,26 @@
-
 Project Empire is
+  for Source_Dirs use (".");
+  for Object_Dir use "./obj";
+  for Exec_Dir use ".";
+  for Main use ("main");
 
-        for Source_Dirs use (".");
-        for Object_Dir use "./obj";
+  package Builder is
+     for Executable ("main.adb") use "aempire";
+     for Default_Switches ("Ada") use ("-g",  "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
+  end Builder;
 
-        for Main use ("main");
+  package Compiler is
+     for Default_Switches ("Ada")
+       use ("-Wall", "-gnata", "-gnato", "-gnatE", "-gnat12", "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
+  end Compiler;
 
-        package Builder is
-                for Default_Switches ("Ada") use ("-g",  "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
-        end Builder;
-
-        package Compiler is
-                for Default_Switches ("Ada")
-                    use ("-Wall", "-gnata", "-gnato", "-gnatE", "-gnat12", "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
-        end Compiler;
-
-        package Linker is
-                for Default_Switches ("Ada")
-                    use ("-g", "-L/usr/local/lib/ada/adalib", "-L/usr/local/lib", "-lAdaCurses", "-lncurses");
-        end Linker;
-
+  package Binder is
+     for Default_Switches ("Ada")
+       use ("-aI/usr/local/share/ada/adainclude", "-aO/usr/local/lib/ada/adalib");
+  end Binder;
+  
+  package Linker is
+     for Default_Switches ("Ada")
+       use ("-g", "-L/usr/local/lib/ada/adalib", "-L/usr/local/lib", "-lAdaCurses", "-lncurses");
+  end Linker;
 end Empire;
