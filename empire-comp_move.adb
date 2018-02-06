@@ -1454,7 +1454,7 @@ package body Empire.Comp_Move is
          then
             return;                     --  nothing left to guess
          end if;
-
+         
          Copied := 0;
 
          for I in 1 .. From.Last_Index
@@ -1598,6 +1598,7 @@ package body Empire.Comp_Move is
    is
       New_Loc : Location_T;
    begin
+      Ui.Debug_Info("Entering Expand_Prune");
       Explored := Explored + 1;
 
       if Ttype = T_LAND
@@ -1628,6 +1629,7 @@ package body Empire.Comp_Move is
               when Constraint_Error => null; --  skips for off-board locations. XXX XXX
            end;
       end loop;
+      Ui.Debug_Info("Leaving Expand_Prune");
    end Expand_Prune;
 
 end Empire.Comp_Move;

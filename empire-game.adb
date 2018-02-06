@@ -702,7 +702,7 @@ package body Empire.Game is
       -- P : Piece_Info_P;
    begin
       -- XXX need to APPEND
-      Open(File, Out_File, "empmovie.dat");
+      -- Open(File, Out_File, "empmovie.dat");
       Ui.Info("XXX XXX XXX Movie creation not yet supported");
 
 --         for (i = 0; i < MAP_SIZE; i++)
@@ -722,7 +722,7 @@ package body Empire.Game is
 --                 }
 --         }
 --         wbuf (mapbuf);
-      Close(File);
+      -- Close(File);
    end;
 
    -- Replay a movie.  We read each buffer from the file and
@@ -732,7 +732,7 @@ package body Empire.Game is
       File : File_Type;
       -- Round : Integer;
    begin
-      Open(File, In_File, "empmovie.dat");
+      -- Open(File, In_File, "empmovie.dat");
       Ui.Info("XXX XXX XXX Movie playback not yet supported");
 
 --         round = 0;
@@ -751,7 +751,7 @@ package body Empire.Game is
 --                 print_movie_screen(mapbuf);
 --         }
 
-      Close(File);
+      -- Close(File);
    end Replay_Movie;
 
    -- Display statistics about the game.  At the top of the screen we
