@@ -603,6 +603,7 @@ package body Empire.Curses_Interface is
    --      int r, c, i, j;
    --      char cell;
    begin
+      pragma Unreferenced (Mapbuf);
       Info ("XXX XXX XXX Move playback is not yet supported");
 
       --  XXX XXX XXX this should get some of the same polish as
