@@ -20,10 +20,9 @@ package Empire.Editing is
    procedure E_City_Repair (Loc : in Location_T; Ptype : Piece_Type_T);
 
 private
-   --  array mapping direction chars to dir_offset indices (1=>N .. 8=>NW). 0
-   --  => not a valid direction char (XXX)
+   --  array mapping direction chars to dir_offset indices (1=>N .. 8=>NW).
+   --  0 => not a valid direction char (XXX)
    type Direction_Offset_Array is array (Character) of Direction_Choice_T;
-   -- hopefully optimized away.
    Dir_Chars : constant Direction_Offset_Array :=
      ('W'    => NORTH,
       'E'    => NORTHEAST,
@@ -36,7 +35,7 @@ private
       others => NODIRECTION);
    --  map move directions onto move functions
    type Direction_Function_Array is array (Direction_T) of Function_T;
-   -- hopefully optimized away.
+   --  hopefully optimized away.
    Dir_Funcs : constant Direction_Function_Array :=
      (NORTH     => MOVE_N,
       NORTHEAST => MOVE_NE,
@@ -54,7 +53,8 @@ private
    type Path_T is record
       Started : Boolean := False;
       Start   : Location_T;
-      Ptype : Piece_Choice_T;          -- XXX type path is for if this is a city path, NOPIECE for a piece path
+      --  XXX type path is for if this is a city path, NOPIECE for a piece path
+      Ptype : Piece_Choice_T;
    end record;
 
    procedure E_Cursor (Edit_Cursor : in out Location_T; Cmd : out Character);

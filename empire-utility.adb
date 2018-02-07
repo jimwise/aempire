@@ -5,7 +5,7 @@ with Empire.Ui;
 
 package body Empire.Utility is
 
-   -- various utility routines
+   --  various utility routines
 
    --  Here is a little routine to perform consistency checking on the
    --  database.
@@ -14,14 +14,14 @@ package body Empire.Utility is
    --
    --  1) Make sure no list contains loops.
    --
---  2) Make sure every object is in either the free list with 0 hits, or it is
---  in the correct object list and a location list with non-zero hits, and an
---  appropriate owner.
+   --  2) Make sure every object is in either the free list with 0 hits, or
+   --  it is in the correct object list and a location list with non-zero
+   --  hits, and an appropriate owner.
    --
    --  3) Make sure every city is on the map.
    --
-   --  4) Make sure every object is in the correct location and that objects on
-   --  the map have non-zero hits.
+   --  4) Make sure every object is in the correct location and that objects
+   --  on the map have non-zero hits.
    --
    --  5) Make sure every object in a cargo list has a ship pointer.
    --
@@ -29,7 +29,7 @@ package body Empire.Utility is
    --  list.
 
    procedure Check is
-   -- P : Piece_Info_P;
+   --  P : Piece_Info_P;
    begin
       if not Debug then
          return;
@@ -40,7 +40,7 @@ package body Empire.Utility is
       --  XXX XXX XXX such as assuming that subtracting the array address XXX
       --  XXX XXX XXX from the member address gives you the index
 
-      -- nothing in any list yet
+      --  nothing in any list yet
 --      In_Free := (others => False);
 --      In_Obj := (others => False);
 --      In_Loc := (others => False);
@@ -141,7 +141,7 @@ package body Empire.Utility is
 --                      in_obj[j] = 1;
 
 --                      if (p->piece_link.prev)
---                              assert (p->piece_link.prev->piece_link.next == p);
+--                        assert (p->piece_link.prev->piece_link.next == p);
 --              }
 --  }
 
@@ -185,7 +185,7 @@ package body Empire.Utility is
 --                      in_cargo[j] = 1;
 
 --                      if (p->cargo_link.prev)
---                              assert (p->cargo_link.prev->cargo_link.next == p);
+--                        assert (p->cargo_link.prev->cargo_link.next == p);
 --                  }
 --              assert (count == p->count);
 --          }
@@ -213,7 +213,7 @@ package body Empire.Utility is
    procedure Panic (Why : in String) is
    begin
       Ui.End_Ui;
-      -- XXX should be stderr?
+      --  XXX should be stderr?
       Text_IO.Put_Line (Ada.Command_Line.Command_Name & ": " & Why);
       raise Program_Error;
    end Panic;
@@ -223,9 +223,10 @@ package body Empire.Utility is
 --      term_end();
 
 --      if (why == NULL)
---              fprintf(stderr, "empire panic (file %s, line %d)\n", file, line);
+--        fprintf(stderr, "empire panic (file %s, line %d)\n", file, line);
 --      else
---              fprintf(stderr, "empire panic (file %s, line %d): %s\n", file, line, why);
+--        fprintf(stderr, "empire panic (file %s, line %d): %s\n",
+--          file, line, why);
 
 --      abort();
 --  }

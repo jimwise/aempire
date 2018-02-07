@@ -11,7 +11,6 @@ package body Empire.Editing is
       Cmd         : Character;
       Edit_Cursor : Location_T := Cur_Cursor;
    begin
-
       loop                              -- until user exits editing mode
          Ui.Display_Loc (USER, Edit_Cursor); -- position cursor
          E_Cursor (Edit_Cursor, Cmd);    -- handle cursor movement
@@ -79,8 +78,7 @@ package body Empire.Editing is
       end loop;
    end Edit;
 
---  Get the next command. We handle cursor movement here
-
+   --  Get the next command. We handle cursor movement here
    procedure E_Cursor (Edit_Cursor : in out Location_T; Cmd : out Character) is
    begin
       loop
@@ -90,8 +88,7 @@ package body Empire.Editing is
       end loop;
    end E_Cursor;
 
--- Goto new sector
-
+   --  Goto new sector
    procedure E_Goto_Sector (Edit_Cursor : in out Location_T) is
       Sector : Sector_T;
    begin
@@ -102,8 +99,8 @@ package body Empire.Editing is
         Locations.Sector_Loc (Sector); -- center cursor within sector
    end E_Goto_Sector;
 
---  Set function for the piece at a location XXX could merge with
---  Empire.User_Move.User_Obj_Func?
+   --  Set function for the piece at a location
+   --  XXX could merge with Empire.User_Move.User_Obj_Func?
    procedure E_User_Obj_Func
      (Loc    : in Location_T;
       Func   : in Function_T;
@@ -320,9 +317,8 @@ package body Empire.Editing is
          return;
       end if;
 
-      if Path.Ptype = NOPIECE
+      if Path.Ptype = NOPIECE then
          --  XXX this means this is not a city path
-          then
          E_User_Obj_Func
            (Path.Start,
             MOVE_TO_DEST,
@@ -338,8 +334,7 @@ package body Empire.Editing is
       Path.Started := False;
    end E_End_Path;
 
---  Print out information about a piece
-
+   --  Print out information about a piece
    procedure E_Info (Loc : in Location_T) is
       Cityp : City_Info_P;
       Objp  : Piece_Info_P;
@@ -368,8 +363,7 @@ package body Empire.Editing is
       Ui.Huh;
    end E_Info;
 
--- Change city production
-
+   --  Change city production
    procedure E_Prod (Loc : in Location_T) is
       Cityp : City_Info_P;
    begin

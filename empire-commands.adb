@@ -1,4 +1,4 @@
--- simple commands.
+--  simple commands.
 
 with Ada.Text_IO;
 
@@ -109,7 +109,7 @@ package body Empire.Commands is
       Ui.Print_Sector (USER, Sec);
    end Sector;
 
--- Print the map to a file.
+--  Print the map to a file.
 --  We print the map sideways to make it easier for the user to print out the
 --  map. XXX XXX For now, unlike C version, we always use the same file name
 --  (which is symmetric with game and movie saves). All three should change.
@@ -120,9 +120,7 @@ package body Empire.Commands is
       Ada.Text_IO.Create (F, Ada.Text_IO.Out_File, MAP_NAME);
 
       for I in Column_T'Range loop
-         --  for each column (see above)
          for J in Row_T'Range loop
-            -- for each row (see above)
             --  XXX we should do this line-at-a-time, as the C does.
             Content_IO.Put
               (F,

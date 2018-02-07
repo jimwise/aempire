@@ -3,11 +3,11 @@ with Empire.Objects;
 with Empire.Ui;
 
 package body Empire.Attack is
---  Empire.Attack -- handle an attack between two pieces. We do everything
---  from fighting it out between the pieces to notifying the user who won
---  and killing off the losing object. Somewhere far above, our caller is
---  responsible for actually removing the object from its list and actually
---  updating the player's view of the world.
+   --  Empire.Attack -- handle an attack between two pieces. We do everything
+   --  from fighting it out between the pieces to notifying the user who won
+   --  and killing off the losing object. Somewhere far above, our caller is
+   --  responsible for actually removing the object from its list and actually
+   --  updating the player's view of the world.
    --
    --  Find object being attacked. If it is a city, attacker has 50% chance
    --  of taking city. If successful, give city to attacker. Otherwise kill
@@ -52,7 +52,8 @@ package body Empire.Attack is
          then
             Ui.Info
               ("Your city at " & Location_T'Image (Loc) & " is under attack.");
-         end if; -- no message when the computer fails to take over a neutral city
+         end if;
+         --  no message when the computer fails to take over a neutral city
 
          Objects.Kill_Obj (Att_Obj, Loc);
       else               --  attack succeeds
