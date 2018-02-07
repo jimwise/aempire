@@ -249,7 +249,9 @@ package Empire is
    type Link_Array is array (Link_Type_T'Range) of Link_T;
 
    type Piece_Info_T is record
-      Links : Link_Array;    --  linked lists of pieces of this type, at this loc, and in this transport/carrier
+      --  linked lists of pieces of this type, at this loc, and in this
+      --  transport/carrier
+      Links       : Link_Array;
       Owner       : Piece_Owner_T;         -- owner of piece
       Piece_Type  : Piece_Type_T;     -- type of piece
       Loc         : Location_T;              -- location of piece
@@ -268,21 +270,21 @@ package Empire is
    --  beginning of a game.
 
    type Piece_Attr_T is record
-      U_Cont      : Content_Display_T;     -- user version, eg 'A'
-      C_Cont      : Content_Display_T;     -- computer version, eg 'a'
-      Sel_Char    : Character;           -- shortcut char for menus
-      Class       : Piece_Class_T;         -- general type of piece
-      Name : Bstring;                -- eg "aircraft carrier" XXX XXX wasteful -- should we have a "short_string" type?
+      U_Cont      : Content_Display_T;  -- user version, eg 'A'
+      C_Cont      : Content_Display_T;  -- computer version, eg 'a'
+      Sel_Char    : Character;          -- shortcut char for menus
+      Class       : Piece_Class_T;      -- general type of piece
+      Name : Bstring;                   -- eg "aircraft carrier"
       Nickname    : Bstring;            -- eg "carrier"
-      Article     : Bstring;             -- eg "an aircraft carrier"
-      Plural : Bstring;              -- eg "aircraft carriers" (XXX not used)
+      Article     : Bstring;            -- eg "an aircraft carrier"
+      Plural      : Bstring;      -- eg "aircraft carriers" (XXX not used)
       Terrain     : Acceptable_Content_Array; -- terrain piece can pass over
-      Build_Time  : Integer;          -- time needed to build unit
-      Strength    : Integer;            -- attack strength
-      Max_Hits : Integer;            -- number of hits when completely repaired
-      Speed       : Integer;               -- number of squares moved per turn
-      Capacity    : Integer;            -- max objects that can be held
-      Piece_Range : Integer;         -- range of piece
+      Build_Time  : Integer;                  -- time needed to build unit
+      Strength    : Integer;                  -- attack strength
+      Max_Hits : Integer;         -- number of hits when completely repaired
+      Speed       : Integer;      -- number of squares moved per turn
+      Capacity    : Integer;      -- max objects that can be held
+      Piece_Range : Integer;      -- range of piece
    end record;
 
    type Dest_Array is array (Piece_Type_T) of Location_T;
@@ -312,8 +314,8 @@ package Empire is
 
    --  Information we need for finding a path for moving a piece
    type Move_Info_T is record
-      Owner             : Owner_T;               -- applicable side
-      Objective_Weights : Content_Value_Array; -- maps objectives to weights (0 = not an objective)
+      Owner             : Owner_T;
+      Objective_Weights : Content_Value_Array; --  (0 = not an objective)
    end record;
 
    --  special cost for a city building a tt
@@ -363,20 +365,21 @@ package Empire is
 
    --  miscellaneous global variables
 
-   Smooth        : Integer;                    -- number of times to smooth map
-   Water_Ratio   : Natural;               -- percentage of map that is water
-   Min_City_Dist : Natural;             -- minimum distance between two cities
-   Save_Interval : Natural;             -- turns between autosaves
-   Traditional   : Boolean := False;      -- `traditional' movement keys
+   Smooth        : Integer;           -- number of times to smooth map
+   Water_Ratio   : Natural;           -- percentage of map that is water
+   Min_City_Dist : Natural;           -- minimum distance between two cities
+   Save_Interval : Natural;           -- turns between autosaves
+   Traditional   : Boolean := False;  -- `traditional' movement keys
 
-   Date        : Natural;                      -- number of game turns played
-   Automove    : Boolean;                  -- true IFF user is in automove mode
-   Resigned    : Boolean;                  -- true IFF computer resigned
-   Debug       : Boolean;                     -- true IFF in debugging mode
-   Print_Debug : Boolean;               -- true IFF we print debugging output
-   subtype Vmap_Debug_Option is
-     Character; -- XXX Restrict to [AILSU0] (0 is none) XXX and perhaps allow multiple
-   Print_Vmap : Vmap_Debug_Option;      -- option for printing vmaps - XXX should probably be a _set_ of options
+   Date        : Natural;              -- number of game turns played
+   Automove    : Boolean;              -- true IFF user is in automove mode
+   Resigned    : Boolean;              -- true IFF computer resigned
+   Debug       : Boolean;              -- true IFF in debugging mode
+   Print_Debug : Boolean;              -- true IFF we print debugging output
+   --  XXX Restrict to [AILSU0] (0 is none) XXX and perhaps allow multiple
+   subtype Vmap_Debug_Option is Character;
+   --  XXX should probably be a _set_ of options
+   Print_Vmap : Vmap_Debug_Option;      -- option for printing vmaps
    Trace_Pmap : Boolean;                -- true IFF we are tracing pmaps
    Win        : Owner_T := UNOWNED;            -- true IFF games is over
    Save_Movie : Boolean;                -- true IFF we're saving movie screens
@@ -388,10 +391,10 @@ package Empire is
    Color : Boolean := True;             -- use color if available
    --  Lines : Integer; -- lines on screen Cols : Integer; -- columns on screen
 
-   -- exceptions
+   --  exceptions
    User_Quit : exception;
 
-   -- constant data
+   --  constant data
 
    --  singleton types for deferred array constants
    type City_Char_Array is array (Owner_T) of Content_Display_T;
@@ -429,7 +432,7 @@ package Empire is
    Help_Edit : constant Help_Array;
    Help_User : constant Help_Array;
 
-   -- global routines
+   --  global routines
    procedure Run_Empire;
    procedure Emp_End;
 
@@ -437,6 +440,9 @@ private
 
    procedure Emp_Start;
    procedure Do_Command (Orders : in Character);
+   --  utility functions
+   procedure Incr (I : in out Integer);
+   procedure Decr (I : in out Integer);
 
    --  Piece attributes. Notice that the Transport is allowed only one hit.
    --  In an earlier version of this game, the user could easily win simply
@@ -615,7 +621,6 @@ private
          Capacity    => 0,
          Piece_Range => 500));
 
-   -- direction offsets
    Dir_Offset : constant Dir_Offset_Array :=
      (NORTH     => -MAP_WIDTH,
       NORTHEAST => -MAP_WIDTH + 1,
@@ -646,11 +651,11 @@ private
       MOVE_W       => Strings.To_Bounded_String ("A"),
       MOVE_NW      => Strings.To_Bounded_String ("Q"),
       MOVE_TO_DEST => Strings.To_Bounded_String ("destination"),
-      COMP_LOADING =>
-        Strings.To_Bounded_String
-          ("computer-internal-loading"), -- only used in debug output of Empire.Comp_Move
-      COMP_UNLOADING =>
-        Strings.To_Bounded_String ("computer-internal-unloading")); -- likewise
+      --  only used in debug output of Empire.Comp_Move
+      COMP_LOADING => Strings.To_Bounded_String
+        ("computer-internal-loading"),
+      COMP_UNLOADING => Strings.To_Bounded_String
+        ("computer-internal-unloading"));
 
    --  the order in which pieces should be moved alternative (easy enough)
    --  would be to put piece_type_t in move order. we can do this because
@@ -671,7 +676,7 @@ private
       ARMY,
       FIGHTER);
 
-   -- types of cities
+   --  types of cities
    City_char : constant City_Char_Array :=
      (UNOWNED => '*', USER => 'O', COMP => 'X');
 
@@ -711,7 +716,7 @@ private
    Tt_Load : constant Move_Info_T :=
      (Owner => COMP, Objective_Weights => ('$' => 1, others => 0));
 
-   -- Rationale for 'tt_unload':
+   --  Rationale for 'tt_unload':
    --
    --     Any continent with four or more cities is extremely attractive,
    --  and we should grab it quickly. A continent with three cities is fairly
@@ -787,7 +792,7 @@ private
    User_Ship_Repair : constant Move_Info_T :=
      (Owner => USER, Objective_Weights => ('O' => 1, others => 0));
 
-   -- Various help texts.
+   --  Various help texts.
    Help_Cmd : constant Help_Array :=
      (Strings.To_Bounded_String ("COMMAND MODE"),
       Strings.To_Bounded_String ("a - enter Automove mode"),

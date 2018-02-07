@@ -221,9 +221,8 @@ package body Empire.Game is
             Num_Land        := Num_Land + 1;
          end if;
       end loop;
-      if Placed > 0
+      if Placed > 0 then
          --  don't decrement the first time through
-          then
          Min_City_Dist := Min_City_Dist - 1;
       end if;
       for I in 0 .. Placed loop
@@ -313,7 +312,7 @@ package body Empire.Game is
 
       Ui.Info ("Your city is at " & Location_T'Image (UserP.Loc) & ".");
 
-      -- update city and map
+      --  update city and map
       CompP.Owner := COMP;
       CompP.Prod  := ARMY;
       CompP.work  := 0;
@@ -328,9 +327,8 @@ package body Empire.Game is
       return True;
    end Select_Cities;
 
---  Find all continents with 2 cities or more, one of which must be a port.
---  city. While at it, rank the continents.
-
+   --  Find all continents with 2 cities or more, one of which must be a port.
+   --  city. While at it, rank the continents.
    procedure Find_Cont is
       Mapi  : Location_T;
       Found : Boolean;
@@ -380,44 +378,13 @@ package body Empire.Game is
             exit;
          end if;
       end loop;
-
-      --     if (not Map(Mapi).On_Board) or Marked(Mapi) or (Map(Mapi).Contents = '.')
-      --     then
-      --        if Mapi = Location_T'Last
-      --        then
-      --           Found := False;
-      --           return;
-      --        end if;
-      --        Mapi := Mapi + 1;
-      --     elsif Good_Cont(Mapi)
-      --     then
-      --        Rank_Tab(Ncont) := Ncont;    --  insert cont in rank table
-      --        Val := Cont_Tab(Ncont).Value;
-
-      --        -- bubble sort
-      --        for I in reverse 1 .. Ncont
-      --        loop
-      --           if Val > Cont_Tab(Rank_Tab(I-1)).Value
-      --           then
-      --              Rank_Tab(I) := Rank_Tab(I-1);
-      --              Rank_Tab(I-1) := Ncont;
-      --           else
-      --              exit;
-      --           end if;
-      --        end loop;
-
-      --        Ncont := Ncont + 1;
-      --        Found := True;
-      --        return;
-      --     end if;
-      --  end loop;
    end Find_Next;
 
---  Map out the current continent. We mark every piece of land on the
---  continent, count the cities, shore cities, and land area of the continent.
---  If the continent contains 2 cities and a shore city, we set the value of
---  the continent and return true. Otherwise we return false.
-
+   --  Map out the current continent. We mark every piece of land on the
+   --  continent, count the cities, shore cities, and land area of the
+   --  continent.  If the continent contains 2 cities and a shore city, we
+   --  set the value of the continent and return true. Otherwise we return
+   --  false.
    function Good_Cont (Mapi : in Location_T) return Boolean is
       Val : Integer;
    begin
@@ -462,11 +429,11 @@ package body Empire.Game is
         (Map (Loc).Contents = '.') or
         (not Map (Loc).On_Board)
       then
-         return;                        --  don't recurse if we've hit the water
+         return;                    --  don't recurse if we've hit the water
       end if;
 
       Marked (Loc) := True;             --  mark this cell seen
-      Nland        := Nland + 1;              --  count land on continent
+      Nland        := Nland + 1;        --  count land on continent
 
       if Map (Loc).Contents = '*' then                              --  a city
          Cont_Tab (Ncont).Cityp (Ncity) := Map (Loc).CityP;
@@ -558,7 +525,7 @@ package body Empire.Game is
 --  (FALSE);
 
    procedure Restore_Game is
-   -- File: File_Type;
+   --  File: File_Type;
    begin
       Ui.Info ("XXX XXX XXX File restore is not yet supported");
       raise Game.No_Saved_Game;
@@ -630,7 +597,7 @@ package body Empire.Game is
       --         read_embark (user_obj[CARRIER], FIGHTER);
       --         read_embark (comp_obj[TRANSPORT], ARMY);
       --         read_embark (comp_obj[CARRIER], FIGHTER);
-      -- Close(File);
+      --  Close(File);
 
       --  Ui.Kill_Display; -- need to force a full refresh Ui.Info("Game (NOT)
       --  restored from empsave.dat.");
@@ -675,10 +642,10 @@ package body Empire.Game is
    --  static char mapbuf[MAP_SIZE];
 
    procedure Save_Movie_Screen is
-      File : File_Type;
-   -- P : Piece_Info_P;
+   --  File : File_Type;
+   --  P : Piece_Info_P;
    begin
-      -- XXX need to APPEND
+      --  XXX need to APPEND
       --  Open(File, Out_File, "empmovie.dat");
       Ui.Info ("XXX XXX XXX Movie creation not yet supported");
 
@@ -688,26 +655,26 @@ package body Empire.Game is
 --                         mapbuf[i] = city_char[map[i].cityp->owner];
 --                 else
 --                 {
---                         p = find_obj_at_loc (i);
+--                    p = find_obj_at_loc (i);
 
---                         if (!p)
---                                 mapbuf[i] = map[i].contents;
---                         else if (p->owner == USER)
---                                 mapbuf[i] = piece_attr[p->type].sname;
---                         else
---                           mapbuf[i] = tolower((int)piece_attr[p->type].sname);
+--                    if (!p)
+--                      mapbuf[i] = map[i].contents;
+--                    else if (p->owner == USER)
+--                      mapbuf[i] = piece_attr[p->type].sname;
+--                    else
+--                      mapbuf[i] = tolower((int)piece_attr[p->type].sname);
 --                 }
 --         }
 --         wbuf (mapbuf);
-      -- Close(File);
+      --  Close(File);
    end Save_Movie_Screen;
 
    --  Replay a movie. We read each buffer from the file and print it using a
    --  zoomed display.
 
    procedure Replay_Movie is
-      File : File_Type;
-   -- Round : Integer;
+   --  File : File_Type;
+   --  Round : Integer;
    begin
       --  Open(File, In_File, "empmovie.dat");
       Ui.Info ("XXX XXX XXX Movie playback not yet supported");
@@ -728,7 +695,7 @@ package body Empire.Game is
 --                 print_movie_screen(mapbuf);
 --         }
 
-      -- Close(File);
+      --  Close(File);
    end Replay_Movie;
 
    --  Display statistics about the game. At the top of the screen we print:
@@ -760,7 +727,7 @@ package body Empire.Game is
 --           then
 --              User_Cost := User_Cost +
 
--- static void
+--  static void
 --  stat_display (char *mbuf, int round) {
 --         long i;
 --         int counts[2*NUM_OBJECTS+2];
@@ -782,12 +749,14 @@ package body Empire.Game is
 
 --         comp_cost = 0;
 --         for (i = NUM_OBJECTS+2; i <= 2*NUM_OBJECTS+1; i++)
---                 comp_cost += counts[i] * piece_attr[i-NUM_OBJECTS-2].build_time;
+--           comp_cost += counts[i] * piece_attr[i-NUM_OBJECTS-2].build_time;
 
 --         for (i = FIRST_OBJECT; i < NUM_OBJECTS+1; i++)
 --         {
---                 snprintf(buf1 + (i*6), STRSIZE - (i*6), "%2d %c  ", counts[i], pieces[i]);
---                 snprintf(buf2 + (i*6), STRSIZE - (i*6), "%2d %c  ", counts[i+NUM_OBJECTS+1], pieces[i+NUM_OBJECTS+1]);
+--            snprintf(buf1 + (i*6), STRSIZE - (i*6), "%2d %c  ",
+--              counts[i], pieces[i]);
+--            snprintf(buf2 + (i*6), STRSIZE - (i*6), "%2d %c  ",
+--              counts[i+NUM_OBJECTS+1], pieces[i+NUM_OBJECTS+1]);
 --         }
 
 --         snprintf(buf1 + (i*6), STRSIZE - (i*6), "%5d", user_cost);
@@ -798,17 +767,16 @@ package body Empire.Game is
 --         info("");
 
 --         prompt("Round %3d", (round + 1) / 2);
--- }
+--  }
    end Stat_Display;
 
-   --  Check to see if the game is over. We count the number of cities
---  owned by each side. If either side has no cities and no armies, then the
---  game is over. If the computer has less than one third as many cities and
---  armies as the user, then the computer will offer to resign.
---
---  The computer will only offer to resign once per session, and the game
---  continues normally if the player refuses the computers offer.
-
+   --  Check to see if the game is over. We count the number of cities owned
+   --  by each side. If either side has no cities and no armies, then the
+   --  game is over. If the computer has less than one third as many cities
+   --  and armies as the user, then the computer will offer to resign.
+   --
+   --  The computer will only offer to resign once per session, and the game
+   --  continues normally if the player refuses the computers offer.
    procedure Check_Endgame is
       Nuser_City : Integer := 0;
       Ncomp_City : Integer := 0;

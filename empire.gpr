@@ -17,7 +17,8 @@ Project Empire is
             "-gnata",                   -- Assertions enabled
             "-gnateE",                  -- Richer exception messages
             "-gnateF",                  -- Check for float overflow
-            "-gnatE",                   -- Full dynamic elaboration checks
+            -- disabled -- adacurses library is statically elaborated
+--            "-gnatE",                   -- Full dynamic elaboration checks
             "-gnato",                   -- handle all overflows in strict mode
             "-gnatyy",                  -- Style checks
             "-fstack-check",

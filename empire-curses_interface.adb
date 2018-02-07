@@ -894,6 +894,7 @@ package body Empire.Curses_Interface is
 
    procedure Wait_Chx is
       K : Curses.Real_Key_Code;
+      pragma Unreferenced (K);
    begin
       Curses.Set_Cbreak_Mode (True);
       K := Curses.Get_Keystroke (Status_Win);

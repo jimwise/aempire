@@ -1401,10 +1401,6 @@ package body Empire.Comp_Move is
      (Cont_Map : in Continent_Map;
       Vmap     : in View_Map) return Scan_Counts_T
    is
-      procedure Incr (I : in out Integer) is
-      begin
-         I := I + 1;
-      end Incr;
       Counts : Scan_Counts_T;
    begin
       for I in Location_T'Range loop
@@ -1414,8 +1410,10 @@ package body Empire.Comp_Move is
             case Vmap (I).Contents is
                when ' ' =>
                   Incr (Counts.Unexplored);
+
                when 'O' =>
                   Incr (Counts.User_Cities);
+
                when 'A' =>
                   Incr (Counts.User_Objects (ARMY));
                when 'F' =>

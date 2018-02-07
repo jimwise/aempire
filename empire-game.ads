@@ -56,7 +56,7 @@ private
    Ncont    : Natural;
    Cont_Tab : array (Cont_Index_T) of Cont_T; --  good continents
    Rank_Tab : array
-   (Cont_Index_T) of Cont_Index_T; --  sorted indices into cont_tab, in rank order
+   (Cont_Index_T) of Cont_Index_T; --  sorted indices into cont_tab, rank order
    Pair_Tab : array
    (0 .. MAX_CONT**2 - 1) of Pair_T; --  ranked pairs of continents
 

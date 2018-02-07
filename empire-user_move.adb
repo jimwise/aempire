@@ -31,7 +31,7 @@ package body Empire.User_Move is
          end loop;
       end loop;
 
-      -- produce new hardware
+      --  produce new hardware
       for I in City'Range loop
          if City (I).Owner = USER then
             Objects.Scan (USER, City (I).Loc);
@@ -84,9 +84,8 @@ package body Empire.User_Move is
             Obj := User_Obj (Move_Order (N));
 
             while Obj /= null loop
-               Next_Obj :=
-                 Obj.Links (Piece_Link)
-                   .Next; --  cache next object, as this object may die in the mean time
+               --  cache next object, as this object may die in the mean time
+               Next_Obj := Obj.Links (Piece_Link).Next;
                if Obj.Moved = 0 then
                   if Locations.Loc_Sector (Obj.Loc) = Sec then
                      Piece_Move (Obj);
@@ -148,13 +147,13 @@ package body Empire.User_Move is
          then
             case Obj.Func is
                when NOFUNC =>
-                  null;                 --  will result in need_input being set, below
+                  null;       --  will result in need_input being set, below
                when RANDOM =>
                   Move_Random (Obj);
-               when SENTRY =>           --  for now, sentry means `guard in place'.  some empire
-                  Obj.Moved :=
-                    Objects.Obj_Moves
-                      (Obj); --  games have a roving sentry function...
+               when SENTRY =>
+                  --  for now, sentry means `guard in place'.  some empire
+                  --  games have a roving sentry function...
+                  Obj.Moved := Objects.Obj_Moves (Obj);
                when FILL =>
                   Move_Fill (Obj);
                when LAND =>
@@ -169,7 +168,9 @@ package body Empire.User_Move is
                   Move_Transport (Obj);
                when MOVE_N .. MOVE_NW =>
                   Move_Dir (Obj);
-               when others =>   --  MOVE_TO_DEST -- the two COMP_ funcs won't occur
+               when others =>
+                  --  MOVE_TO_DEST
+                  --  the two COMP_ funcs won't occur
                   Move_Path (Obj);
             end case;
          end if;
@@ -212,8 +213,8 @@ package body Empire.User_Move is
       end loop;
 
       --  if a boat is in port, damaged, and never moved, fix some damage
-      if Obj.Hits >
-        0 and            --  still alive?  XXX again, can we get here otherwise?
+      --  we check if still alive?  can we get here otherwise?
+      if Obj.Hits > 0 and
         not Changed_Loc and
         Piece_Attr (Obj.Piece_Type).Class = SHIP and
         Obj.Hits < Piece_Attr (Obj.Piece_Type).Max_Hits and
@@ -286,7 +287,7 @@ package body Empire.User_Move is
       end case;
 
       if Loc = Obj.Loc then
-         return;                        --  nothing to explore (that's reachable)
+         return;                   --  nothing to explore (that's reachable)
       end if;
 
       if View (USER) (Loc).Contents = ' ' and Pmap.Cost (Loc) = 2 then
@@ -340,7 +341,7 @@ package body Empire.User_Move is
    --  adjacent transport, move the army onto the transport, and awaken
    --  the army.
 
-   -- but it was set to panic.
+   --  but it was set to panic.
    --  and an empty stub of a reciprocal function, Tt_load, but it too was set
    --  to panic
 
@@ -394,7 +395,7 @@ package body Empire.User_Move is
       end if;
 
       if Obj.Hits = Piece_Attr (Obj.Piece_Type).Max_Hits then
-         -- we don't need repair
+         --  we don't need repair
          User_Obj_Func (Obj, NOFUNC);
          return;
       end if;
@@ -548,7 +549,7 @@ package body Empire.User_Move is
             Fterrain := T_WATER;
             Mterrain := ('.' | 'O' => True, others => False);
          when SPACECRAFT =>
-            raise Program_Error;        --  spacecraft can't make controlled moves
+            raise Program_Error;  --  spacecraft can't make controlled moves
       end case;
 
       Mapping.Vmap_Find_Dest
@@ -561,7 +562,7 @@ package body Empire.User_Move is
          Fterrain);
 
       if New_Loc = Obj.Loc then
-         return;                        --  can't get there -- user_move will remove func setting
+         return;   --  can't get there -- user_move will remove func setting
       end if;
 
       Pmap.Mark_Path (View (USER), Dest);
@@ -689,7 +690,7 @@ package body Empire.User_Move is
                Objects.Describe_Obj (Obj);
 
             when others =>
-               -- Uh.Huh, maybe?
+               --  Ui.Huh, maybe?
                Ui.Alert;
          end case;
       end loop;
@@ -771,9 +772,9 @@ package body Empire.User_Move is
       end case;
    end User_Set_Dir;
 
-   -- Set a city's function
---  XXX XXX XXX this is identical to E_City_Func, except that that func
---  supports XXX XXX XXX a path. they should be merged.
+   --  Set a city's function
+   --  XXX XXX XXX this is identical to E_City_Func, except that that func
+   --  supports XXX XXX XXX a path. they should be merged.
 
    procedure User_Set_City_Func (loc : in Location_T) is
       Ptype : Piece_Choice_T;
@@ -794,7 +795,7 @@ package body Empire.User_Move is
          return;
       end if;
 
-      -- XXX maybe a prompt?
+      --  XXX maybe a prompt?
       E := Ui.Get_Chx;
 
       case E is
@@ -825,7 +826,7 @@ package body Empire.User_Move is
       end case;
    end User_Set_City_Func;
 
-   -- Change a city's production
+   --  Change a city's production
    procedure User_Build (Loc : in Location_T) is
       Cityp : City_Info_P;
    begin
@@ -863,7 +864,7 @@ package body Empire.User_Move is
          when SHIP =>
             User_Dir_Ship (Obj, Loc);
          when SPACECRAFT =>
-            raise Program_Error;        --  satellites are never under user control
+            raise Program_Error; --  satellites are never under user control
       end case;
    end User_Dir;
 
@@ -893,8 +894,8 @@ package body Empire.User_Move is
          --  more cutesy-ism was here. We die if we walk out to sea, but if
          --  there was an enemy there, we get to attack him first. XXX this is
          --  gone, but some form of army attack out to sea might be worthwhile
-         Ui.Error
-           ("Troops can't walk on water, sir."); --  message apparently from Craig Hansen
+         --  message apparently from Craig Hansen
+         Ui.Error ("Troops can't walk on water, sir.");
       elsif User_Content (View (USER) (Loc).Contents) then
          --  XXX XXX XXX ideally, we could coexist with a satellite or airborne
          --  aircraft, actually
@@ -974,8 +975,7 @@ package body Empire.User_Move is
       end if;
    end Move_Army_To_City;
 
-   -- Cancel automove mode
-
+   --  Cancel automove mode
    procedure User_Cancel_Auto is
    begin
       if not Automove then

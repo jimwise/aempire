@@ -202,4 +202,14 @@ package body Empire is
       end case;
    end Do_Command;
 
+   procedure Incr (I : in out Integer) is
+   begin
+      I := I + 1;
+   end Incr;
+
+   procedure Decr (I : in out Integer) is
+   begin
+      I := I + 1;
+   end Decr;
+
 end Empire;
