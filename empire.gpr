@@ -6,12 +6,14 @@ Project Empire is
 
   package Builder is
      for Executable ("main.adb") use "aempire";
-     for Default_Switches ("Ada") use ("-g",  "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
+     for Default_Switches ("Ada") use ("-g",  "-I/usr/local/share/ada/adainclude",
+                                       "-L/usr/local/lib/ada/adalib");
   end Builder;
 
   package Compiler is
      for Default_Switches ("Ada")
-       use ("-Wall", "-gnata", "-gnato", "-gnatE", "-gnat12", "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
+       use ("-Wall", "-gnata", "-gnato", "-gnatE", "-gnat12",
+            "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
   end Compiler;
 
   package Binder is
@@ -21,6 +23,7 @@ Project Empire is
   
   package Linker is
      for Default_Switches ("Ada")
-       use ("-g", "-L/usr/local/lib/ada/adalib", "-L/usr/local/lib", "-lAdaCurses", "-lncurses");
+       use ("-g", "-L/usr/local/lib/ada/adalib", "-L/usr/local/lib", "-lAdaCurses",
+            "-lncurses");
   end Linker;
 end Empire;
