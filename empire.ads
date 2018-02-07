@@ -6,22 +6,25 @@ with Ada.Text_IO;
 use type Ada.Containers.Count_Type;
 
 package Empire is
-   -- these include a `frame' of one cell all around the playable area.
-   -- XXX maybe this should change, but it allows easy assumption that we can go
-   -- XXX any direction from any playable cell, _then_ check if still on board.
+   --  these include a `frame' of one cell all around the playable area.
+   --  XXX maybe this should change, but it allows easy assumption that we
+   --  XXX can go any direction from any playable cell, _then_ check if
+   --  XXX still on board.
    MAP_WIDTH : constant := 200;
    MAP_HEIGHT : constant := 100;
    MAP_SIZE : constant := MAP_WIDTH * MAP_HEIGHT;
 
    NUM_CITY : constant := 70;
 
-   -- cost to switch a city's production is the _new_ item's cost over RETOOLING_DENOMINATOR
+   --  cost to switch a city's production is the _new_ item's cost over
+   --  RETOOLING_DENOMINATOR
    RETOOLING_DENOMINATOR : constant := 5;
 
-   -- these are still from 0 so modulo, etc are easy to use.
-   subtype Location_T is Integer range 0 .. MAP_SIZE-1; -- map location as index into map
-   subtype Row_T is Integer range 0 .. MAP_HEIGHT-1;
-   subtype Column_T is Integer range 0 .. MAP_WIDTH-1;
+   --  these are still from 0 so modulo, etc are easy to use.
+   --  map location as index into map
+   subtype Location_T is Integer range 0 .. MAP_SIZE - 1;
+   subtype Row_T is Integer range 0 .. MAP_HEIGHT - 1;
+   subtype Column_T is Integer range 0 .. MAP_WIDTH - 1;
 
    LIST_SIZE : constant Integer := 5000; -- max number of pieces on board
 
@@ -33,7 +36,8 @@ package Empire is
    subtype Location_Count is Ada.Containers.Count_Type;
 
    STRING_MAX : constant := 256;
-   package Strings is new Ada.Strings.Bounded.Generic_Bounded_Length(STRING_MAX);
+   package Strings is
+     new Ada.Strings.Bounded.Generic_Bounded_Length (STRING_MAX);
    subtype Bstring is Strings.Bounded_String;
 
    type Help_Array is array (Natural range <>) of Bstring;
@@ -42,35 +46,39 @@ package Empire is
    MOVIE_NAME : constant String := "empmovie.dat";
    MAP_NAME : constant String := "empmap.txt";
 
-   -- useful constants for accessing sectors
-
-   ROWS_PER_SECTOR : constant := 20; --  should divide evenly into MAP_HEIGHT, and be likely to fit on screen
-   -- was      (MAP_HEIGHT + SECTOR_ROWS - 1) / SECTOR_ROWS;
-   COLS_PER_SECTOR : constant := 50;    --  should divide evenly into MAP_WIDTH, and be likely to fit on screen
-   -- was       (MAP_WIDTH + SECTOR_COLS - 1) / SECTOR_COLS;
-   SECTOR_ROWS : constant := MAP_HEIGHT / ROWS_PER_SECTOR;  -- number of vertical sectors
-   SECTOR_COLS : constant := MAP_WIDTH / COLS_PER_SECTOR;  -- number of horizontal sectors
-   NUM_SECTORS : constant := SECTOR_ROWS * SECTOR_COLS; -- total sectors
+   --  useful constants for accessing sectors
+   --  should divide evenly into MAP_HEIGHT, and be likely to fit on screen
+   ROWS_PER_SECTOR : constant := 20;
+   --  should divide evenly into MAP_WIDTH, and be likely to fit on screen
+   COLS_PER_SECTOR : constant := 50;
+   --  number of vertical sectors
+   SECTOR_ROWS : constant := MAP_HEIGHT / ROWS_PER_SECTOR;
+   --  number of horizontal sectors
+   SECTOR_COLS : constant := MAP_WIDTH / COLS_PER_SECTOR;
+   --  total sectors
+   NUM_SECTORS : constant := SECTOR_ROWS * SECTOR_COLS;
 
    subtype Sector_T is Integer range 0 .. NUM_SECTORS - 1;
 
-   -- XXX XXX XXX this is really broken.  INFINITY, as used here, has to be small enough that we can add a fair number of them together within the range
-   -- XXX XXX XXX of an Integer, yet large enough that we wouldn't expect to see it.  Grrr....
-   -- INFINITY : constant Integer := Integer'Last;
+   --  XXX XXX XXX this is really broken.  INFINITY, as used here, has to be
+   --  XXX XXX XXX small enough that we can add a fair number of them
+   --  XXX XXX XXX together within the range of an Integer, yet large enough
+   --  XXX XXX XXX that we wouldn't expect to see it.  Grrr....
    INFINITY : constant := 1_000_000;
 
-   VERSION_STRING : constant String := "ADA EMPIRE, Version 1.4_ALPHA0, February 2006";
+   VERSION_STRING : constant String :=
+     "ADA EMPIRE, Version 1.4_ALPHA0, February 2006";
 
    type Owner_T is (UNOWNED, USER, COMP);
    subtype Piece_Owner_T is Owner_T range USER .. COMP;
    type Acceptable_Owner_Array is array (Owner_T) of Boolean;
 
-   -- when adding a new piece type, must add here, in piece_attr below,
-   -- and at least also in switch in Empire.Mapping.Vmap_Cont_Scan
-   -- XXX (undoubtedly others, too)
-   -- XXX XXX note that piece types here need to be in preference order
-   -- XXX XXX for Find_Obj_At_Loc (least -> most).  This can be replaced
-   -- XXX XXX by a constant piece_value_array, making this tunable
+   --  when adding a new piece type, must add here, in piece_attr below,
+   --  and at least also in switch in Empire.Mapping.Vmap_Cont_Scan
+   --  XXX (undoubtedly others, too)
+   --  XXX XXX note that piece types here need to be in preference order
+   --  XXX XXX for Find_Obj_At_Loc (least -> most).  This can be replaced
+   --  XXX XXX by a constant piece_value_array, making this tunable
    type Piece_Choice_T is
       (ARMY,
        FIGHTER,
@@ -82,129 +90,135 @@ package Empire is
        BATTLESHIP,
        SATELLITE,
        NOPIECE);
-  subtype Piece_Type_T is Piece_Choice_T range ARMY .. SATELLITE;
+   subtype Piece_Type_T is Piece_Choice_T range ARMY .. SATELLITE;
 
-  type Piece_Value_Array is array (Piece_Type_T) of Integer;
-  type Acceptable_Piece_Array is array (Piece_Type_T) of Boolean;
+   type Piece_Value_Array is array (Piece_Type_T) of Integer;
+   type Acceptable_Piece_Array is array (Piece_Type_T) of Boolean;
 
-  type Piece_Class_T is
+   type Piece_Class_T is
      (GROUND,
       AIRCRAFT,
       SHIP,
       SPACECRAFT);
 
-   -- in addition to terrain and user types, planning algorithms use following special symbols in view maps
-   -- '$' represents loading tt must be first
-   --  'x' represents transport-producing city
-   --  '0' .. '9' represent explorable territory
+   --  in addition to terrain and user types, planning algorithms use
+   --  following special symbols in view maps:
+   --    '$' represents loading tt must be first
+   --    'x' represents transport-producing city
+   --    '0' .. '9' represent explorable territory
 
    type Content_Display_T is
-      ('.', '+', '*', 'O', 'X', ' ',
-       'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd', 'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z',
-       '$', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%');
+     ('.', '+', '*', 'O', 'X', ' ', 'A', 'a', 'F', 'f', 'P', 'p', 'D', 'd',
+      'S', 's', 'T', 't', 'C', 'c', 'B', 'b', 'Z', 'z', '$', 'x', '0', '1',
+      '2', '3', '4', '5', '6', '7', '8', '9', '%');
    subtype Terrain_Display_T is Content_Display_T range '.' .. '*';
 
    type Acceptable_Content_Array is array (Content_Display_T) of Boolean;
    type Acceptable_Terrain_Array is array (Terrain_Display_T) of Boolean;
    type Content_Value_Array is array (Content_Display_T) of Integer;
 
-   Comp_Content : Constant Acceptable_Content_Array :=
+   Comp_Content : constant Acceptable_Content_Array :=
      (
-      'a'|'f'|'p'|'d'|'s'|'t'|'c'|'b'|'z'|'X' => True,
+      'a' | 'f' | 'p' | 'd' | 's' | 't' | 'c' | 'b' | 'z' | 'X' => True,
       others => False
      );
 
-   User_Content : Constant Acceptable_Content_Array :=
+   User_Content : constant Acceptable_Content_Array :=
      (
-      'A'|'F'|'P'|'D'|'S'|'T'|'C'|'B'|'Z'|'O' => True,
+      'A' | 'F' | 'P' | 'D' | 'S' | 'T' | 'C' | 'B' | 'Z' | 'O' => True,
       others => False
      );
 
-   package Content_IO is new Ada.Text_IO.Enumeration_IO(Content_Display_T);
+   package Content_IO is new Ada.Text_IO.Enumeration_Io (Content_Display_T);
 
    type Direction_Choice_T is
-      (NORTH,
-       NORTHEAST,
-       EAST,
-       SOUTHEAST,
-       SOUTH,
-       SOUTHWEST,
-       WEST,
-       NORTHWEST,
-       NODIRECTION);
+     (NORTH,
+      NORTHEAST,
+      EAST,
+      SOUTHEAST,
+      SOUTH,
+      SOUTHWEST,
+      WEST,
+      NORTHWEST,
+      NODIRECTION);
    subtype Direction_T is Direction_Choice_T range NORTH .. NORTHWEST;
 
-   -- in original, function_t was overloaded, with negative values meaning as indicated
-   -- below, and positive values indicatign a location_t destination.
-   -- we now use MOVE_TO_DEST, and the piece_info_t's (new) `Dest' field.
+   --  in original, function_t was overloaded, with negative values meaning
+   --  as indicated below, and positive values indicatign a location_t
+   --  destination.  we now use MOVE_TO_DEST, and the piece_info_t's (new)
+   --  `Dest' field.
    --
-   -- also, despite defined values, the original computer move implementation (compmove.c)
-   -- used two values, '0' and '1' (only), giving them the meaning 'LOADING' and 'UNLOADING'.
-   -- for now, we include these in the type.
+   --  also, despite defined values, the original computer move
+   --  implementation (compmove.c) used two values, '0' and '1' (only),
+   --  giving them the meaning 'LOADING' and 'UNLOADING'.  for now, we
+   --  include these in the type.
    --
-   -- XXX XXX better would be to make Piece_Info_T a variant record, where `Func' took on
-   -- a new User_Function_T or Comp_Function_T depending on Owner
+   --  XXX XXX better would be to make Piece_Info_T a variant record, where
+   --  `Func' took on a new User_Function_T or Comp_Function_T depending on
+   --  Owner
    type Function_T is
-      (NOFUNC,                          -- no programmed function (-1)
-       RANDOM,                          -- move randomly (-2)
-       SENTRY,                          -- sleep (-3)
-       FILL,                            -- load transport (-4)
-       LAND,                            -- land fighter at city (-5)
-       EXPLORE,                         -- explore (-6)
-       ARMYATTACK,                      -- army looks for city to attack (-8)
-       REPAIR,                          -- ship moves toward port (-10)
-       WFTRANSPORT,                     -- army boards a transport (-11)
-       MOVE_N,                          -- move north (-12)
-       MOVE_NE,                         -- move northeast (-13)
-       MOVE_E,                          -- move east (-14)
-       MOVE_SE,                         -- move southeast (-15)
-       MOVE_S,                          -- move south (-16)
-       MOVE_SW,                         -- move southwest (-17)
-       MOVE_W,                          -- move west (-18)
-       MOVE_NW,                         -- move northwest (-19)
-       MOVE_TO_DEST,                    -- move to Obj.Dest
-       COMP_LOADING,                    -- Comp_Move only
-       COMP_UNLOADING);                 -- Comp_Move only
+     (NOFUNC,                          -- no programmed function (-1)
+      RANDOM,                          -- move randomly (-2)
+      SENTRY,                          -- sleep (-3)
+      FILL,                            -- load transport (-4)
+      LAND,                            -- land fighter at city (-5)
+      EXPLORE,                         -- explore (-6)
+      ARMYATTACK,                      -- army looks for city to attack (-8)
+      REPAIR,                          -- ship moves toward port (-10)
+      WFTRANSPORT,                     -- army boards a transport (-11)
+      MOVE_N,                          -- move north (-12)
+      MOVE_NE,                         -- move northeast (-13)
+      MOVE_E,                          -- move east (-14)
+      MOVE_SE,                         -- move southeast (-15)
+      MOVE_S,                          -- move south (-16)
+      MOVE_SW,                         -- move southwest (-17)
+      MOVE_W,                          -- move west (-18)
+      MOVE_NW,                         -- move northwest (-19)
+      MOVE_TO_DEST,                    -- move to Obj.Dest
+      COMP_LOADING,                    -- Comp_Move only
+      COMP_UNLOADING);                 -- Comp_Move only
 
-   Move_Func_Directions : constant array (Function_T range MOVE_N .. MOVE_NW) of Direction_T :=
-     (
-      MOVE_N => NORTH,
-      MOVE_NE => NORTHEAST,
-      MOVE_E => EAST,
-      MOVE_SE => SOUTHEAST,
-      MOVE_S => SOUTH,
-      MOVE_SW => SOUTHWEST,
-      MOVE_W => WEST,
-      MOVE_NW => NORTHWEST
-     );
+   Move_Func_Directions :
+     constant array (Function_T range MOVE_N .. MOVE_NW) of Direction_T :=
+       (
+        MOVE_N => NORTH,
+        MOVE_NE => NORTHEAST,
+        MOVE_E => EAST,
+        MOVE_SE => SOUTHEAST,
+        MOVE_S => SOUTH,
+        MOVE_SW => SOUTHWEST,
+        MOVE_W => WEST,
+        MOVE_NW => NORTHWEST
+       );
 
-   Move_Dir_Functions : constant array (Direction_T range NORTH .. NORTHWEST) of Function_T :=
-     (
-      NORTH => MOVE_N,
-      NORTHEAST => MOVE_NE,
-      EAST => MOVE_E,
-      SOUTHEAST => MOVE_SE,
-      SOUTH => MOVE_S,
-      SOUTHWEST => MOVE_SW,
-      WEST => MOVE_W,
-      NORTHWEST => MOVE_NW
-     );
+   Move_Dir_Functions :
+     constant array (Direction_T range NORTH .. NORTHWEST) of Function_T :=
+       (
+        NORTH => MOVE_N,
+        NORTHEAST => MOVE_NE,
+        EAST => MOVE_E,
+        SOUTHEAST => MOVE_SE,
+        SOUTH => MOVE_S,
+        SOUTHWEST => MOVE_SW,
+        WEST => MOVE_W,
+        NORTHWEST => MOVE_NW
+       );
 
-   -- if we determine how to represent T_PATH, this could be replaced with a set of constants of
-   -- type Acceptable_Terrain_Array
+   --  if we determine how to represent T_PATH, this could be replaced with
+   --  a set of constants of type Acceptable_Terrain_Array
    type Terrain_T is
-      (T_UNKNOWN,
-       T_PATH,
-       T_LAND,
-       T_WATER,
-       T_AIR);
+     (T_UNKNOWN,
+      T_PATH,
+      T_LAND,
+      T_WATER,
+      T_AIR);
 
    for Terrain_T use
-      (T_UNKNOWN => 0,
-       T_PATH => 1,
-       T_LAND => 2,
-       T_WATER => 4,
-       T_AIR => 6);                     -- T_LAND or T_WATER
+     (T_UNKNOWN => 0,
+      T_PATH => 1,
+      T_LAND => 2,
+      T_WATER => 4,
+      T_AIR => 6);                     -- T_LAND or T_WATER
 
    type Piece_Info_T;
 
@@ -363,8 +377,8 @@ package Empire is
    -- global display-related variables
 
    Color : Boolean := TRUE;             -- use color if available
-   -- Lines : Integer;                     -- lines on screen
-   -- Cols : Integer;                      -- columns on screen
+                                        -- Lines : Integer;                     -- lines on screen
+                                        -- Cols : Integer;                      -- columns on screen
 
    -- exceptions
    User_Quit : exception;
@@ -415,12 +429,12 @@ private
    procedure Emp_Start;
    procedure Do_Command (Orders : in Character);
 
--- Piece attributes.  Notice that the Transport is allowed only one hit.
--- In an earlier version of this game, the user could easily win simply
--- by building armies and troop transports.  We attempt to alleviate this
--- problem by making transports far more fragile.  We have also increased
--- the range of a fighter from 20 to 30 so that fighters will be somewhat
--- more useful.
+   -- Piece attributes.  Notice that the Transport is allowed only one hit.
+   -- In an earlier version of this game, the user could easily win simply
+   -- by building armies and troop transports.  We attempt to alleviate this
+   -- problem by making transports far more fragile.  We have also increased
+   -- the range of a fighter from 20 to 30 so that fighters will be somewhat
+   -- more useful.
 
    -- values for Piece_Attr.*.Terrain.  XXX We could dispatch based on
    -- Class now, but don't yet
@@ -507,7 +521,7 @@ private
          Build_Time => 50, Strength => 0, Max_Hits => 1,
          Speed => 10, Capacity => 0, Piece_Range => 500));
 
-  -- direction offsets
+   -- direction offsets
    Dir_Offset : constant Dir_Offset_Array :=
      (NORTH => -MAP_WIDTH,
       NORTHEAST => -MAP_WIDTH + 1,
@@ -518,7 +532,7 @@ private
       WEST => -1,
       NORTHWEST => -MAP_WIDTH - 1);
 
-  -- names of movement functions
+   -- names of movement functions
    Function_Name : constant Function_Name_Array :=
      (NOFUNC => Strings.To_Bounded_String("none"),
       RANDOM => Strings.To_Bounded_String("random"),
