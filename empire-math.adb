@@ -6,7 +6,7 @@
 --
 --     rand_long (n) -- returns a random integer in the range 0..n-1
 --
--- Other routines include:
+--  Other routines include:
 --
 --     dist (a, b) -- returns the straight-line distance between two locations.
 

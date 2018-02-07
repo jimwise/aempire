@@ -184,7 +184,7 @@ package body Empire.Mapping is
             New_Water,
             New_Land);
 
-         -- expand new water one cell
+         --  expand new water one cell
          Cur_Water := To_Vector (0);
          Expand_Perimeter
            (Pmap,
@@ -346,7 +346,7 @@ package body Empire.Mapping is
         Loc;                  --  if nothing found, we return current loc
    end Start_Perimeter;
 
-   -- Expand the perimeter.
+   --  Expand the perimeter.
    --
    --  Note that 'waterp' and 'landp' may be the same.
    --
@@ -358,7 +358,7 @@ package body Empire.Mapping is
    --
    --  We set the cost to reach the current perimeter.
    --
-   -- pmap == path map to update
+   --  pmap == path map to update
    --  move_info == objectives and weights curp == perimeter to expand type ==
    --  type of terrain to expand cur_cost == cost to reach cells on perimeter
    --  inc_wcost == cost to enter new water cells inc_lcost == cost to enter
@@ -530,9 +530,11 @@ package body Empire.Mapping is
             return T_LAND;
          when '*' =>
             if Map (To_Loc).CityP.Owner = Move_Info.Owner then
-               return T_WATER;       --  well, a ship can enter it, and an army can't...
+               --  well, a ship can enter it, and an army can't...
+               return T_WATER;
             else
-               return T_UNKNOWN;     --  cannot cross
+               --  cannot cross
+               return T_UNKNOWN;
             end if;
       end case;
    end Terrain_Type;
@@ -636,11 +638,11 @@ package body Empire.Mapping is
       New_Dest : Location_T;
    begin
       if Pmap.Map (Dest).Cost = 0 then
-         return;                        --  reached end of path (recursive exit condition)
+         return;          --  reached end of path (recursive exit condition)
       end if;
 
       if Pmap.Map (Dest).Terrain = T_PATH then
-         return;                        --  already marked (other recursive exit condition)
+         return;         --  already marked (other recursive exit condition)
       end if;
 
       Pmap.Map (Dest).Terrain := T_PATH;     --  this square is on path
@@ -735,7 +737,7 @@ package body Empire.Mapping is
       Best_Loc, New_Loc     : Location_T;
       Path_Count, Best_Path : Integer;
 
-      -- prefer diagonal moves
+      --  prefer diagonal moves
       Order : constant array (1 .. 8) of Direction_T :=
         (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST, WEST, EAST, NORTH, SOUTH);
    begin
@@ -743,11 +745,11 @@ package body Empire.Mapping is
          Ui.Print_Pzoom ("Before Pmap_Find_Dir:", Pmap, Vmap);
       end if;
 
-      -- no best yet
-      Best_Count :=
-        -2;                 --  was -INFINITY (where INFINITY was 100,000), but this should do
-      Best_Path := -1;
-      Best_Loc  := Loc;
+      --  no best yet
+      --  was -INFINITY (where INFINITY was 100,000), but this should do
+      Best_Count := -2;
+      Best_Path  := -1;
+      Best_Loc   := Loc;
 
       for I in Order'Range loop
          New_Loc :=

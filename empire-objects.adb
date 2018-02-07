@@ -38,8 +38,8 @@ package body Empire.Objects is
       New_dist  : Integer;
       Best_Loc  : Location_T := Loc;
    begin
-      Found :=
-        False;                   --  will end up true unless owner has no cities left
+      --  will end up true unless owner has no cities left
+      Found := False;
       for I in City'Range loop
          if City (I).Owner = Owner then
             New_dist := Math.Dist (Loc, City (I).Loc);
@@ -108,8 +108,8 @@ package body Empire.Objects is
       Best_Dist : Integer      := INFINITY;
       Best_Obj  : Piece_Info_P := null;
    begin
-      Found :=
-        False; --  will end up true unless Owner has no pieces left (matching criteria)
+      --  will end up true unless Owner has no pieces left (matching criteria)
+      Found := False;
 
       for I in Object'Range loop
          P := Object (I);
@@ -187,7 +187,7 @@ package body Empire.Objects is
       end if;
    end Disembark;
 
-   -- Move an object onto a ship
+   --  Move an object onto a ship
 
    procedure Embark (Ship : in Piece_Info_P; Obj : in Piece_Info_P) is
    begin
@@ -252,7 +252,9 @@ package body Empire.Objects is
                Kill_Obj (P, City.Loc);
             when SHIP =>
                while P.Cargo /= null
-               loop                  --  original ran only for TRANSPORT.  since we now also kill fighters, run for any
+               loop
+                  --  original ran only for TRANSPORT.  since we now also
+                  --  kill fighters, run for any
                   Kill_One (P.Cargo);
                end loop;
                case P.Owner is
@@ -286,8 +288,7 @@ package body Empire.Objects is
       end loop;
    end Kill_City;
 
-   -- Produce an item for a city
-
+   --  Produce an item for a city
    procedure Produce (City : in out City_Info_T) is
       New_obj : Piece_Info_P;
       Sat_Dir : constant array (Integer range 0 .. 3) of Function_T :=
@@ -298,9 +299,9 @@ package body Empire.Objects is
       --  zero after production
       City.work := City.work - Piece_Attr (City.Prod).Build_Time;
 
---  XXX of course, the static storage model should go at some point XXX (either
---  make free_list growable, or allocate all dynamically, allowing XXX us to
---  move away from 'access all' ptrs)
+      --  XXX of course, the static storage model should go at some point
+      --  XXX (either make free_list growable, or allocate all dynamically,
+      --  XXX allowing us to move away from 'access all' ptrs)
       if Free_List = null then
          raise Storage_Error;
       end if;
@@ -321,9 +322,9 @@ package body Empire.Objects is
       New_obj.Links (Cargo_Link).Next := null;
       New_obj.Links (Cargo_Link).Prev := null;
 
-      New_obj.Loc  := City.Loc;
-      New_obj.Func :=
-        NOFUNC;        --  if city has a func for the obj, this will be handled by caller
+      New_obj.Loc         := City.Loc;
+      --  if city has a func for the obj, this will be handled by caller
+      New_obj.Func        := NOFUNC;
       New_obj.Hits        := Piece_Attr (City.Prod).Max_Hits;
       New_obj.Owner       := City.Owner;
       New_obj.Piece_Type  := City.Prod;
@@ -531,7 +532,7 @@ package body Empire.Objects is
          if P /= null and then P.Owner = Obj.Owner then
             return True;
          else
-            return False;               --  armies can't move into cities, so end here
+            return False;     --  armies can't move into cities, so end here
          end if;
       end if;
 
@@ -604,7 +605,7 @@ package body Empire.Objects is
          Strings.To_String (Other));
    end Describe_Obj;
 
-   -- Display info on a city
+   --  Display info on a city
    procedure Describe_City (City : in City_Info_T) is
       Objp : Piece_Info_P;
 
@@ -657,9 +658,8 @@ package body Empire.Objects is
             Strings.Append (Func, ")");
          end if;
 
-         if City.Func (I) /= NOFUNC and I /= Piece_Type_T'Last
+         if City.Func (I) /= NOFUNC and I /= Piece_Type_T'Last then
             --  avoid a trailing ';', or '; ;'
-             then
             Strings.Append (Func, "; ");
          end if;
       end loop;
@@ -699,9 +699,9 @@ package body Empire.Objects is
          New_Loc := Loc + Dir_Offset (D);
          Update (Owner, New_Loc);
       end loop;
-      Update
-        (Owner,
-         Loc);               --  update current location as well (e.g. if we are updating a city we just lost)
+      --  update current location as well (e.g. if we are updating a city we
+      --  just lost)
+      Update (Owner, Loc);
    end Scan;
 
    --  Scan a portion of the board on behalf of a satellite
@@ -773,11 +773,12 @@ package body Empire.Objects is
          T := Ui.Get_Piece_Name;
 
          if T = NOPIECE then
-            Ui.Error
-              ("I don't know how to build those."); -- XXX kinda snarky.  consider changing.
+             --  XXX kinda snarky.  consider changing. (esp. as letters are
+             --  XXX unclear!
+            Ui.Error ("I don't know how to build those.");
          else
             City.Prod := T;
-            -- retooling time
+            --  retooling time
             City.work := -(Piece_Attr (T).Build_Time / RETOOLING_DENOMINATOR);
             exit;
          end if;

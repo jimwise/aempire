@@ -10,9 +10,7 @@ package body Empire.Curses_Interface is
 --  XXX XXX note that very little of this is actually curses based. this should
 --  XXX XXX really be split into a driver-independent and a curses part.
 
-   package Curses renames
-     Terminal_Interface
-       .Curses; --  lets it be clearer which funcs are from curses, without using full hierarchy
+   package Curses renames Terminal_Interface.Curses;
    package Text_Io renames Terminal_Interface.Curses.Text_IO;
 
    --  This file contains routines for displaying sectors and moving the cursor
@@ -394,7 +392,7 @@ package body Empire.Curses_Interface is
       Pmap : in Mapping.Path_Map;
       Vmap : in View_Map)
    is
-      R, C : Natural;             -- must support larger values than Row_T, Col_T
+      R, C : Natural;        -- must support larger values than Row_T, Col_T
       Row_Inc, Col_Inc : Natural;
    begin
       Row_Inc :=
@@ -609,21 +607,19 @@ package body Empire.Curses_Interface is
 
       --  XXX XXX XXX this should get some of the same polish as
       --  print_{p,}_zoom
---      row_inc = (MAP_HEIGHT + lines - NUMTOPS - 2) / (lines - NUMTOPS);
---      col_inc = (MAP_WIDTH + cols - 1) / (cols - 1);
+--  row_inc = (MAP_HEIGHT + lines - NUMTOPS - 2) / (lines - NUMTOPS);
+--  col_inc = (MAP_WIDTH + cols - 1) / (cols - 1);
 
---      for (r = 0; r < MAP_HEIGHT; r += row_inc)
---              for (c = 0; c < MAP_WIDTH; c += col_inc)
---              {
---                      cell = ' ';
-
---                      for (i = r; i < r + row_inc; i++)
---                              for (j = c; j < c + col_inc; j++)
---                                      if (strchr(zoom_list, mapbuf[row_col_loc(i,j)]) < strchr(zoom_list, cell))
---                                              cell = mapbuf[row_col_loc(i,j)];
-
---                      mvwaddch(stdscr, r/row_inc + NUMTOPS, c/col_inc, cell);
---              }
+--  for (r = 0; r < MAP_HEIGHT; r += row_inc)
+--    for (c = 0; c < MAP_WIDTH; c += col_inc) {
+--      cell = ' ';
+--    for (i = r; i < r + row_inc; i++)
+--      for (j = c; j < c + col_inc; j++)
+--        if (strchr(zoom_list, mapbuf[row_col_loc(i,j)]) <
+--          strchr(zoom_list, cell))
+--      cell = mapbuf[row_col_loc(i,j)];
+--      mvwaddch(stdscr, r/row_inc + NUMTOPS, c/col_inc, cell);
+--    }
 
 --      wrefresh(stdscr);
    end Print_Movie_Screen;
@@ -885,7 +881,7 @@ package body Empire.Curses_Interface is
       K := Curses.Get_Keystroke (Status_Win);
       Curses.Set_Cbreak_Mode (False);
 
-      -- XXX XXX XXX is this right?
+      --  XXX XXX XXX is this right?
       C := Character'Val (K);
       C := Ada.Characters.Handling.To_Upper (C);
       return C;
@@ -959,7 +955,7 @@ package body Empire.Curses_Interface is
          C := Get_Chx;
 
          case C is
-            -- remember, Get_Chx upcases
+            --  remember, Get_Chx upcases
             when 'Y' =>
                return True;
             when 'N' =>
@@ -979,7 +975,7 @@ package body Empire.Curses_Interface is
       Kill_Display;
    end Clear;
 
-   -- Redraw the screen
+   --  Redraw the screen
    --  XXX as above, this has the same name as a curses function, but this is
    --  ui driver independent
    procedure Redraw is
@@ -997,8 +993,7 @@ package body Empire.Curses_Interface is
       Curses.End_Screen;
    end End_Ui;
 
-   -- Initialize the terminal
-
+   --  Initialize the terminal
    procedure Init_Ui is
    begin
       Curses.Init_Screen;

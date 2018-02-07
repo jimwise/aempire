@@ -15,7 +15,7 @@ package Empire.Curses_Interface is
       Low     : in Integer;
       High    : in Integer) return Integer;
    function Get_Yn (Message : in String) return Boolean;
-   -- XXX see note on imp
+   --  XXX see note on imp
    function Get_Piece_Name return Piece_Choice_T;
 
    procedure Huh;
@@ -72,9 +72,9 @@ private
    --  we start the game with these set to 'Last, as no sector is displayed
    Ref_Row : Row_T    := Row_T'Last;       --  current top row displayed
    Ref_Col : Column_T :=
-     Column_T'Last;    --  current left-most column displayed
-   Save_Sector : Sector_T;              --  current displayed sector
-   Save_Cursor : Location_T;            --  ??? -- current displayed cursor position
+     Column_T'Last;             --  current left-most column displayed
+   Save_Sector : Sector_T;      --  current displayed sector
+   Save_Cursor : Location_T;    --  ??? -- current displayed cursor position
 
    NUMTOPS : constant :=
      4;      -- number of lines at top of screen for messages
