@@ -8,4 +8,3 @@ package Empire.Locations is
    function Loc_Sector (Loc : in Location_T) return Sector_T;
    function Sector_Loc (Sec : in Sector_T) return Location_T;
 end Empire.Locations;
-

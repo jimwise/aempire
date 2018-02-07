@@ -1,4 +1,4 @@
--- Routines to handle edit mode commands
+--  Routines to handle edit mode commands
 
 with Empire.Locations;
 with Empire.Objects;
@@ -7,69 +7,86 @@ with Empire.Ui;
 package body Empire.Editing is
 
    procedure Edit (Cur_Cursor : in Location_T) is
-      Path : Path_T;
-      Cmd : Character;
+      Path        : Path_T;
+      Cmd         : Character;
       Edit_Cursor : Location_T := Cur_Cursor;
    begin
 
       loop                              -- until user exits editing mode
-         Ui.Display_Loc(USER, Edit_Cursor); -- position cursor
-         E_Cursor(Edit_Cursor, Cmd);    -- handle cursor movement
+         Ui.Display_Loc (USER, Edit_Cursor); -- position cursor
+         E_Cursor (Edit_Cursor, Cmd);    -- handle cursor movement
 
          case Cmd is
             when 'B' =>                 -- change city production
-               E_Prod(Edit_Cursor);
+               E_Prod (Edit_Cursor);
             when 'F' =>
-               E_User_Obj_Func(Edit_Cursor, FILL);
+               E_User_Obj_Func (Edit_Cursor, FILL);
             when 'G' =>
-               E_User_Obj_Func(Edit_Cursor, EXPLORE);
+               E_User_Obj_Func (Edit_Cursor, EXPLORE);
             when 'I' =>
-               E_Move_Direction(Edit_Cursor);
+               E_Move_Direction (Edit_Cursor);
             when 'K' =>                 -- wake up
-               E_Wake(Edit_Cursor);
+               E_Wake (Edit_Cursor);
             when 'L' =>
-               E_User_Obj_Func(Edit_Cursor, LAND);
-            when  'M' =>                -- start to set move destination
-               E_Start_Path(Path, Edit_Cursor, NOPIECE);
+               E_User_Obj_Func (Edit_Cursor, LAND);
+            when 'M' =>                -- start to set move destination
+               E_Start_Path (Path, Edit_Cursor, NOPIECE);
             when 'N' =>                 -- finish setting move destination
-               E_End_Path(Path, Edit_Cursor);
+               E_End_Path (Path, Edit_Cursor);
             when 'O' =>                 -- leave edit mode
                return;
             when 'P' =>                 -- print_new_sector
-               E_Goto_Sector(Edit_Cursor);
+               E_Goto_Sector (Edit_Cursor);
             when 'R' =>
-               E_User_Obj_Func(Edit_Cursor, RANDOM);
+               E_User_Obj_Func (Edit_Cursor, RANDOM);
             when 'S' =>
-               E_User_Obj_Func(Edit_Cursor, SENTRY);
+               E_User_Obj_Func (Edit_Cursor, SENTRY);
             when 'T' =>
-               E_User_Obj_Func(Edit_Cursor, WFTRANSPORT, Ptypes => (ARMY => TRUE, others => FALSE));
+               E_User_Obj_Func
+                 (Edit_Cursor,
+                  WFTRANSPORT,
+                  Ptypes => (ARMY => True, others => False));
             when 'U' =>
-               -- there ought to be a way to do this by class.  hmm.  XXX
-               E_User_Obj_Func(Edit_Cursor, REPAIR, Ptypes => (PATROL|DESTROYER|SUBMARINE|TRANSPORT|BATTLESHIP|CARRIER => TRUE, others => FALSE));
+               --  there ought to be a way to do this by class. hmm. XXX
+               E_User_Obj_Func
+                 (Edit_Cursor,
+                  REPAIR,
+                  Ptypes =>
+                    (PATROL     |
+                     DESTROYER  |
+                     SUBMARINE  |
+                     TRANSPORT  |
+                     BATTLESHIP |
+                     CARRIER    =>
+                       True,
+                     others => False));
             when 'V' =>                 -- set city function
-               E_City_Func(Edit_Cursor, Path);
+               E_City_Func (Edit_Cursor, Path);
             when 'Y' =>
-               E_User_Obj_Func(Edit_Cursor, ARMYATTACK, Ptypes => (ARMY => TRUE, others => FALSE));
+               E_User_Obj_Func
+                 (Edit_Cursor,
+                  ARMYATTACK,
+                  Ptypes => (ARMY => True, others => False));
             when '=' =>                 -- request info
-               E_Info(Edit_Cursor);
-            when Character'Val(12) =>      -- c-l (redraw screen)
+               E_Info (Edit_Cursor);
+            when Character'Val (12) =>      -- c-l (redraw screen)
                Ui.Redraw;
             when '?' =>
-               Ui.Help(Help_Edit);
+               Ui.Help (Help_Edit);
             when others =>
                Ui.Huh;
          end case;
       end loop;
    end Edit;
 
--- Get the next command.  We handle cursor movement here
+--  Get the next command. We handle cursor movement here
 
    procedure E_Cursor (Edit_Cursor : in out Location_T; Cmd : out Character) is
    begin
       loop
          Cmd := Ui.Get_Chx;
-         exit when Dir_Chars(Cmd) = Nodirection;
-         Ui.Move_Cursor(Edit_Cursor, Dir_Chars(Cmd));
+         exit when Dir_Chars (Cmd) = NODIRECTION;
+         Ui.Move_Cursor (Edit_Cursor, Dir_Chars (Cmd));
       end loop;
    end E_Cursor;
 
@@ -78,28 +95,32 @@ package body Empire.Editing is
    procedure E_Goto_Sector (Edit_Cursor : in out Location_T) is
       Sector : Sector_T;
    begin
-      -- XXX better to have a `ui.get_sector' which could validate on its own
-      Sector := Ui.Get_Int("New Sector? ", Sector_T'First, Sector_T'Last);
+      --  XXX better to have a `ui.get_sector' which could validate on its own
+      Sector := Ui.Get_Int ("New Sector? ", Sector_T'First, Sector_T'Last);
 
-      Edit_Cursor := Locations.Sector_Loc(Sector); -- center cursor within sector
+      Edit_Cursor :=
+        Locations.Sector_Loc (Sector); -- center cursor within sector
    end E_Goto_Sector;
 
--- Set function for the piece at a location
--- XXX could merge with Empire.User_Move.User_Obj_Func?
+--  Set function for the piece at a location XXX could merge with
+--  Empire.User_Move.User_Obj_Func?
    procedure E_User_Obj_Func
-     (Loc : in Location_T;
-      Func : in Function_T;
-      Ptypes : in Acceptable_Piece_Array := (SATELLITE => FALSE, others => TRUE);
-      Dest_If_Move_To_Dest : Location_T := 0
-      ) is
+     (Loc    : in Location_T;
+      Func   : in Function_T;
+      Ptypes : in Acceptable_Piece_Array :=
+        (SATELLITE => False, others => True);
+      Dest_If_Move_To_Dest : Location_T := 0)
+   is
       Obj : Piece_Info_P;
    begin
-      Obj := Objects.Find_Obj_At_Loc(Loc, Types => Ptypes, Owners => (USER => TRUE, others => FALSE));
+      Obj :=
+        Objects.Find_Obj_At_Loc
+          (Loc,
+           Types  => Ptypes,
+           Owners => (USER => True, others => False));
 
-      if Obj /= null
-      then
-         if Func = MOVE_TO_DEST
-         then
+      if Obj /= null then
+         if Func = MOVE_TO_DEST then
             Obj.Dest := Dest_If_Move_To_Dest;
          end if;
          Obj.Func := Func;
@@ -108,23 +129,25 @@ package body Empire.Editing is
       end if;
    end E_User_Obj_Func;
 
--- Set function for a type of piece produced by the city at a location
+--  Set function for a type of piece produced by the city at a location
 
    procedure E_User_City_Func
-     (Loc : in Location_T;
-      Func : in Function_T;
-      Ptype : in Piece_Type_T;
-      Dest_If_Move_To_Dest : Location_T := 0) is
+     (Loc                  : in Location_T;
+      Func                 : in Function_T;
+      Ptype                : in Piece_Type_T;
+      Dest_If_Move_To_Dest :    Location_T := 0)
+   is
       Cityp : City_Info_P;
    begin
-      Cityp := Objects.Find_City_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE));
+      Cityp :=
+        Objects.Find_City_At_Loc
+          (Loc,
+           Owners => (USER => True, others => False));
 
-      if Cityp /= null
-      then
-         Cityp.Func(Ptype) := Func;
-         if Func = MOVE_TO_DEST
-         then
-            Cityp.Dest(Ptype) := Dest_If_Move_To_Dest;
+      if Cityp /= null then
+         Cityp.Func (Ptype) := Func;
+         if Func = MOVE_TO_DEST then
+            Cityp.Dest (Ptype) := Dest_If_Move_To_Dest;
          end if;
       else
          Ui.Huh;
@@ -133,127 +156,127 @@ package body Empire.Editing is
 
    procedure E_City_Repair (Loc : in Location_T; Ptype : Piece_Type_T) is
    begin
-      if Piece_Attr(Ptype).Class = SHIP
-      then
-         E_User_City_Func(Loc, REPAIR, Ptype);
+      if Piece_Attr (Ptype).Class = SHIP then
+         E_User_City_Func (Loc, REPAIR, Ptype);
       else
          Ui.Huh;
       end if;
    end E_City_Repair;
 
--- Set object to move in a direction
+--  Set object to move in a direction
 
    procedure E_Move_Direction (Loc : in Location_T) is
-      C : Character;
-      D : Direction_Choice_T;
-      F : Function_T;
+      C   : Character;
+      D   : Direction_Choice_T;
+      F   : Function_T;
       Obj : Piece_Info_P;
    begin
-      Obj := Objects.Find_Obj_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE));
-      if Obj = null
-      then
+      Obj :=
+        Objects.Find_Obj_At_Loc
+          (Loc,
+           Owners => (USER => True, others => False));
+      if Obj = null then
          Ui.Huh;
          return;
       end if;
 
       C := Ui.Get_Chx;                  -- XXX XXX should prompt
-      D := Dir_Chars(C);
-      if D = NODIRECTION
-      then
+      D := Dir_Chars (C);
+      if D = NODIRECTION then
          Ui.Huh;
       else
-         F := Dir_Funcs(D);
-         E_User_Obj_Func(Loc, F);
+         F := Dir_Funcs (D);
+         E_User_Obj_Func (Loc, F);
       end if;
    end E_Move_Direction;
 
-   procedure E_City_Move_Direction (Loc : in Location_t; Ptype : Piece_Type_T) is
+   procedure E_City_Move_Direction
+     (Loc   : in Location_T;
+      Ptype :    Piece_Type_T)
+   is
       E : Character;
       D : Direction_Choice_T;
       F : Function_T;
    begin
       E := Ui.Get_Chx;                  -- get a direction
-      D := Dir_Chars(E);
+      D := Dir_Chars (E);
 
-      if D = NODIRECTION
-      then
+      if D = NODIRECTION then
          Ui.Huh;
       else
-         F := Dir_Funcs(D);
-         E_User_City_Func(Loc, F, Ptype);
+         F := Dir_Funcs (D);
+         E_User_City_Func (Loc, F, Ptype);
       end if;
    end E_City_Move_Direction;
 
--- Wake up anything and everything
+--  Wake up anything and everything
 
    procedure E_Wake (Loc : in Location_T) is
       Obj : Piece_Info_P;
    begin
-      for I in Piece_Type_T'Range
-      loop
-         E_User_City_Func(Loc, NOFUNC, I);
+      for I in Piece_Type_T'Range loop
+         E_User_City_Func (Loc, NOFUNC, I);
       end loop;
 
-      Obj := Map(Loc).Objp;
-      while Obj /= null
-      loop
+      Obj := Map (Loc).ObjP;
+      while Obj /= null loop
          Obj.Func := NOFUNC;
-         Obj := Obj.Links(Loc_Link).Next;
+         Obj      := Obj.Links (Loc_Link).Next;
       end loop;
    end E_Wake;
 
---  Set a city's function.  We get the piece type to set, then the function itself.
+--  Set a city's function. We get the piece type to set, then the function
+--  itself.
 
-   -- XXX XXX XXX this is identical to User_Set_City_Func -- except that it
-   -- XXX XXX XXX supports a path.  the two should be merged
+   --  XXX XXX XXX this is identical to User_Set_City_Func -- except that it
+   --  XXX XXX XXX supports a path. the two should be merged
    procedure E_City_Func (Loc : in Location_T; Path : out Path_T) is
       Ptype : Piece_Choice_T;
-      E : Character;
+      E     : Character;
       Cityp : City_Info_P;
    begin
-      Cityp := Objects.Find_City_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE));
+      Cityp :=
+        Objects.Find_City_At_Loc
+          (Loc,
+           Owners => (USER => True, others => False));
 
-      if Cityp = null
-      then
+      if Cityp = null then
          Ui.Huh;
          return;
       end if;
 
       Ptype := Ui.Get_Piece_Name;
 
-      if Ptype = NOPIECE
-      then
+      if Ptype = NOPIECE then
          Ui.Huh;
          return;
       end if;
 
-      -- XXX XXX XXX should prompt here
+      --  XXX XXX XXX should prompt here
       E := Ui.Get_Chx;
 
       case E is
          when 'F' =>
-            if (Ptype = TRANSPORT) or (Ptype = CARRIER)
-            then
-               E_User_City_Func(Loc, FILL, Ptype);
+            if (Ptype = TRANSPORT) or (Ptype = CARRIER) then
+               E_User_City_Func (Loc, FILL, Ptype);
             else
                Ui.Huh;
             end if;
          when 'G' =>
-            E_User_City_Func(Loc, EXPLORE, Ptype);
+            E_User_City_Func (Loc, EXPLORE, Ptype);
          when 'I' =>
-            E_City_Move_Direction(Loc, Ptype);
+            E_City_Move_Direction (Loc, Ptype);
          when 'K' =>
-            E_User_City_Func(Loc, NOFUNC, Ptype);
+            E_User_City_Func (Loc, NOFUNC, Ptype);
          when 'M' =>
-            E_Start_Path(Path, Loc, Ptype);
+            E_Start_Path (Path, Loc, Ptype);
          when 'R' =>
-            E_User_City_Func(Loc, RANDOM, Ptype);
+            E_User_City_Func (Loc, RANDOM, Ptype);
          when 'U' =>
-            E_City_Repair(Loc, Ptype);
+            E_City_Repair (Loc, Ptype);
          when 'Y' =>
-            if Ptype = ARMY
-            then
-               E_User_City_Func(Loc, ARMYATTACK, Ptype);
+            if Ptype = ARMY then
+               E_User_City_Func (Loc, ARMYATTACK, Ptype);
             else
                Ui.Huh;
             end if;
@@ -262,64 +285,83 @@ package body Empire.Editing is
       end case;
    end E_City_Func;
 
--- Beginning of move to location
+--  Beginning of move to location
 
-   procedure E_Start_Path (Path: in out Path_T; Loc : in Location_T; Ptype : in Piece_Choice_T) is
+   procedure E_Start_Path
+     (Path  : in out Path_T;
+      Loc   : in     Location_T;
+      Ptype : in     Piece_Choice_T)
+   is
    begin
-      if (Objects.Find_Obj_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE)) = null) and
-          (Objects.Find_City_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE)) = null)
+      if
+        (Objects.Find_Obj_At_Loc
+           (Loc,
+            Owners => (USER => True, others => False)) =
+         null) and
+        (Objects.Find_City_At_Loc
+           (Loc,
+            Owners => (USER => True, others => False)) =
+         null)
       then
          Ui.Huh;
       else
-         Path.Start := Loc;
-         Path.Started := TRUE;
-         Path.Ptype := Ptype;
+         Path.Start   := Loc;
+         Path.Started := True;
+         Path.Ptype   := Ptype;
       end if;
    end E_Start_Path;
 
--- Finish setting up move to location
+--  Finish setting up move to location
 
    procedure E_End_Path (Path : in out Path_T; Loc : in Location_T) is
    begin
-      if not Path.Started
-      then
+      if not Path.Started then
          Ui.Huh;
          return;
       end if;
 
-      if Path.Ptype = NOPIECE           -- XXX this means this is not a city path
-      then
-         E_User_Obj_Func(Path.Start, MOVE_TO_DEST, Dest_If_Move_To_Dest => Loc);
+      if Path.Ptype = NOPIECE
+         --  XXX this means this is not a city path
+          then
+         E_User_Obj_Func
+           (Path.Start,
+            MOVE_TO_DEST,
+            Dest_If_Move_To_Dest => Loc);
       else
-         E_User_City_Func(Path.Start, MOVE_TO_DEST, Path.Ptype, Dest_If_Move_To_Dest => Loc);
+         E_User_City_Func
+           (Path.Start,
+            MOVE_TO_DEST,
+            Path.Ptype,
+            Dest_If_Move_To_Dest => Loc);
       end if;
 
-      Path.Started := FALSE;
+      Path.Started := False;
    end E_End_Path;
 
--- Print out information about a piece
+--  Print out information about a piece
 
    procedure E_Info (Loc : in Location_T) is
       Cityp : City_Info_P;
-      Objp : Piece_Info_P;
-      Whose : Acceptable_Owner_Array := (USER => TRUE, others => FALSE);
+      Objp  : Piece_Info_P;
+      Whose : Acceptable_Owner_Array := (USER => True, others => False);
    begin
-      if Debug
-      then
-         Whose(COMP) := TRUE;
+      if Debug then
+         Whose (COMP) := True;
       end if;
 
-      Cityp := Objects.Find_City_At_Loc(Loc, Whose);
-      if Cityp /= null
-      then
-         Objects.Describe_City(Cityp.all);
+      Cityp := Objects.Find_City_At_Loc (Loc, Whose);
+      if Cityp /= null then
+         Objects.Describe_City (Cityp.all);
          return;
       end if;
 
-      Objp := Objects.Find_Obj_At_Loc(Loc, Types => (others => TRUE), Owners => Whose);
-      if Objp /= null
-      then
-         Objects.Describe_Obj(Objp);
+      Objp :=
+        Objects.Find_Obj_At_Loc
+          (Loc,
+           Types  => (others => True),
+           Owners => Whose);
+      if Objp /= null then
+         Objects.Describe_Obj (Objp);
          return;
       end if;
 
@@ -331,13 +373,15 @@ package body Empire.Editing is
    procedure E_Prod (Loc : in Location_T) is
       Cityp : City_Info_P;
    begin
-      Cityp := Objects.Find_City_At_Loc(Loc, Owners => (USER => TRUE, others => FALSE));
+      Cityp :=
+        Objects.Find_City_At_Loc
+          (Loc,
+           Owners => (USER => True, others => False));
 
-      if Cityp = null
-      then
+      if Cityp = null then
          Ui.Huh;
       else
-         Objects.Ask_Prod(Cityp.all);
+         Objects.Ask_Prod (Cityp.all);
       end if;
    end E_Prod;
 

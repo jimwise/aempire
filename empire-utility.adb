@@ -7,40 +7,38 @@ package body Empire.Utility is
 
    -- various utility routines
 
-   -- Here is a little routine to perform consistency checking on the
-   -- database.
+   --  Here is a little routine to perform consistency checking on the
+   --  database.
    --
-   -- We perform the following functions:
+   --  We perform the following functions:
    --
-   -- 1)  Make sure no list contains loops.
+   --  1) Make sure no list contains loops.
    --
-   -- 2)  Make sure every object is in either the free list with 0 hits,
-   -- or it is in the correct object list and a location list with non-zero hits,
-   -- and an appropriate owner.
+--  2) Make sure every object is in either the free list with 0 hits, or it is
+--  in the correct object list and a location list with non-zero hits, and an
+--  appropriate owner.
    --
-   -- 3)  Make sure every city is on the map.
+   --  3) Make sure every city is on the map.
    --
-   -- 4)  Make sure every object is in the correct location and that
-   -- objects on the map have non-zero hits.
+   --  4) Make sure every object is in the correct location and that objects on
+   --  the map have non-zero hits.
    --
-   -- 5)  Make sure every object in a cargo list has a ship pointer.
+   --  5) Make sure every object in a cargo list has a ship pointer.
    --
-   -- 6)  Make sure every object with a ship pointer is in that ship's
-   -- cargo list.
+   --  6) Make sure every object with a ship pointer is in that ship's cargo
+   --  list.
 
-   procedure Check
-   is
-      -- P : Piece_Info_P;
+   procedure Check is
+   -- P : Piece_Info_P;
    begin
-      if not Debug
-      then
+      if not Debug then
          return;
       end if;
 
-      -- XXX XXX XXX XXX this needs major rework for the new world order
-      -- XXX XXX XXX XXX (see below -- this is very ptr-arithmetic intensive,
-      -- XXX XXX XXX XXX such as assuming that subtracting the array address
-      -- XXX XXX XXX XXX from the member address gives you the index
+      --  XXX XXX XXX XXX this needs major rework for the new world order XXX
+      --  XXX XXX XXX (see below -- this is very ptr-arithmetic intensive, XXX
+      --  XXX XXX XXX such as assuming that subtracting the array address XXX
+      --  XXX XXX XXX from the member address gives you the index
 
       -- nothing in any list yet
 --      In_Free := (others => False);
@@ -48,8 +46,8 @@ package body Empire.Utility is
 --      In_Loc := (others => False);
 --      In_Cargo := (others => False);
 
-      -- Mark all objects in free list.  Make sure objects in free list
-      -- have zero hits.
+      --  Mark all objects in free list. Make sure objects in free list have
+      --  zero hits.
 
 --      P := Free_List;
 --      while P /= null
@@ -126,8 +124,7 @@ package body Empire.Utility is
 --   */
 
 --  static void
---  check_obj (piece_info_t **list, const int owner)
---  {
+--  check_obj (piece_info_t **list, const int owner) {
 --      long j;
 --      piece_type_t i;
 --      const piece_info_t *p;
@@ -169,8 +166,7 @@ package body Empire.Utility is
 --   */
 
 --  static void
---  check_cargo (const piece_info_t *list, const piece_type_t cargo_type)
---  {
+--  check_cargo (const piece_info_t *list, const piece_type_t cargo_type) {
 --      const piece_info_t *p, *q;
 --      long j, count;
 
@@ -202,8 +198,7 @@ package body Empire.Utility is
 --   */
 
 --  static void
---  check_obj_cargo (piece_info_t **list)
---  {
+--  check_obj_cargo (piece_info_t **list) {
 --      const piece_info_t *p;
 --      piece_type_t i;
 
@@ -213,21 +208,18 @@ package body Empire.Utility is
 --                              assert(in_cargo[p-object]);
 --  }
 
-      -- Print a message and then exit
+   --  Print a message and then exit
 
-   procedure Panic (Why : in String)
-   is
+   procedure Panic (Why : in String) is
    begin
       Ui.End_Ui;
       -- XXX should be stderr?
-      Text_IO.Put_Line(Ada.Command_Line.Command_Name & ": " & Why);
+      Text_IO.Put_Line (Ada.Command_Line.Command_Name & ": " & Why);
       raise Program_Error;
    end Panic;
 
-
 --  void
---  emp_panic (const char *file, const int line, const char *why)
---  {
+--  emp_panic (const char *file, const int line, const char *why) {
 --      term_end();
 
 --      if (why == NULL)

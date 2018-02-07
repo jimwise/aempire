@@ -1,5 +1,5 @@
---  this file contains initialization code, the main command
---  parser, and the simple commands.
+--  this file contains initialization code, the main command parser, and the
+--  simple commands.
 
 with Ada.Exceptions;
 
@@ -19,12 +19,11 @@ package body Empire is
       --  distinct from date as we may have loaded a saved game
       Turn : Natural := 0;
    begin
-      --  DEBUGGING CONFIG GOES HERE
-      --  XXX this should move to empire.ads
-      Debug := True;
+      --  DEBUGGING CONFIG GOES HERE XXX this should move to empire.ads
+      Debug       := True;
       Print_Debug := True;
-      Print_Vmap := '0';
-      Trace_Pmap := False;
+      Print_Vmap  := '0';
+      Trace_Pmap  := False;
 
       Emp_Start;
 
@@ -34,8 +33,7 @@ package body Empire is
       Commands.Restore;
 
       loop
-         if Automove
-         then
+         if Automove then
             Ui.Prompt ("User_Move...");
             User_Move.User_Move;
             Ui.Prompt ("Comp_Move...");
@@ -44,12 +42,10 @@ package body Empire is
             Game.Check_Endgame;
             Turn := Turn + 1;
             Date := Date + 1;
-            if (Turn mod Save_Interval) = 0
-            then
+            if (Turn mod Save_Interval) = 0 then
                Game.Save_Game;
             end if;
-            if Save_Movie
-            then
+            if Save_Movie then
                Game.Save_Movie_Screen;
             end if;
             Ui.Display_Score;
@@ -91,11 +87,10 @@ package body Empire is
 
 --  execute a command
 
-   procedure Do_Command (Orders : in Character)
-   is
-      E : Character;
+   procedure Do_Command (Orders : in Character) is
+      E      : Character;
       Ncycle : Integer;
-      Sec : Sector_T;
+      Sec    : Sector_T;
    begin
       case Orders is
          when 'A' =>                    -- turn on auto-move mode
@@ -110,8 +105,7 @@ package body Empire is
             Ui.Error ("Round " & Integer'Image (Date)); -- XXX spaces right?
 
          when 'E' =>                    -- examine enemy map
-            if Resigned
-            then
+            if Resigned then
                Commands.Examine;
             else
                Ui.Huh;            -- would be better to tell user why not
@@ -130,12 +124,10 @@ package body Empire is
 
          when 'J' =>                    -- edit mode
             Sec := Ui.Cur_Sector;
-            --  in C, this was only done if we were switching
-            --  from view of non-user map, but it's cheap to
-            --  always do it if sector is 0.
-            --  XXX may be better to add an out boolean to Cur_Sector
-            if Sec = Sector_T'First
-            then
+            --  in C, this was only done if we were switching from view of
+            --  non-user map, but it's cheap to always do it if sector is
+            --  0. XXX may be better to add an out boolean to Cur_Sector
+            if Sec = Sector_T'First then
                Ui.Print_Sector (USER, Sec);
             end if;
             Editing.Edit (Locations.Sector_Loc (Sec));
@@ -147,8 +139,7 @@ package body Empire is
 
          when 'N' =>                    -- give enemy free moves
             Ncycle := Ui.Get_Int ("Number of free enemy moves: ", 1, 1000);
-            for I in 1 .. Ncycle
-            loop
+            for I in 1 .. Ncycle loop
                Ai.Comp_Move;
             end loop;
             Game.Save_Game;
@@ -169,16 +160,14 @@ package body Empire is
 
          when 'T' =>                    -- trace (toggle save_movie flag)
             Save_Movie := not Save_Movie;
-            if Save_Movie
-            then                        -- XXX name?
+            if Save_Movie then                        -- XXX name?
                Ui.Info ("Saving movie screens to '" & MOVIE_NAME & "'.");
             else
                Ui.Info ("No longer saving movie screens.");
             end if;
 
          when 'W' =>                    -- watch movie
-            if Resigned or Debug
-            then
+            if Resigned or Debug then
                Game.Replay_Movie;
             else
                Ui.Error ("You cannot watch a movie until your foe resigns.");
@@ -193,12 +182,10 @@ package body Empire is
 
          when '+' =>                    -- change debug state
             E := Ui.Get_Chx;
-            if E = '+'
-            then
+            if E = '+' then
                Ui.Error ("Debug enabled");
                Debug := True;
-            elsif E = '-'
-            then
+            elsif E = '-' then
                Ui.Error ("Debug disabled");
                Debug := False;
             else
