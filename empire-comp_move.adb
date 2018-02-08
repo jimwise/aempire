@@ -1555,7 +1555,12 @@ package body Empire.Comp_Move is
             return;                     --  nothing left to guess
          end if;
 
+         To.Clear;
          Copied := 0;
+         Ui.Debug_Info ("predicting... " &
+                          Location_Count'Image (Copied) &
+                          " / " &
+                          Ada.Containers.Count_Type'Image (From.Length));
 
          for I in 1 .. From.Last_Index loop
             Loc := From.Element (I);
@@ -1686,7 +1691,6 @@ package body Empire.Comp_Move is
    is
       New_Loc : Location_T;
    begin
-      Ui.Debug_Info ("Entering Expand_Prune");
       Explored := Explored + 1;
 
       if Ttype = T_LAND then
@@ -1713,7 +1717,6 @@ package body Empire.Comp_Move is
                null; --  skips for off-board locations. XXX XXX
          end;
       end loop;
-      Ui.Debug_Info ("Leaving Expand_Prune");
    end Expand_Prune;
 
 end Empire.Comp_Move;
