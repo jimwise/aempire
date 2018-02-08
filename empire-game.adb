@@ -282,7 +282,7 @@ package body Empire.Game is
       Pair                 : Integer;
    begin
       Find_Cont;                        --  find and rank the continents
-      if (Ncont = 0) then
+      if Ncont = 0 then
          Ui.Debug_Info ("no usable continents found");
          return False;                  --  no good continents
       end if;

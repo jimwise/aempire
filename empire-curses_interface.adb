@@ -760,7 +760,6 @@ package body Empire.Curses_Interface is
 
       Curses.Clear (Help_Win);
       Curses.Refresh (Help_Win);
-
       Curses.Delete (Help_Win);
 
       if Whose_Map = USER then

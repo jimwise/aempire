@@ -13,13 +13,22 @@ Project Empire is
   package Compiler is
      for Default_Switches ("Ada")
        use ("-gnatwa",           --  all warnings
-            "-gnatwe",           --  warnings as errors
+            "-gnatwe",           --  warnings as errors     
             "-gnat2012",                -- Ada 2012
             "-gnata",                   -- Assertions enabled
             "-gnateE",                  -- Richer exception messages
             "-gnateF",                  -- Check for float overflow
             "-gnato",                   -- handle all overflows in strict mode
             "-gnatyy",                  -- Style checks
+            "-gnatyO",          -- overrides must be marked as such
+            "-gnatyx",          -- no c-style extra parens in IF
+            "-gnatyS",          -- newline after then
+            "-gnatyd",          -- consistent Unix line endings
+            "-gnatyu",          -- no extraneous blank lines
+--  DO NOT WANT?            
+--          "-gnatyo",          -- subprograms in alphabetical order
+--          "-gnatyI",          -- don't say "IN" explicitly (it's default)
+--          "-gnatyB",          --  enforce and/then, or/else
             "-fstack-check",
             "-I/usr/local/share/ada/adainclude", "-L/usr/local/lib/ada/adalib");
   end Compiler;

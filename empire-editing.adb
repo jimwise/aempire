@@ -254,7 +254,7 @@ package body Empire.Editing is
 
       case E is
          when 'F' =>
-            if (Ptype = TRANSPORT) or (Ptype = CARRIER) then
+            if Ptype = TRANSPORT or Ptype = CARRIER then
                E_User_City_Func (Loc, FILL, Ptype);
             else
                Ui.Huh;
